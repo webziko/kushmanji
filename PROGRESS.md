@@ -188,15 +188,16 @@ is making sure each one runs on Windows from inside the app, and making it easy 
 - [x] M9-01 Security hardening and its write-up: calls answered only from the app's own page, browser
       permissions refused, `<webview>` blocked, request length capped (Claude, 2026-10-12) → `SECURITY.md`
 - [x] M9-02 Unit tests with Node's built-in runner: `npm test`, 15 tests (Claude, 2026-10-12)
-- [~] M9-03 CI on GitHub: `.github/workflows/ci.yml` runs check, tests and `npm audit` on Windows (Claude).
-      Written, never run: the repository has no GitHub home yet
+- [x] M9-03 CI on GitHub: `.github/workflows/ci.yml` runs check, tests and `npm audit` on Windows
+      (Claude, 2026-10-13). The first run, on the first push to `github.com/webziko/kushmanji`, passed every step
 - [x] M9-04 Guides for people: `CONTRIBUTING.md`, `docs/MAINTENANCE.md`, `CHECKLIST.md` (Claude, 2026-10-12)
 - [ ] M9-05 Lint and type-check (`// @ts-check` with JSDoc types, checked by `tsc --noEmit`)
 - [ ] M9-06 Unit tests for the parts that still have none: project names, the preview's ready line, each
       bridge's event handling against recorded real output
 - [ ] M9-07 A log file the owner can send when something goes wrong, with nothing private in it
-- [ ] M9-08 Licence file and third-party notices. Needs the owner's choice of licence
-- [ ] M9-09 Version numbers and a changelog. Needs the owner's go-ahead to start committing
+- [~] M9-08 Licence file and third-party notices. The owner chose Apache-2.0 and `LICENSE` is in the repository
+      (2026-10-13). Still to write: the notices for HyperFrames and Electron
+- [ ] M9-09 Version numbers and a changelog. Committing has started (2026-10-13); from here on one task per commit
 - [ ] M9-10 Outside security review before any wider release
 - [ ] M9-11 Run the self-test in CI too (needs FFmpeg and Chrome on the runner)
 
