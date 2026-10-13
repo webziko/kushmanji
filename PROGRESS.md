@@ -500,9 +500,12 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       Code on Sonnet, which was stopped by the usage limit before its own check (M17-06); Claude then checked
       the still frames, moved the chime onto the name card and brought the storyboard up to date. The finished
       file was checked too: no frozen stretch outside the two cards
-- [ ] M17-08 A saved video comes out at the project's own loudness: about -19 LUFS for all four of the owner's
-      videos, where YouTube and Instagram play at about -14. Tonight the upload copies were raised by hand
-      (`reviews/m16-playback/finish.sh`). "Save video" should offer the usual loudness itself
+- [x] M17-08 "Save video" brings the sound to the usual loudness itself (Claude, 2026-10-14). A saved video came
+      out at the project's own loudness: about -19 LUFS for all four of the owner's videos, where YouTube and
+      Instagram play at about -14. After the video is made, FFmpeg measures it and raises or lowers the sound
+      (at most +9 or -6 dB, with a limiter), copying the picture; a video with no sound, or a computer with no
+      FFmpeg, keeps the file as made. `main/loudness.js`. Tried on one of the owner's shorts from outside the
+      app (-18.9 to -14.2); inside the app the self-test's video has no sound, so that path is the one tried
 - [ ] M17-09 One kit for a channel's shorts: the three ending cards and the top titles came out a little
       different each time, because each short was a separate request. Goes with M17-04 and M10-04
 - [x] M17-03 Arrow keys in "Edit by hand" (Claude, 2026-10-14): while the video plays they skip ten seconds and

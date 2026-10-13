@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnCli } from "./cli.js";
+import { evenLoudness } from "./loudness.js";
 import { killTree } from "./proc.js";
 
 // "Save video": the app makes the video file itself, with HyperFrames' own `render`, and puts it in the
@@ -9,6 +10,9 @@ import { killTree } from "./proc.js";
 // nothing leaves the computer.
 //
 // One video is saved at a time: a render already uses every processor core, and two would both crawl.
+//
+// The video is first made under a working name ("... .making.mp4"), then its sound is brought to the usual
+// loudness (loudness.js) into the real name. Only a finished video ever carries the real name.
 
 const TAIL_LINES = 12;
 
@@ -56,11 +60,16 @@ export class ExportManager {
   #last = null;
   #emit;
   #folder;
+  #ffmpeg;
 
-  /** `emit(payload)` tells the page; `folder()` is where saved videos go (the person's Downloads). */
-  constructor({ emit, folder }) {
+  /**
+   * `emit(payload)` tells the page; `folder()` is where saved videos go (the person's Downloads);
+   * `ffmpeg()` is the FFmpeg program for the loudness step, or null to leave the sound as it is.
+   */
+  constructor({ emit, folder, ffmpeg = () => null }) {
     this.#emit = emit;
     this.#folder = folder;
+    this.#ffmpeg = ffmpeg;
   }
 
   /** The project being saved right now, or null. */
@@ -91,8 +100,9 @@ export class ExportManager {
     const folder = this.#folder();
     fs.mkdirSync(folder, { recursive: true });
     const file = freeFile(folder, exportName(path.basename(dir)));
-    const child = spawnCli(["render", dir, "--output", file], { cwd: dir, projectDir: dir });
-    const job = { dir, file, child, percent: 0, tail: [], stopped: false };
+    const making = file.replace(/\.mp4$/, ".making.mp4");
+    const child = spawnCli(["render", dir, "--output", making], { cwd: dir, projectDir: dir });
+    const job = { dir, file, making, child, percent: 0, tail: [], stopped: false };
     this.#job = job;
     this.#last = null;
 
@@ -116,15 +126,34 @@ export class ExportManager {
     };
     child.stdout.on("data", read);
     child.stderr.on("data", read);
-    const finish = (code, problem) => {
-      if (this.#job !== job) return;
-      this.#job = null;
-      let size = 0;
+    const sizeOf = (given) => {
       try {
-        size = fs.statSync(file).size;
+        return fs.statSync(given).size;
       } catch {
-        // No file was made.
+        return 0;
       }
+    };
+    const finish = async (code, problem) => {
+      if (this.#job !== job) return;
+      if (!job.stopped && code === 0 && sizeOf(making) > 0) {
+        // The picture is done. The sound's loudness takes a few seconds more; without FFmpeg it stays as it is.
+        const ffmpeg = this.#ffmpeg();
+        let evened = false;
+        if (ffmpeg) {
+          job.percent = 100;
+          this.#tell(job);
+          const even = await evenLoudness({ ffmpeg, from: making, to: file, onChild: (program) => (job.child = program) })
+            .catch(() => ({ changed: false }));
+          evened = even.changed && sizeOf(file) > 0;
+        }
+        if (!evened && !job.stopped) {
+          fs.rmSync(file, { force: true });
+          fs.renameSync(making, file);
+        }
+      }
+      this.#job = null;
+      fs.rmSync(making, { force: true });
+      const size = sizeOf(file);
       const made = !job.stopped && code === 0 && size > 0;
       // A stopped or failed save leaves no half-written file behind to be mistaken for the video.
       if (!made) fs.rmSync(file, { force: true });
@@ -140,8 +169,8 @@ export class ExportManager {
       this.#last = { dir, file: made ? file : null, status };
       this.#emit({ dir, status });
     };
-    child.on("error", (error) => finish(1, `The video could not be saved: ${error.message}`));
-    child.on("close", (code) => finish(code));
+    child.on("error", (error) => void finish(1, `The video could not be saved: ${error.message}`));
+    child.on("close", (code) => void finish(code));
     this.#tell(job);
     return this.status(dir);
   }
@@ -152,7 +181,7 @@ export class ExportManager {
     if (!job) return false;
     job.stopped = true;
     killTree(job.child.pid, { sync });
-    if (sync) fs.rmSync(job.file, { force: true });
+    if (sync) for (const file of [job.file, job.making]) fs.rmSync(file, { force: true });
     return true;
   }
 

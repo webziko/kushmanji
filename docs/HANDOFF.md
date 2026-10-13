@@ -33,7 +33,8 @@ to do"; "do it 1 by 1, morning i will come and check".
 - **Codex cannot see what it builds** at "Editing tools" (M17-07). It says so honestly. Always take still
   frames yourself afterwards: `hyperframes snapshot <project> --at ...`.
 - The footage is wide. A full-screen upright short is a crop around her face, a little soft, and looks fine.
-- A saved video is about 5 dB quieter than YouTube plays (M17-08).
+- A video made by HyperFrames is about 5 dB quieter than YouTube plays. "Save video" now evens that out
+  itself (M17-08, `main/loudness.js`); a file made with the CLI by hand does not.
 - **The full-screen check only passes with the self-test's window in front.** It now says "NOT checked"
   instead of failing. `HFWIN_SMOKE_NAME` lets several runs go at once; `HFWIN_SMOKE_JUST_ASK` sends one
   real request without the self-test's own steps (`CONTRIBUTING.md`).
@@ -46,10 +47,10 @@ sentences), `styles.css` (two rules), `smoke.js`, `scripts/smoke.mjs`. ChatGPT: 
 mention the editor's arrow keys; that belongs with M14-05.
 
 **Not done, next in line:** M14-05 (plain wording, with M14-11), M17-04 and M17-09 (shorts as something the
-app does, with one kit), M17-06 (say what a stopped assistant left unfinished), M17-08 (loudness when saving),
+app does, with one kit), M17-06 (say what a stopped assistant left unfinished),
 then the list at the end of `docs/PARITY.md`. Nothing is claimed.
 
-Check (57 files), 109 tests and the self-test pass. Paid requests: two on Claude, both cut off by its
+Check (59 files), 112 tests and the self-test pass. Paid requests: two on Claude, both cut off by its
 usage limit; four on Codex.
 
 ---

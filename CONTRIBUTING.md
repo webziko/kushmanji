@@ -76,6 +76,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   selection.js           what is selected in the editor, for the chat's "Pointing at"
   editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
   exporter.js            "Save video": the video file, made into the Downloads folder
+  loudness.js            the saved video's sound, brought to the loudness YouTube and Instagram play at
   smoke.js               the self-test's steps
   playbackProbe.js       the self-test's playback measurement on a real project
   study.js  studyPlan.js the footage study: transcripts and frame sheets written into the project

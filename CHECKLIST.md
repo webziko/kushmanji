@@ -68,7 +68,8 @@ Claude measured your vlog playing in the real app, picture by picture.
 
 - [x] **Save video.** A button at the top of every video (and the "Save the video" editing button) makes the
       video file and puts it in your Downloads folder. It shows a count, also on the taskbar button, and
-      "Show the file" when it is done. No editor needed, no assistant used
+      "Show the file" when it is done. It also sets the sound to the loudness YouTube and Instagram expect.
+      No editor needed, no assistant used
 - [x] **Arrow keys in "Edit by hand".** While the video plays, left and right skip ten seconds and it keeps
       playing. While it is paused they still move one frame, as editors do
 - [x] **Pushed to GitHub**, as you asked

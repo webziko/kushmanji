@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
+import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
@@ -92,6 +93,8 @@ const agent = new AgentRunner({
 // Saving a video: the file goes to the person's Downloads folder, and the taskbar button shows how far it is.
 const exporter = new ExportManager({
   folder: () => app.getPath("downloads"),
+  // The real program, never the stand-in the assistants are given below "Full access" (that one is a .cmd).
+  ffmpeg: () => process.env.HYPERFRAMES_FFMPEG_PATH?.trim() || (whereAll("ffmpeg").find((file) => /\.exe$/i.test(file)) ?? null),
   emit: (payload) => {
     win?.setProgressBar(payload.status.state === "saving" ? Math.max(0.02, payload.status.percent / 100) : -1);
     win?.webContents.send("save:event", payload);
