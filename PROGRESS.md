@@ -8,7 +8,7 @@ The owner's short version is `CHECKLIST.md`.
 
 ## Where things stand
 
-_Updated 2026-10-13 by Claude (after ChatGPT the same day); existing tasks keep their original ownership._
+_Updated 2026-10-13, late evening, by Claude after ChatGPT; existing tasks keep their original ownership._
 
 **The app is called Kushmanji** (owner, 2026-10-13), is public at `github.com/webziko/kushmanji` under
 Apache-2.0, and has its first commits. The owner wants every feature of the official app, one by one: the order
@@ -17,13 +17,18 @@ is at the end of `docs/PARITY.md`, and milestones M11 to M13 below were added fo
 **New on 2026-10-13:** an "Access" menu (project only, editing tools, full access) with a check that keeps
 FFmpeg inside the project; the app studies footage by itself; a "How we work" menu where the agent plans first
 and waits for "Build it"; and pointing: click something in the picture, then say what to change. The owner's
-real vlog was re-edited through the app's own chat (`reviews/city-centre-vlog`, second version, 4:29).
+real vlog was re-edited through the app's own chat (`reviews/city-centre-vlog`). Its third version (4:04, back
+in step, soft cross-fades, no freeze before joins) was made late that evening and waits for the owner to watch.
 
 **Works today on Windows, checked by the app's own tests:**
 
 - The app opens to a Home screen with the project list.
-- A project opens with the real HyperFrames Studio editor inside the app window.
-- Chat beside the editor: type a change, the agent edits the video, the preview updates.
+- A project opens in a large video player with chat beside it; "Edit by hand" opens the full Studio editor.
+- Play/pause, ten-second skips and arrows, scrubbing, sound, full screen and portrait sizing work in the player.
+- Chat beside the video: type a change, the agent edits it, and the picture updates. Settings are expandable.
+- The chat shows "At 0:42" and sends the current video moment; sent messages keep that time.
+- Large editing buttons explain the action, then prepare a request. Saving opens the full editor.
+- Help explains the current screen, with a short first-time walkthrough and a glossary of editor words.
 - Three agents, picked from a menu in the chat: **Claude Code**, **Codex** (ChatGPT) and **Antigravity** (Gemini).
   A second menu picks the model.
 - Shared memory: each agent is told what the others did since its last turn, and every turn is logged in the
@@ -32,13 +37,21 @@ real vlog was re-edited through the app's own chat (`reviews/city-centre-vlog`, 
 - Generated images through the chat, when the agent is Codex (it uses the ChatGPT plan).
 - Closing the app leaves nothing running in the background.
 
+**Measured on the owner's vlog (2026-10-13):** playback is smooth inside a clip on both screens (30 pictures a
+second, under 1% dropped, the clock keeps time). The "stuck" feeling is a freeze of about a third of a second
+before most joins, because the clips' pictures are 0.2 seconds shorter than their sound. See M16-05.
+
 **Proven at the command line only, not yet through the chat:** captions from speech.
 
 **Not there yet:** an installer (today it starts with `npm start`), drawing on the picture,
 one-click export to Downloads, updates.
 
-**Next up:** the advanced plan in M10, starting with M10-01 (study the footage) and M10-02 (plan first); M5-01
-the installer; and the owner's decisions in `CHECKLIST.md`.
+**Next up:** M14-05 (plain wording, with M14-11), then branding, Home improvements and M15 (spend less).
+Nothing is claimed right now. Today's commits are on this PC only; the owner has not asked for a push.
+The installer and the owner's open decisions remain in `CHECKLIST.md`.
+
+**Cancelled by the owner:** browser features, social-account management and automatic social posting.
+Do not build them.
 
 **Who it is for:** many people making any kind of video, not only the owner's own channel (owner, 2026-10-12).
 
@@ -200,6 +213,9 @@ is making sure each one runs on Windows from inside the app, and making it easy 
 - [ ] M9-09 Version numbers and a changelog. Committing has started (2026-10-13); from here on one task per commit
 - [ ] M9-10 Outside security review before any wider release
 - [ ] M9-11 Run the self-test in CI too (needs FFmpeg and Chrome on the runner)
+- [ ] M9-12 Reproduce a rare self-test delay opening the saved clip picture. One M14 run exceeded its
+      ten-second image deadline; later runs passed without changing the study reader. Failure diagnostics
+      now record the image's loading state and bounds. Do not guess at a fix before reproducing it
 
 ## M10 · Advanced editing, for any kind of video
 
@@ -352,17 +368,48 @@ this hyperframes fully ... from names, logo and many things", "review the ui ux 
 HyperFrames, credited where the licence asks. Everything a person sees becomes Kushmanji's own. **This milestone
 now comes first**: it changes what every later feature looks like. The review itself is `docs/UX.md`.
 
-- [ ] M14-01 A simple screen, shown first: the video, big, with the controls of an ordinary player (play, back
+- [x] M14-01 A simple screen, shown first (ChatGPT, 2026-10-13): the video, big, with the controls of an ordinary player (play, back
       and forward ten seconds, a bar to drag, sound, full screen), and the chat. No panels, no jargon. The full
       editor is one button away ("Edit by hand") for people who want it. The owner's own case: pressing the
       arrow key to go forward pauses the video, because in the editor an arrow means "one frame"
-- [ ] M14-02 The chat says where you are: "At 0:42" goes with a message on the simple screen, the way
-      "Pointing at" does in the editor
-- [ ] M14-03 Big plain buttons for what people ask for most: fix the sound, add subtitles, make it shorter,
-      add music, change the look, add a title, save the video. Each one says what will happen before it does it
-- [ ] M14-04 "What is what": a guide a person can open anywhere, one sentence per part, and a first-time walk
-      through. In the full editor, a plain name beside each of the editor's own words (Inspector = "change the
-      thing you clicked", Compositions = "your scenes", Lint = "check for mistakes")
+      Built in `renderer/player.js`, with a fixed, validated playback IPC in `main/player.js`. The chat stays
+      mounted across room changes; its assistant/clip settings are expandable and its access sentence remains
+      visible. Source/media changes refresh the simple player; hidden notes and exports do not. Checked with
+      95 unit tests and real-app smoke: both arrows preserve playback, actual tone audio plays/mutes/restores,
+      hidden playback stops, full screen, portrait sizing, smallest window, source refresh, access confirmation,
+      clip review and editor pointing. Smoke screenshots inspected. The vlog's timeline was not changed.
+- [x] M14-02 The chat says where you are (ChatGPT, 2026-10-13): "At 0:42" appears beside the box. At Send the
+      main process reads the active whole video's current time, before any footage-study wait; the chosen
+      assistant receives it and saved messages and the shared journal retain it. Studio keeps "Pointing at".
+      Home's initial request and "Build it" do not inherit a time. Verified with unit tests, real-app smoke,
+      one real Codex turn at 0:42, and reopening its saved chat without another assistant request
+- [x] M14-03 Big plain editing buttons (ChatGPT, 2026-10-13): sound balance, supplied subtitle words/times,
+      shorter cuts, imported music, colours/fonts, titles, voiceover and saving. Each explains its limits
+      first. Requests are added to the existing draft and wait for Send; saving opens Studio. Automatic
+      subtitles, stock/generated music, noise-tool setup and one-click saving remain pending. Buttons stay
+      available after messages and are disabled during a turn. Checked in the real app, including the
+      960 × 600 minimum window, draft preservation, Cancel, room switching and access confirmation
+- [x] M14-04 "What is what" (ChatGPT, 2026-10-13): Help on Home, the watching screen, the editor and full-screen
+      playback. A three-step walkthrough appears once, remembers completion/dismissal and can be replayed.
+      The guide opens the current screen's explanations first, one sentence per part. A collapsible glossary
+      above Studio pairs its words with plain names, including Inspector = Change it and Lint = Check for
+      mistakes. The upstream tabs remain intact. Verified with check (50 files), 99 tests and real-app smoke:
+      Back, replay, persistence after reload, Escape, minimum window, full screen, draft preservation and no
+      playback shortcuts through an open dialog. Screenshots inspected; no paid assistant turn
+- [x] M14-00 Claude's review of M14-01 to M14-04 before committing them (Claude, 2026-10-13). Check, tests and
+      the self-test pass; both new calls (`player:command`, `preview:changed`) hold to `SECURITY.md`: fixed
+      actions, numbers only, the moment read by the main process. Tried on the real vlog: opens in 2 to 5
+      seconds, plays as smoothly as the editor. Committed as one commit, because the four tasks share files.
+      Found and fixed: the self-test's full-screen check waited three seconds and failed one run in two here.
+      Found and left for their owner: M14-09 to M14-11
+- [ ] M14-09 The chat changes sides: right of the video while watching, left of it in "Edit by hand"
+      (`[data-screen="edit"] .chat { order: -1 }`). Pick one side. Claude's case is in the handoff
+- [ ] M14-10 While an assistant works, the watching screen loads the whole video again on every file it saves
+      (`preview:changed`, then `reload()` in `renderer/player.js`). Not yet watched during a long real turn on
+      a long video: check that it does not flash "Loading your video" over and over, and wait for a quiet
+      stretch or the end of the turn if it does
+- [ ] M14-11 Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
+      can change this project's files and run HyperFrames"), "Start over", the header's "built on HyperFrames"
 - [ ] M14-05 Every word the app itself shows, reread for a twelve-year-old: no "agent", "access level",
       "composition", "render", "lint" without a plain twin. One list of words in `docs/UX.md`, used everywhere
 - [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
@@ -386,9 +433,9 @@ subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each jo
 - [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
       conversation when a job is done, carrying a short summary forward
 - [ ] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13)
-- [ ] M15-06 Prove a smaller model through the chat's model menu. Tried 2026-10-13: Sonnet was picked in the
-      menu and the request was sent, but Claude Code answered "You've hit your session limit" before doing
-      anything. Not proven
+- [x] M15-06 A smaller model through the chat's model menu (Claude, 2026-10-13). Sonnet was picked in the menu
+      and did the whole vlog repair (M16-02) in one request of about 17 minutes, without reaching the limit.
+      What it cost was not recorded: the app does not show it yet (M15-05)
 
 ## M16 · Editing that looks edited
 
@@ -399,14 +446,29 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       joins of picture and sound, no repeated takes, how long a title stays, where subtitles sit, how loud music
       is under a voice. First version: `app/src/main/agents/craft.js`. To grow from research and from what the
       owner sends back
-- [~] M16-02 The vlog, third version (Claude). **Not made yet, and the vlog is out of step right now.** The
-      second opening take (clip 01) was removed in the editor, the clips after it moved 15 seconds earlier, and
-      the labels, wipes, sounds and all subtitles stayed at their old times. The cleaned voice files are in use
-      and `subtitles.json` is already remade for the new clip positions (40 lines), but
-      `compositions/subtitles.html` and the label positions in `index.html` are not. The request that fixes it
-      and adds soft cross-fades is written and ready; it stopped because the owner's Claude usage ran out
-      (2026-10-13, resets 1:40 pm). The state before it is saved in
-      `.hyperframes/versions/2026-10-13-before-third-version`
+- [x] M16-02 The vlog, third version (Claude, 2026-10-13; waiting for the owner to watch it). Made through the
+      app's chat by Claude Code on Sonnet at "Editing tools", in about 17 minutes: labels, sounds and subtitles
+      back on their clips; every clip ends inside its own picture; 16 soft cross-fades of 0.4 seconds with the
+      sound fading across, plain cuts inside one scene; a slow push-in on her talking shots; the two heart
+      wipes retired. New length 4:03.9. Lint: no errors, 18 expected warnings (16 are the cross-fades'
+      overlapping sound). Claude then looked at eleven still frames and changed two things by hand: only the
+      incoming picture fades now (fading both showed the dark background mid-join), and `subtitles.json` got
+      the new times the assistant had put only in the scene. Measured after: no pause inside any clip, at most
+      one frame held at a clip's end. Her last words in the kurta clip lose under a quarter second. The state
+      before is in `.hyperframes/versions/2026-10-13-before-third-version`; the request is `NEXT_REQUEST.txt`
+- [x] M16-05 Why the preview felt "stuck", measured and answered (Claude, 2026-10-13). A measuring run in the
+      self-test (`playbackProbe.js`; how to run it: `CONTRIBUTING.md`) plays a real project and counts dropped
+      pictures, the hold at each join and whether the clock keeps time. Result on the vlog: `docs/FINDINGS.md`.
+      The cause was the clips, not the player: 15 of 19 play 0.2 seconds past their picture. The footage study
+      now records `pictureSeconds` and `soundSeconds` for every video, with a plain note when the picture is
+      short (old studies get it added without being redone), and the editing guide forbids playing a clip past
+      its picture. Lighter copies for watching were not built: the measurement says they would not help
+- [ ] M16-06 What is left at a join, measured on the repaired vlog: the one plain cut held the picture for 83
+      thousandths of a second (two or three frames), a clip coming in under a cross-fade moves after 67 to 150,
+      and 7 or 8 pictures in every thousand are dropped, most of them just after a join. No step back, no
+      pause. Probably not visible. Open only so that someone watches a plain cut with the owner before closing
+      it; if it does show, it is upstream's media sync (`packages/core/src/runtime/media.ts`) and goes under
+      "Upstream" with these numbers
 - [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,

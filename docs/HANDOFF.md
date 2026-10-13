@@ -5,6 +5,152 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-13 · Claude · ChatGPT's work reviewed, the "stuck" preview measured, the vlog's third version (late evening)
+
+The owner asked for four things in order; the first three are done, the fourth is not started.
+
+**1. ChatGPT's M14-01 to M14-04, reviewed and committed** (`ea509b2`, one commit: the four tasks share files).
+Check, tests and the self-test pass. `player:command` and `preview:changed` hold to `SECURITY.md`. Tried on
+the real vlog. One fault fixed: the self-test's full-screen check waited three seconds and failed one run in
+two on this PC; it waits fifteen now. Left for their owner, in `PROGRESS.md`: M14-09, M14-10, M14-11.
+
+*The case for M14-09 (ChatGPT, yours to decide):* the chat is right of the video while watching and left of it
+in "Edit by hand". The same panel jumping sides at one click is the kind of thing M14 exists to remove. Keep it
+on the right in both; Studio's own right-hand panel can be narrowed by the person, the chat cannot be found
+again by a child.
+
+**2. "Stuck stuck", measured** (M16-05). `HFWIN_SMOKE_PLAYBACK=1` with `HFWIN_SMOKE_REAL_PROJECT` plays a real
+project and counts pictures really shown (`playbackProbe.js`; `CONTRIBUTING.md` says how). Playback inside a
+clip is smooth on both screens. The freeze was before each join: 15 of 19 clips played 0.2 seconds past their
+picture, because a "15 second" file held 15.0 seconds of sound and 14.8 of picture. The study now records
+`pictureSeconds` and `soundSeconds` (old studies are topped up without being redone) and the guide forbids
+playing past the picture. Numbers and what was ruled out: `docs/FINDINGS.md`, last section.
+
+**3. The vlog, third version** (M16-02), through the app's chat with Sonnet (which also settles M15-06). Then
+two changes by hand after looking at stills: see M16-02. Measured again: the freeze is gone.
+
+**What would surprise you**
+- The handoff named `reviews/city-centre-vlog/NEXT_REQUEST.txt`. It did not exist. The request was recovered
+  from the vlog's saved chat and the file is there now.
+- `media.autoProxy` does not make lighter copies of ordinary video. It only re-encodes what a browser cannot
+  play. The earlier note that suggested it was a guess.
+- Two measuring runs were spoiled by real mouse clicks in the test window: twelve trusted clicks counted, the
+  playhead dragged. The owner's own Kushmanji has been open since the morning and the Codex desktop app (with
+  its computer-use helper) was running; which of them clicked is not known. The measuring run now ignores the
+  mouse. An ordinary `npm run smoke` does not, so a failure with a strange screenshot may be a stray click.
+- The owner's open Kushmanji window still runs this morning's code. They have been told to restart it.
+- Assistants put a cross-fade's clips on one track, which lint reports as overlapping sound (16 warnings on the
+  vlog). They are expected. Whether to teach two alternating tracks instead is open.
+- The assistant re-timed the subtitle scene but not `subtitles.json`. A request that says "rebuild from
+  subtitles.json" must also say "and keep that file's times true".
+
+**Not done:** step 4 (M14-05 onward, M15, the list at the end of `docs/PARITY.md`). Nothing is claimed.
+M16-06 is new and small: what is left at a join after the repair (a plain cut holds two or three frames).
+
+**Shared files touched:** `main.js` (two switches, only under `HFWIN_SMOKE_PLAYBACK`), `smoke.js` (the hook for
+the measuring run, the longer full-screen wait). New: `playbackProbe.js`. Also `study.js`, `studyPlan.js`,
+`agents/craft.js` and their tests. Check (52 files), 103 tests and the self-test pass.
+
+**Commits:** three, on this PC only. Not pushed: the owner has not asked. No installs, nothing changed outside
+this folder. One paid request: the vlog repair, on the owner's Claude plan.
+
+---
+
+## 2026-10-13 · ChatGPT · simple help and the welcome walkthrough (M14-04)
+
+**Done:** Help on Home, the watching screen, the editor and full-screen playback. `renderer/help.js` opens
+the current screen's explanations first, with one sentence per part. Its three-step walkthrough appears
+once, remembers finishing or dismissal and replays through "Show me around". Only a seen flag is stored in
+the shell origin's localStorage (`hfwin-help-seen-v1`); unavailable storage falls back to the current session.
+
+The full editor has a collapsible glossary above it pairing every listed editor word with its plain meaning.
+It lives in the shell, keeping the upstream tabs intact and avoiding version-sensitive DOM changes inside
+Studio. The same word list supplies the guide. The iframe takes the remaining stage height. Help changes
+no video files, sends no messages and preserves the draft. Its full-screen entry remains available while
+playback controls are loading. Playback keys now ignore open dialogs, including Help.
+
+**Verification:** check (50 files), tests (99/99), real-app smoke with zero console errors; screenshots
+inspected and saved in `reviews/m14-help`. Tested initial steps, Back, finish, replay, Skip, preference
+persistence after a page reload, Escape, context on all three screens, smallest window, full-screen Help,
+draft preservation and keyboard isolation. Two defects found and fixed before delivery: conditional false
+values were rendered as stray text, and Space/arrows could control the video beneath the dialog. Both
+failures were reproduced and covered in the self-test. No paid assistant request or independent review run.
+
+**Next:** M14-05, the full wording pass. Branding, Home, team/usage controls and the rest of the roadmap are
+still pending. Claude keeps the caption proof and M16-02 vlog repair; the vlog was untouched. Cancelled
+browser features, social accounts and automatic posting stay cancelled.
+
+Shared edits are limited to renderer/app.js, player.js, styles.css and main/smoke.js, plus the new help module
+and notes. All earlier uncommitted changes were preserved. No main/preload/agent protocol or dependency
+changes, no installs, no changes to other programs' settings, and no commits or pushes.
+
+---
+
+## 2026-10-13 · ChatGPT · message moments and plain editing buttons (M14-02, M14-03)
+
+**Done:** the watching screen shows "At 0:42" beside the box. Sending passes a boolean flag; main.js reads the
+active root player afresh before the study wait. A short note reaches whichever assistant is chosen. The
+timestamp is saved beside the user message and in the shared journal; the accepted snapshot replaces the
+optimistic line in the UI. Missing/loading players refuse a requested snapshot and restore the draft. Studio
+keeps its selection context; Home's initial request and plan approval omit a watching time.
+
+Eight large buttons in `renderer/editActions.js` explain themselves in native dialogs, then append a request
+to the draft. Nothing sends automatically. Supplied captions and imported music are offered; automatic
+subtitles, stock/generated music and noise-tool setup are explicitly pending. Saving opens Studio and
+explains the incomplete Windows export checks. Buttons disable during a turn; the collapsible list leaves
+room for chat even at the actual 960 × 600 minimum. No new dependencies or access changes.
+
+**Verification:** check (49 files), tests (99/99), real-app smoke; screenshots inspected. One real Codex turn
+received 42.366 seconds, wrote only the title "At 0:42" in the test video and recorded its moment. A second
+self-test reopened a copy of that test video, verified the saved bubble and the updated title in the live
+frame, and sent no assistant request. Evidence: `reviews/m14-actions`, `reviews/m14-moment-live`,
+`reviews/m14-reopen` (all ignored). The first live screenshot was stale despite correct DOM/file data:
+the self-test now requests a repaint before capture. The reopened screenshot shows the actual changed title.
+Access-test selectors now target the confirmation specifically instead of any dialog footer. One initial
+clip-review image timeout did not recur in later runs; M9-12 records it with diagnostics. Host execution was
+needed: the Windows execution sandbox denied temporary-directory realpath checks and would not open Electron.
+
+**Still pending:** M14-04 help, M14-05 wording, branding/Home/team/usage/export/undo/languages/installer.
+M8-04's automatic-caption proof and M16-02's vlog repair remain Claude's claims. The vlog was untouched.
+Browser features, social-account management and automatic posting are cancelled by the owner.
+
+Small shared edits: main.js, agents/index.js (context only, no bridge changes), renderer/app.js, chat.js,
+player.js, styles.css and smoke.js. Preload, preview.js and the earlier uncommitted player work were preserved.
+Architecture, security, UX, README, progress and checklist are current. No commits, pushes, global installs or
+changes to the owner's program settings; one paid assistant turn, no independent reviewer run this session.
+
+---
+
+## 2026-10-13 · ChatGPT · the simple watching screen (M14-01)
+
+**Done:** projects now open with a large player and chat on the right. Play/pause, ten-second buttons and
+arrow keys, scrubbing, master sound and full screen. "Edit by hand" opens the existing Studio; "Watch video"
+returns to the remembered position, paused. The same chat instance and draft survive each switch. Assistant
+and clip settings are expandable; the current access sentence remains visible. The default access choice
+has not been decided or changed.
+
+`renderer/player.js` uses the current server's root preview and `main/player.js` exposes only fixed,
+validated commands to that direct frame. A preview watcher refreshes source/media changes and ignores hidden
+journals, versions, dependencies and exports; agent completion is a fallback on unwatched folders. The
+inactive iframe source is removed. Editor readiness must match its own Studio frame: Studio adds a query
+after the project fragment, so comparing the whole parent URL fails. A regression test covers it.
+
+**Verification:** check (47 files), tests (95/95), real-app smoke; screenshots inspected. Smoke checks a
+moving FFmpeg clip with actual audible tone, mute/unmute, both arrows while playing, scrub bounds, full
+screen, portrait size, minimum window, source refresh, ignored notes, hidden playback stopping, chat draft,
+    access confirmation/cancel, clip review and editor pointing. No real agent turn was sent. Independent
+review was attempted twice but the reviewer model hit capacity; it did not deliver a review. Local source
+inspection and the tests are the evidence here. Screenshots and the final smoke result are preserved in
+`reviews/m14-player`. Paused scrubbing checks the decoded video frame and its visibility before capturing;
+full-screen screenshots wait briefly for the resized picture to paint.
+
+**Ownership:** M16-02 is still Claude's claimed task, so the vlog and its timing repair were left untouched.
+Next unclaimed UI work is M14-02, then M14-03. Shared files touched: main.js, preview.js, preload.cjs, app.js,
+chat.js, styles.css and smoke.js. No dependency/version changes, commits, installs or changes outside this
+workspace. README, UX, architecture, security and the owner's checklist describe the new screen.
+
+---
+
 ## Start here (written 2026-10-13, evening)
 
 **The order changed.** The owner wants the app to be its own thing and easy enough for a child: M14 in

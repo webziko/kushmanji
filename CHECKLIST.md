@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-13. The app is now called **Kushmanji**._
+_Updated 2026-10-13, late evening. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -15,7 +15,13 @@ Two shortcuts are on your Desktop:
 
 ## Waiting on you
 
-- [ ] **Watch the third version of the vlog** and tell me what still feels wrong. One example is enough each time.
+- [ ] **Close Kushmanji and open it again.** The copy on your screen has been open since the morning, so it
+      still shows the old screen. The new simple screen appears after a restart.
+- [ ] **Say "push" when you want today's work on GitHub.** It is saved on this PC (committed), not uploaded.
+
+- [ ] **Watch the vlog's third version** (4 minutes 4 seconds) and say what still feels wrong. Labels and
+      subtitles are back on their clips, the clip changes are soft cross-fades, and the freeze before each
+      change is gone.
 - [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
 - [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools".
 - [ ] **Music made on this PC?** It needs a few gigabytes of extra software. Yes or no.
@@ -29,10 +35,15 @@ and the order ("however you recommend").
 You asked for an app that is its own thing and easy enough for a child, and for it to spend less of your
 usage. So the order changed. The review you asked for is `docs/UX.md`.
 
-1. [ ] **A simple screen, shown first**: your video, big, with ordinary player buttons (play, back and forward
-       ten seconds, a bar to drag), and the chat. The full editor is one button away
-2. [ ] **Big plain buttons**: fix the sound, add subtitles, make it shorter, change the look, save the video
-3. [ ] **"What is what"**: a guide in one sentence per part, and plain names instead of Inspector, Lint and the rest
+1. [x] **A simple screen, shown first**: your video, big, with ordinary player buttons (play, back and forward
+       ten seconds, a bar to drag, sound and full screen), and the chat. "Edit by hand" opens the full editor;
+       "Watch video" returns. Restart Kushmanji to load the new screen
+2. [x] **Big plain buttons**: sound, subtitles, shorter cuts, music, look, title, voiceover and saving.
+       Each explains what is possible, then prepares a message for you to check and send. Saving opens the
+       full editor; one-click saving is still coming
+3. [x] **"What is what"**: Help on every screen, a three-step welcome guide, and plain explanations of
+       Inspector, Lint and the editor's other words. The welcome guide appears once; Help → Show me around
+       lets you see it again
 4. [ ] **Kushmanji's own logo, icon and colours**, and HyperFrames credited in an About box instead of the header
 5. [ ] **Your team**: tick which assistants you have (one, two or three); the app uses only those
 6. [ ] **The right size of model for each job**, so small changes cost little
@@ -40,13 +51,31 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 
 Then the list further down, starting with one-click export.
 
+## Why the preview felt "stuck", and what was done
+
+Claude measured your vlog playing in the real app, picture by picture.
+
+- Inside a clip it is smooth: 30 pictures a second, and the clock keeps time. Same on the new simple screen
+  and in the editor.
+- The "stuck" moments are just before a clip change. The picture stops for about a third of a second while
+  the sound carries on. The cause: most of your 15 second clips have 15 seconds of sound and only 14.8 seconds
+  of picture, and each was set to play the full 15.
+- Fixed in the app for every future video: Kushmanji now measures how long each clip's picture really lasts
+  and tells every assistant never to play a clip past it.
+- Fixed in your vlog: see "Your City Centre vlog" below.
+
 ## Works today
 
 - [x] The app opens on Windows, with a Home screen and your projects
+- [x] A large video player and chat, shown first. Arrow keys skip ten seconds without pausing; settings are
+      tucked into "Assistant and clip settings". Both landscape and portrait videos fit the player
 - [x] The real HyperFrames Studio editor inside the app, with sound
 - [x] Chat: describe a change, the agent edits the video, the preview updates
+- [x] **At 0:42** beside your message: the assistant knows which moment you mean. Sent messages keep their time
+- [x] Editing buttons stay available during a conversation. They explain the action and preserve your draft
+- [x] **Help** explains the screen you are on, including full screen. The editor has a small word guide above it
 - [x] Three agents in one menu: Claude Code, Codex (ChatGPT), Antigravity (Gemini), and a model menu for each
-- [x] **Click, then tell**: click anything in the picture or on the timeline and the chat says "Pointing at ...";
+- [x] **Click, then tell, in Edit by hand**: click anything in the picture or timeline and the chat says "Pointing at ...";
       what you type next is about that thing
 - [x] **How we work** menu: build it for me, review the story first (the agent shows a plan and waits for
       "Build it"), or co-direct
@@ -62,8 +91,11 @@ Then the list further down, starting with one-click export.
 - [x] **Codex repairs itself** when its safety sandbox will not start (it broke after a Codex update while the
       Codex desktop app was open). See `PROGRESS.md`, M12-01, for what is proven
 - [x] Security rules, written down in `SECURITY.md`
-- [x] Automatic tests: 84 unit tests plus a self-test that opens the real app, clicks the picture and checks
-      the menus
+- [x] Automatic tests: 103 unit tests plus the real-app self-test, including Help, the walkthrough, editing
+      buttons and message time
+- [x] ChatGPT's new screens were checked by Claude (tests, the security rules, and your real vlog) before
+      being saved. Three small things were written down for later; nothing had to be undone
+- [x] A measuring run that plays a real video and counts dropped pictures and holds at each clip change
 
 ## Your City Centre vlog
 
@@ -74,7 +106,11 @@ Then the list further down, starting with one-click export.
 - [x] **Noise:** her voice is cleaned on the 13 talking clips with a voice-cleaning program (DeepFilterNet).
       Measured indoors: the background between her words dropped about 13 dB. On the loud street the gain is
       small. The six clips with no talking play at 40%
-- [~] **Third version:** one opening take, soft cross-fades, labels and subtitles back in step. See `PROGRESS.md`, M16-02
+- [x] **Third version (made 2026-10-13, late evening, through Kushmanji's own chat):** 4 min 4 s. One opening
+      take; labels, sounds and subtitles back on their clips; soft cross-fades between places; a slow push-in
+      when she talks; no more frozen picture before a clip change. The two heart wipes are gone, because the
+      cross-fades do that job. One thing to listen for: the very end of "...kurta sets" lost a sliver of sound
+- [x] It was made with the smaller, cheaper Claude model (Sonnet) in one request of about 17 minutes
 - [ ] Not exported to a video file yet. Watch it in the app first
 - **Earlier versions are saved** inside the project, in `.hyperframes/versions`: ChatGPT's first draft, and the
   second version before the noise pass
@@ -109,6 +145,8 @@ app around the editor. The full list with a mark on every line is `docs/PARITY.m
 ## Not possible right now
 
 - **HeyGen's better voices, stock images and music.** Their tool does not run on Windows yet ("coming soon").
+- **Automatic subtitles and one-click saving.** The buttons explain the limits. You can supply subtitle
+  words/times and use the full editor's saving controls; its Windows saving choices still need checking.
 - **Framey and HeyGen sign-in.** They are HeyGen's own; Kushmanji will not copy them.
 - **Taking the official app apart** (the REA tool you linked). Not needed and a legal risk: the editor is open
   source and the features are documented. Nothing was installed.
@@ -130,3 +168,9 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.
+
+The player, message moments, editing buttons and Help are now committed on this PC. Nothing has been pushed
+to GitHub since the morning. This evening's session installed no software and changed no other program's
+settings. While it measured, a second Kushmanji window opened and closed by itself a few times: that was the
+test copy, with its own settings. Next is clearer wording throughout Kushmanji. The cancelled browser and
+social-posting work stays cancelled.
