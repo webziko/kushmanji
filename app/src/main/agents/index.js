@@ -148,8 +148,9 @@ export class AgentRunner {
   /**
    * Start one chat turn. `pointing`, when the person has something selected in Studio, is
    * `{ name, kind, when, note }`: what the chat shows beside their message, and what the agent is told.
+   * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
    */
-  send({ dir, text, pointing = null }) {
+  send({ dir, text, pointing = null, moment = null }) {
     if (this.#active) throw new Error("The agent is still working. Stop it, or wait for it to finish.");
     const message = String(text ?? "").trim();
     if (!message) throw new Error("Type what you want to change first.");
@@ -167,16 +168,18 @@ export class AgentRunner {
     const limits = told ? "" : [accessNote(access), modeNote(mode)].join("\n\n");
     chat.told = { ...chat.told, [engine]: terms };
     const pointed = pointing ? { name: pointing.name, kind: pointing.kind, when: pointing.when } : null;
-    chat.messages.push({ role: "user", text: message, ...(pointed ? { pointing: pointed } : {}), at: Date.now() });
+    const watched = moment ? { seconds: moment.seconds, when: moment.when } : null;
+    chat.messages.push({ role: "user", text: message, ...(pointed ? { pointing: pointed } : {}),
+      ...(watched ? { moment: watched } : {}), at: Date.now() });
     writeChat(dir, chat);
 
     // What other agents did since this one last worked here, so it does not act on a stale picture.
     const handover = handoverNote(dir, engine, NAMES);
-    const preface = [handover, limits, pointing?.note].filter(Boolean).join("\n\n");
+    const preface = [handover, limits, pointing?.note, moment?.note].filter(Boolean).join("\n\n");
     const turn = {
       dir,
       engine,
-      asked: message,
+      asked: watched ? `At ${watched.when} (${watched.seconds}s into the video): ${message}` : message,
       mode,
       startedAt: Date.now(),
       text: "",

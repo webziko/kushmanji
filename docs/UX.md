@@ -7,6 +7,31 @@ how to do", "we somehow copied the hyperframes ... lets come out of this hyperfr
 This page is the review they asked for, the words to use, and the plan. The tasks are M14 in `PROGRESS.md`.
 Read it before changing any screen.
 
+**Built on 2026-10-13 (M14-01, ChatGPT):** videos now open in the simple room described below. The large player
+and chat work, "Edit by hand" opens the workshop, and assistant/clip settings are tucked into one expandable
+control. Play, skips, scrubbing, sound, full screen, portrait sizing, live refresh and room switching were
+checked in the real app.
+
+**Built on 2026-10-13 (M14-02 and M14-03, ChatGPT):** "At 0:42" appears beside the message box and the actual
+position at Send goes with the request. Sent messages keep their timestamp. The editor retains "Pointing at".
+Large editing buttons stay available after a conversation starts, behind a collapsible "Editing buttons"
+section. A button first explains the action, then prepares a message without replacing existing words or
+spending assistant usage. The person presses Send to ask for the change.
+
+The buttons offer sound balance, supplied subtitle words/times, shorter cuts, imported music, colours/fonts,
+titles and the existing voiceover. They explain that automatic subtitles, stock/generated music and setting up
+a noise-cleaning tool are pending. "Save the video" opens the full editor, explaining that one-click saving
+and the Windows export checks are still pending.
+
+**Built on 2026-10-13 (M14-04, ChatGPT):** Help is available on Home, the watching screen, the editor and in
+full-screen playback. The guide opens explanations of the current screen first, with one sentence per part.
+A three-step welcome guide appears once and can be replayed through "Show me around"; finishing, skipping or
+closing it remembers that choice. Studio has a collapsible glossary above it, with the editor's word beside
+its plain meaning. The original tabs stay intact. Help preserves the chat draft, fits the minimum window,
+closes with Escape and prevents playback shortcuts reaching the picture underneath.
+
+The full wording pass, branding and new Home screen remain planned.
+
 ## What a new person meets today
 
 **Home.** A box that says "What do you want to make?", four buttons, a list. It is the best screen in the app,

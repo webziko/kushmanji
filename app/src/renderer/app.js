@@ -2,9 +2,12 @@
 // Studio. Plain DOM on purpose: two screens do not need a framework or a build step. See docs/ARCHITECTURE.md.
 import { createChat } from "./chat.js";
 import { h } from "./dom.js";
+import { createPlayer } from "./player.js";
+import { createEditorWords, createHelp } from "./help.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
+const help = createHelp();
 
 const folderName = (dir) => dir.split(/[\\/]/).filter(Boolean).pop() ?? dir;
 
@@ -149,11 +152,12 @@ async function startFromFootage() {
 }
 
 function showHome() {
-  open?.chat.destroy();
+  open?.destroy();
   open = null;
   document.body.dataset.view = "home";
   delete document.body.dataset.studio;
   delete document.body.dataset.error;
+  delete document.body.dataset.screen;
 
   home.busy = false;
   home.prompt = h("input", {
@@ -195,6 +199,7 @@ function showHome() {
       h("span", { class: "tag" }, "built on HyperFrames · unofficial"),
       h("span", { class: "spacer" }),
       h("span", { class: "muted" }, info ? `App ${info.appVersion} · HyperFrames ${info.cliVersion}` : ""),
+      help.button,
     ),
     h(
       "main",
@@ -218,6 +223,7 @@ function showHome() {
   );
   home.prompt.focus();
   refreshProjects().catch((error) => showError(error.message));
+  help.firstTime();
 }
 
 // ---------------------------------------------------------------- Project
@@ -235,28 +241,95 @@ function setStudio(state, error = "") {
 }
 
 async function openProject(dir, { request } = {}) {
-  open?.chat.destroy();
-  const project = { dir, name: folderName(dir), chat: createChat(dir) };
+  open?.destroy();
+  const project = { dir, name: folderName(dir) };
+  project.chat = createChat(dir, { onEdit: () => { if (!project.editing) edit.click(); } });
   open = project;
   document.body.dataset.view = "project";
+  document.body.dataset.screen = "watch";
   setStudio("starting");
 
   const frame = h("iframe", {
     class: "studio",
     title: "HyperFrames Studio",
     allow: "clipboard-read; clipboard-write; fullscreen",
+    hidden: true,
   });
-  const status = h("p", { class: "overlay-text" }, "Starting Studio…");
+  const status = h("p", { class: "overlay-text" }, "Opening your video…");
   const retry = h("button", { class: "primary", hidden: true, onclick: () => openProject(dir) }, "Try again");
   const overlay = h("div", { class: "overlay" }, h("div", { class: "spinner", "aria-hidden": "true" }), status, retry);
+  let initialRequest = request;
+  let viewGeneration = 0;
+  const loading = () => {
+    if (open !== project) return;
+    setStudio("starting");
+    overlay.hidden = false;
+    overlay.classList.remove("failed");
+    status.textContent = project.editing ? "Opening the editor…" : "Loading your video…";
+    retry.hidden = true;
+    edit.disabled = true;
+  };
+  const ready = () => {
+    if (open !== project) return;
+    overlay.hidden = true;
+    setStudio("loaded");
+    edit.disabled = false;
+    if (initialRequest) {
+      project.chat.send(initialRequest);
+      initialRequest = null;
+    }
+  };
+  const player = createPlayer(dir, { onLoading: loading, onReady: ready,
+    onTime: (time) => project.chat.setTime(time),
+    onHelp: () => help.show(),
+    onError: (message) => { if (open === project) project.fail("failed", message); } });
+  project.destroy = () => { player.destroy(); project.chat.destroy(); };
+  const edit = h("button", {
+    class: "secondary editor-toggle", disabled: true, type: "button", "aria-pressed": "false",
+    onclick: () => {
+      if (!project.started || open !== project) return;
+      project.editing = !project.editing;
+      viewGeneration++;
+      document.body.dataset.screen = project.editing ? "edit" : "watch";
+      project.chat.setEditor(project.editing);
+      edit.textContent = project.editing ? "Watch video" : "Edit by hand";
+      edit.setAttribute("aria-pressed", String(project.editing));
+      frame.hidden = !project.editing;
+      player.element.hidden = Boolean(project.editing);
+      loading();
+      if (project.editing) {
+        player.suspend();
+        frame.src = project.started.studioUrl;
+      } else {
+        frame.removeAttribute("src");
+        player.open(project.started);
+      }
+    },
+  }, "Edit by hand");
   project.fail = (state, message) => {
     setStudio(state, message);
     overlay.hidden = false;
     overlay.classList.add("failed");
     status.textContent = message;
     retry.hidden = false;
+    edit.disabled = true;
     frame.removeAttribute("src");
+    player.suspend();
   };
+  frame.addEventListener("load", async () => {
+    if (open !== project || !project.editing || !frame.hasAttribute("src")) return;
+    const current = viewGeneration;
+    const deadline = Date.now() + 45_000;
+    while (open === project && project.editing && current === viewGeneration && Date.now() < deadline) {
+      if (await api.projects.ready(dir).catch(() => false)) {
+        if (open === project && project.editing && current === viewGeneration) ready();
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    if (open === project && project.editing && current === viewGeneration)
+      project.fail("failed", "The editor opened, but the video's picture did not finish loading. Try again.");
+  });
   const mediaStatus = h("span", { class: "muted", role: "status" });
   const addMedia = h("button", {
     class: "ghost", title: "Copy footage into this project; keep the originals.",
@@ -282,6 +355,7 @@ async function openProject(dir, { request } = {}) {
       mediaStatus,
       h("span", { class: "spacer" }),
       addMedia,
+      edit,
       h(
         "button",
         {
@@ -291,33 +365,18 @@ async function openProject(dir, { request } = {}) {
         },
         "Show folder",
       ),
+      help.button,
     ),
-    h("main", { class: "project" }, project.chat.element, h("div", { class: "stage" }, frame, overlay)),
+    h("main", { class: "project" },
+      h("div", { class: "stage" }, player.element, createEditorWords(), frame, overlay), project.chat.element),
   );
+  help.firstTime();
 
   try {
     const started = await api.projects.open(dir);
     if (open !== project) return;
-    frame.addEventListener(
-      "load",
-      async () => {
-        if (open !== project) return;
-        const deadline = Date.now() + 45_000;
-        while (open === project && Date.now() < deadline) {
-          if (await api.projects.ready(dir).catch(() => false)) {
-            if (open !== project) return;
-            overlay.hidden = true;
-            setStudio("loaded");
-            if (request) project.chat.send(request);
-            return;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 250));
-        }
-        if (open === project) project.fail("failed", "The editor opened, but the video's picture did not finish loading. Try again.");
-      },
-      { once: true },
-    );
-    frame.src = started.studioUrl;
+    project.started = started;
+    player.open(started);
   } catch (error) {
     if (open === project) project.fail("failed", error.message);
   }

@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs";
 import { spawnCli } from "./cli.js";
 import { killTree } from "./proc.js";
 
@@ -15,6 +16,42 @@ export function isCompositionPreview(given, { serverUrl, projectName }) {
     const route = url.pathname.match(/^\/api\/projects\/([^/]+)\/preview(?:\/comp\/.+)?$/);
     return url.origin === serverUrl && Boolean(route) && decodeURIComponent(route[1]) === projectName;
   } catch { return false; }
+}
+
+/** While switching rooms, the old player's frame may still be finishing its navigation. */
+export function studioPreviewFrame(frames, current) {
+  return frames.find((frame) => {
+    if (!isCompositionPreview(frame.url, current)) return false;
+    try {
+      const studio = new URL(frame.parent?.url);
+      const expected = new URL(current.studioUrl);
+      // Studio adds its playhead, selected tab and scene to the fragment query as soon as it opens.
+      return studio.origin === expected.origin && studio.pathname === expected.pathname &&
+        decodeURIComponent(studio.hash.split("?")[0]) === decodeURIComponent(expected.hash);
+    } catch { return false; }
+  });
+}
+
+/** Watch source and media, not chat journals, saved versions, or exported videos. */
+export function watchPreview(dir, onChange) {
+  let timer;
+  let watcher;
+  const close = () => { clearTimeout(timer); watcher?.close(); };
+  try {
+    watcher = fs.watch(dir, { recursive: true }, (_event, filename) => {
+      if (filename) {
+        const parts = String(filename).split(/[\\/]/);
+        if (parts.some((part) => part.startsWith(".") || ["node_modules", "renders"].includes(part.toLowerCase()))) return;
+        if (!/\.(html|css|js|json|svg|cube|png|jpe?g|webp|gif|mp4|mov|webm|wav|mp3|m4a|ogg|woff2?|ttf|otf)$/i.test(filename)) return;
+      }
+      clearTimeout(timer);
+      timer = setTimeout(() => onChange(dir), 350);
+    });
+    watcher.on("error", close);
+  } catch {
+    // Some network folders cannot be watched. The player also refreshes when an assistant's turn ends.
+  }
+  return close;
 }
 
 /** The line `hyperframes preview --json` prints once the server answers. */
@@ -35,10 +72,12 @@ function readyResult(line) {
 export class PreviewManager {
   #session = null;
   #onExit;
+  #onChange;
 
   /** `onExit(dir, code)` runs when a running server dies without being asked to. */
-  constructor({ onExit } = {}) {
+  constructor({ onExit, onChange } = {}) {
     this.#onExit = onExit;
+    this.#onChange = onChange;
   }
 
   get current() {
@@ -114,6 +153,7 @@ export class PreviewManager {
         // Still the open project's server: it died by itself, so the window has to know. A stop() clears the
         // session first and so never reports.
         if (this.#session?.child !== child) return;
+        this.#session.unwatch?.();
         this.#session = null;
         if (wasReady) this.#onExit?.(dir, code);
       });
@@ -123,6 +163,7 @@ export class PreviewManager {
     this.#session = session;
     try {
       session.info = await ready;
+      if (this.#session === session && this.#onChange) session.unwatch = watchPreview(dir, this.#onChange);
       return session.info;
     } catch (error) {
       if (this.#session === session) this.#session = null;
@@ -134,6 +175,7 @@ export class PreviewManager {
     const session = this.#session;
     if (!session) return;
     this.#session = null;
+    session.unwatch?.();
     killTree(session.child.pid, { sync });
   }
 }

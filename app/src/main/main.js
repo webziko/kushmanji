@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
 import { cliVersion } from "./cli.js";
-import { isCompositionPreview, PreviewManager } from "./preview.js";
+import { PreviewManager, studioPreviewFrame } from "./preview.js";
+import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
 import { importMedia, mediaFilesIn, MEDIA_EXTENSIONS } from "./mediaImport.js";
 import {
@@ -60,6 +61,7 @@ const isLocal = (url) => /^http:\/\/127\.0\.0\.1(:\d+)?(\/|$)/.test(url);
 let win = null;
 const preview = new PreviewManager({
   onExit: (dir, code) => win?.webContents.send("preview:exit", { dir, code }),
+  onChange: (dir) => win?.webContents.send("preview:changed", { dir }),
 });
 /** Set while a chat turn waits for the footage study, so the chat can show which clip is being studied. */
 let studyStep = null;
@@ -214,7 +216,7 @@ function registerIpc() {
     const current = preview.current;
     if (!win || current?.dir !== dir) return false;
     // Studio's page load is not the composition's first frame. Probe only our active local preview frame.
-    const frame = win.webContents.mainFrame.framesInSubtree.find((item) => isCompositionPreview(item.url, current));
+    const frame = studioPreviewFrame(win.webContents.mainFrame.framesInSubtree, current);
     return frame ? frame.executeJavaScript("window.__renderReady === true").catch(() => false) : false;
   });
   handle("projects:reveal", async (dir) => {
@@ -223,6 +225,18 @@ function registerIpc() {
   });
   handle("projects:forget", (dir) => forgetFolder(String(dir)));
   handle("preview:log", () => preview.log);
+  handle("player:command", ({ dir, action, value } = {}) => {
+    requireProject(dir);
+    const current = preview.current;
+    if (!win || !current || path.resolve(current.dir).toLowerCase() !== path.resolve(dir).toLowerCase())
+      throw new Error("Open this video before using its playback controls.");
+    const frame = rootPlayerFrame(win.webContents.mainFrame, current);
+    if (!frame) {
+      if (action === "state") return { ready: false };
+      throw new Error("The video is loading. Try the playback control again in a moment.");
+    }
+    return runPlayerCommand(frame, { action, value });
+  });
 
   handle("study:status", (dir) => study.status(requireProject(dir)));
   handle("study:clip", ({ dir, file } = {}) => readClipStudy(requireProject(dir), String(file)));
@@ -245,14 +259,26 @@ function registerIpc() {
   });
   // `pointing` only says whether to include the selection. The selection itself is read here, from Studio's
   // server, at the moment of sending: the page is not trusted to describe an element.
-  handle("agent:send", async ({ dir, text, pointing } = {}) => {
-    const { selection } = pointing ? await selected(requireProject(dir)) : { selection: null };
+  // `moment` likewise requests a fresh root-player snapshot, not a time or note supplied by the page.
+  handle("agent:send", async ({ dir, text, pointing, moment = false } = {}) => {
+    dir = requireProject(dir);
+    if (typeof moment !== "boolean") throw new Error("Choose whether to include the current video moment.");
+    let captured = null;
+    if (moment) {
+      const current = preview.current;
+      if (!win || !current || path.resolve(current.dir).toLowerCase() !== path.resolve(dir).toLowerCase())
+        throw new Error("Open this video before sending its current moment.");
+      captured = await readPlaybackMoment(rootPlayerFrame(win.webContents.mainFrame, current));
+    }
+    const { selection } = !moment && pointing ? await selected(dir) : { selection: null };
     const shown = pointingAt(selection);
-    return agent.send({
-      dir: requireProject(dir),
+    agent.send({
+      dir,
       text,
       pointing: shown ? { ...shown, note: pointingNote(selection) } : null,
+      moment: captured,
     });
+    return { moment: captured ? { seconds: captured.seconds, when: captured.when } : null };
   });
   handle("agent:choose", ({ dir, engine } = {}) => agent.choose(requireProject(dir), String(engine)));
   handle("agent:chooseModel", ({ engine, model } = {}) =>

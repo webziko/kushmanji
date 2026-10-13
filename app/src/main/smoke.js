@@ -57,9 +57,9 @@ async function chooseAccess(inPage, level) {
     `(() => { const pick = document.querySelector('.access-pick'); pick.value = ${inJs(level)}; pick.dispatchEvent(new Event('change')); })()`,
   );
   if (level === "full") {
-    const asked = "[...document.querySelectorAll('.notice-actions button')].some((b) => b.offsetParent)";
+    const asked = "document.querySelector('.access-confirm')?.hidden === false";
     if (!(await until(() => inPage(asked), { timeoutMs: 5000 }))) throw new Error("Full access was not asked about first.");
-    await inPage("document.querySelector('.notice-actions button').click()");
+    await inPage("document.querySelector('.access-confirm .notice-actions button').click()");
   }
   if (!(await until(() => inPage(`document.body.dataset.access === ${inJs(level)}`), { timeoutMs: 5000 })))
     throw new Error(`The access level never became "${level}".`);
@@ -67,6 +67,7 @@ async function chooseAccess(inPage, level) {
 
 /** The access menu, in every run: it costs nothing. Leaves the project on the level it started on. */
 async function accessStep({ result, inPage, shot }) {
+  await inPage("document.querySelector('.chat-settings')?.setAttribute('open', '')");
   if (!(await until(() => inPage("Boolean(document.body.dataset.access)"), { timeoutMs: 10_000 })))
     throw new Error("The access menu never appeared.");
   const start = await inPage("document.body.dataset.access");
@@ -82,13 +83,268 @@ async function accessStep({ result, inPage, shot }) {
   await wait(300);
   result.access.fullAsksFirst = await inPage("document.body.dataset.access === 'tools' && document.querySelector('.access-pick').value === 'tools'");
   await shot("access-full-asks");
-  await inPage("[...document.querySelectorAll('.notice-actions button')].pop().click()");
+  await inPage("document.querySelector('.access-confirm .notice-actions button:last-child').click()");
   await wait(200);
-  result.access.cancelKeeps = await inPage("document.body.dataset.access === 'tools'");
+  result.access.cancelKeeps = await inPage("document.body.dataset.access === 'tools' && document.querySelector('.access-confirm').hidden");
   if (!result.access.fullAsksFirst || !result.access.cancelKeeps)
     throw new Error("Full access was applied without the person confirming it.");
 
   await chooseAccess(inPage, start);
+}
+
+/** Help is local: completing or replaying it must not create a video or send an assistant request. */
+async function helpStep({ win, result, inPage, shot }) {
+  if (!(await until(() => inPage("Boolean(document.querySelector('.help-dialog[open]'))"),
+    { timeoutMs: 5000 }))) throw new Error("The first-time walkthrough did not appear.");
+  for (let step = 1; step <= 3; step++) {
+    if (await inPage("document.querySelector('.help-content').textContent.includes('false')"))
+      throw new Error("The walkthrough contains stray text instead of just its explanation.");
+    if (!(await inPage(`document.querySelector('.help-progress').textContent === 'Step ${step} of 3'`)))
+      throw new Error("The walkthrough skipped or repeated a step.");
+    if (step === 1) await shot("welcome");
+    if (step === 2) {
+      await inPage("document.querySelector('.help-back').click()");
+      if (!(await inPage("document.querySelector('.help-progress').textContent === 'Step 1 of 3'")))
+        throw new Error("Back did not return to the previous walkthrough step.");
+      await inPage("document.querySelector('.help-next').click()");
+    }
+    await inPage("document.querySelector('.help-next').click()");
+  }
+  if (await inPage("Boolean(document.querySelector('.help-dialog[open]'))"))
+    throw new Error("Finishing the walkthrough did not return to the app.");
+  await inPage("document.querySelector('.help-button').click()");
+  if (!(await inPage("document.querySelector('.help-title').textContent === 'What is what'")))
+    throw new Error("Help did not open the plain guide.");
+  await shot("help-home");
+  win.webContents.sendInputEvent({ type: "keyDown", keyCode: "Escape" });
+  win.webContents.sendInputEvent({ type: "keyUp", keyCode: "Escape" });
+  if (!(await until(() => inPage("!document.querySelector('.help-dialog').open"), { timeoutMs: 3000 })))
+    throw new Error("Escape did not close Help.");
+  await inPage("document.querySelector('.help-button').click()");
+  await inPage("document.querySelector('.help-replay').click(); document.querySelector('.help-close').click()");
+  // The same app page is reloaded to check the preference actually survives, in the smoke profile only.
+  await inPage("location.reload()");
+  if (!(await until(() => inPage("document.body.dataset.view === 'home' && Boolean(document.querySelector('.help-button'))"),
+    { timeoutMs: 15_000 }))) throw new Error("Home did not return after reloading the help preference.");
+  await wait(300);
+  if (await inPage("Boolean(document.querySelector('.help-dialog[open]'))"))
+    throw new Error("The walkthrough kept reappearing after it was dismissed.");
+  result.help = { walkthrough: true, back: true, replay: true, remembered: true };
+}
+
+/** Ordinary playback, then the same project in the workshop, without an AI request. */
+async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
+  if (!(await inPage("document.body.dataset.screen === 'watch' && Boolean(document.querySelector('.player'))")))
+    throw new Error("A video did not open on the simple player screen.");
+  const frames = () => win.webContents.mainFrame.framesInSubtree;
+  const frame = frames().find((item) => item.parent === win.webContents.mainFrame && /\/preview(\?|$)/.test(item.url));
+  if (!frame) throw new Error("The simple player has no video frame.");
+  const state = () => frames().find((item) => item.parent === win.webContents.mainFrame && /\/preview(\?|$)/.test(item.url))
+    .executeJavaScript("({ time: window.__player.getTime(), duration: window.__player.getDuration(), playing: window.__player.isPlaying() })");
+  const seek = async (time) => {
+    await inPage(`(() => { const bar = document.querySelector('.player-seek'); bar.value = ${time}; bar.dispatchEvent(new Event('input')); })()`);
+    if (!(await until(async () => Math.abs((await state()).time - time) < 0.15, { timeoutMs: 5000 })))
+      throw new Error("Dragging the playback bar did not move the video.");
+  };
+  if (!(await until(() => inPage("document.querySelector('.player-play')?.disabled === false"), { timeoutMs: 10_000 })))
+    throw new Error("The video loaded but its playback controls stayed disabled.");
+  const draft = await inPage("document.querySelector('.composer textarea').value");
+  await inPage("document.querySelector('.help-button').click()");
+  if (!(await inPage("document.querySelector('.help-content details[data-help=watch]').open")))
+    throw new Error("Help did not explain the watching screen first.");
+  const beforeHelp = await state();
+  await inPage("document.querySelector('.help-title').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })); document.querySelector('.help-title').dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true }))");
+  await wait(300);
+  const afterHelp = await state();
+  if (Math.abs(afterHelp.time - beforeHelp.time) > 0.2 || afterHelp.playing !== beforeHelp.playing)
+    throw new Error("Keyboard navigation in Help unexpectedly controlled the video underneath.");
+  await shot("help-watch");
+  await inPage("document.querySelector('.help-close').click()");
+  if ((await inPage("document.querySelector('.composer textarea').value")) !== draft)
+    throw new Error("Opening Help changed the message draft.");
+  await seek(2.375);
+  if (!(await until(() => inPage("document.querySelector('.chat-moment')?.textContent === 'At 0:02' && !document.querySelector('.chat-moment').hidden"),
+    { timeoutMs: 5000 }))) throw new Error("The message box does not show the video's current moment.");
+  if ((await inPage("document.querySelector('.composer textarea').value")) !== draft)
+    throw new Error("Updating the current moment changed the chat draft.");
+  result.chatMoment = { followsSeek: true };
+  await shot("chat-moment");
+  const labels = await inPage("[...document.querySelectorAll('.edit-action')].map((b) => b.textContent)");
+  if (!["Fix the sound", "Add subtitles", "Make it shorter", "Add music", "Change the look",
+    "Add a title", "Save the video"].every((label) => labels.includes(label)))
+    throw new Error("The plain editing buttons are missing.");
+  for (const label of labels) {
+    await inPage(`[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === ${inJs(label)}).click()`);
+    if (!(await inPage("Boolean(document.querySelector('.edit-action-dialog[open]'))")))
+      throw new Error(`The ${label} button did not explain what will happen.`);
+    if ((await inPage("document.querySelector('.composer textarea').value")) !== draft ||
+      (await inPage("document.body.dataset.agent")) !== "idle")
+      throw new Error("An editing button sent a request or replaced the draft before the person chose to.");
+    if (["Fix the sound", "Add subtitles", "Add music", "Save the video"].includes(label))
+      await shot(`editing-${label.toLowerCase().replaceAll(" ", "-")}`);
+    await inPage("document.querySelector('.edit-action-close').click()");
+  }
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Add a title').click(); document.querySelector('.edit-action-use').click()");
+  const addedDraft = await inPage("document.querySelector('.composer textarea').value");
+  if (!addedDraft.startsWith(draft) || !addedDraft.includes("Add a title that says:") ||
+    (await inPage("document.body.dataset.agent")) !== "idle")
+    throw new Error("The title button did not prepare a request while preserving the existing draft.");
+  await inPage(`document.querySelector('.composer textarea').value = ${inJs(draft)}`);
+  result.editingButtons = { explainFirst: true, draftOnly: true, preserveDraft: true };
+  await shot("player");
+  const originalSize = win.getSize();
+  win.setSize(960, 600);
+  await wait(400);
+  const fits = await inPage("(() => { const box = document.querySelector('.player').getBoundingClientRect(); return [...document.querySelectorAll('.player-buttons button,.player-buttons input')].every((item) => { const r = item.getBoundingClientRect(); return r.left >= box.left && r.right <= box.right && r.bottom <= innerHeight; }); })()");
+  if (!fits) throw new Error("The playback controls do not fit the app's smallest window.");
+  if (!(await inPage("(() => { const box = document.querySelector('.composer').getBoundingClientRect(); return box.bottom <= innerHeight && document.querySelector('.chat-log').clientHeight >= 80 && [...document.querySelectorAll('.edit-action')].every((b) => b.getBoundingClientRect().height >= 44); })()")))
+    throw new Error("The editing buttons or message box do not fit the app's smallest window.");
+  await inPage("document.querySelector('.help-button').click()");
+  if (!(await inPage("(() => { const box = document.querySelector('.help-dialog').getBoundingClientRect(); const close = document.querySelector('.help-close').getBoundingClientRect(); return box.top >= 0 && box.bottom <= innerHeight && close.bottom <= innerHeight; })()")))
+    throw new Error("Help or its Close button does not fit the smallest window.");
+  await shot("help-small-window");
+  await inPage("document.querySelector('.help-close').click()");
+  await shot("player-small-window");
+  win.setSize(...originalSize);
+  await wait(300);
+  await seek(1);
+  await inPage("document.querySelector('.player-play').click()");
+  if (!(await until(async () => { const got = await state(); return got.playing && got.time > 1.1; },
+    { timeoutMs: 5000 }))) throw new Error("Play did not start a moving picture.");
+  if (hasAudio && !(await until(() => win.webContents.isCurrentlyAudible(), { timeoutMs: 5000 })))
+    throw new Error("The simple player moved the picture but did not play its sound.");
+  await inPage("document.querySelector('.player-play').focus(); document.querySelector('.player-play').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }))");
+  if (!(await until(async () => { const got = await state(); return got.playing && got.time < 1; },
+    { timeoutMs: 3000 }))) throw new Error("The back arrow paused the video instead of skipping while playing.");
+  if (hasAudio) {
+    await inPage("document.querySelector('.player-mute').click()");
+    if (!(await until(() => !win.webContents.isCurrentlyAudible(), { timeoutMs: 3000 })))
+      throw new Error("Muting the simple player did not stop its sound.");
+    await inPage("document.querySelector('.player-mute').click()");
+    if (!(await until(() => win.webContents.isCurrentlyAudible(), { timeoutMs: 3000 })))
+      throw new Error("Restoring sound in the simple player did not work.");
+  }
+  await inPage("document.querySelector('.player-play').focus(); document.querySelector('.player-play').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))");
+  if (!(await until(async () => { const got = await state(); return got.playing && got.time >= 10; },
+    { timeoutMs: 3000 }))) throw new Error("The forward arrow paused the video instead of skipping while playing.");
+  await inPage("document.querySelector('.player-play').click()");
+  if (!(await until(async () => !(await state()).playing, { timeoutMs: 3000 })))
+    throw new Error("Pause did not stop the player.");
+  const duration = (await state()).duration;
+  await seek(Math.min(2, duration / 2));
+  await inPage("document.querySelector('.player-forward').click()");
+  const afterForward = await state();
+  if (afterForward.time < Math.min(12, duration) - 0.2 || afterForward.playing)
+    throw new Error("Forward ten seconds did not keep a paused video paused.");
+  await inPage("document.querySelector('.player-back').click()");
+  const afterBack = await state();
+  if (Math.abs(afterBack.time - Math.max(0, afterForward.time - 10)) > 0.2)
+    throw new Error("Back ten seconds did not stop at the beginning.");
+  if (hasAudio) {
+    const shown = async () => {
+      const current = frames().find((item) => item.parent === win.webContents.mainFrame && /\/preview(\?|$)/.test(item.url));
+      const got = await current.executeJavaScript(`(() => { const video = document.querySelector('video'); const css = getComputedStyle(video);
+        return { time: video.currentTime, playerTime: window.__player.getTime(), seeking: video.seeking, ready: video.readyState,
+          display: css.display, opacity: css.opacity, visibility: css.visibility }; })()`);
+      result.pausedPicture = got;
+      return got.display !== "none" && got.visibility !== "hidden" && Number(got.opacity) > 0 &&
+        !got.seeking && got.ready >= 2 && Math.abs(got.time - got.playerTime) < 0.2;
+    };
+    if (!(await until(shown, { timeoutMs: 5000 })))
+      throw new Error("Scrubbing back from past the clip's end did not restore its picture.");
+    await wait(250);
+    await shot("player-scrubbed");
+  }
+  await inPage("document.querySelector('.player-mute').click()");
+  if (!(await inPage("document.querySelector('.player-mute').getAttribute('aria-pressed') === 'true'")))
+    throw new Error("The sound control did not show that sound is muted.");
+  await inPage("document.querySelector('.player-mute').click()");
+  await inPage("document.querySelector('.player-fullscreen').click()");
+  if (!(await until(() => inPage("document.fullscreenElement?.classList.contains('player')"), { timeoutMs: 3000 })))
+    throw new Error("Full screen did not open the player.");
+  await wait(250);
+  await shot("player-fullscreen");
+  await inPage("document.querySelector('.player-help').click()");
+  if (!(await inPage("document.querySelector('.help-dialog').open")))
+    throw new Error("Help is not reachable in full-screen playback.");
+  await shot("help-fullscreen");
+  await inPage("document.querySelector('.help-close').click()");
+  await inPage("document.exitFullscreen()");
+  await inPage("document.querySelector('.composer textarea').focus(); document.querySelector('.composer textarea').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))");
+  await wait(300);
+  if (Math.abs((await state()).time - afterBack.time) > 0.2)
+    throw new Error("Typing in chat unexpectedly moved the video.");
+
+  // A real file edit must reach the simple screen too; only this throwaway project is changed.
+  const index = path.join(dir, "index.html");
+  const original = fs.readFileSync(index, "utf8");
+  fs.writeFileSync(index, original.replace("</head>", "<meta name=\"player-smoke\" content=\"updated\"></head>"));
+  const updated = () => {
+    const current = frames().find((item) => item.parent === win.webContents.mainFrame && /\/preview(\?|$)/.test(item.url));
+    return current?.executeJavaScript("window.__renderReady === true && Boolean(document.querySelector('meta[name=player-smoke]'))").catch(() => false);
+  };
+  if (!(await until(updated, { timeoutMs: 30_000 }))) throw new Error("The player did not refresh after a video edit.");
+  const playerUrl = await inPage("document.querySelector('.player iframe').src");
+  fs.writeFileSync(path.join(dir, ".hyperframes", "player-smoke.json"), "{}");
+  await wait(1200);
+  if ((await inPage("document.querySelector('.player iframe').src")) !== playerUrl)
+    throw new Error("A saved chat note unnecessarily reloaded the video.");
+
+  fs.writeFileSync(index, fs.readFileSync(index, "utf8")
+    .replace('data-width="1920"', 'data-width="1080"').replace('data-height="1080"', 'data-height="1920"')
+    .replaceAll("width: 1920px", "width: 1080px").replaceAll("height: 1080px", "height: 1920px"));
+  const portrait = () => {
+    const current = frames().find((item) => item.parent === win.webContents.mainFrame && /\/preview(\?|$)/.test(item.url));
+    return current?.executeJavaScript("window.__renderReady === true && document.querySelector('[data-composition-id]')?.getAttribute('data-width') === '1080'").catch(() => false);
+  };
+  if (!(await until(portrait, { timeoutMs: 30_000 }))) throw new Error("The portrait video did not load.");
+  if (!(await until(() => inPage("(() => { const r = document.querySelector('.player iframe').getBoundingClientRect(); return r.height > r.width; })()"),
+    { timeoutMs: 5000 }))) throw new Error("The portrait picture did not fit the player.");
+  await shot("player-portrait");
+  result.player = { playback: true, arrowsKeepPlaying: true, seek: true, fullscreen: true,
+    sound: hasAudio ? true : "No FFmpeg for the audio fixture", editRefresh: true, portrait: true,
+    ignoresJournal: true, smallWindow: true };
+  await shot("player-updated");
+  if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 10_000 })))
+    throw new Error("The portrait player's controls did not finish loading.");
+  await seek(1);
+  await inPage("document.querySelector('.player-play').click()");
+  if (!(await until(async () => (await state()).playing, { timeoutMs: 3000 })))
+    throw new Error("The video could not play before switching to the editor.");
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Save the video').click(); document.querySelector('.edit-action-use').click()");
+  await wait(2000);
+  result.editorFrames = frames().map((item) => ({ url: item.url, parent: item.parent?.url }));
+  if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
+    { timeoutMs: 60_000 }))) throw new Error("Edit by hand did not open the full editor.");
+  if ((await inPage("document.querySelector('.composer textarea').value")) !== draft)
+    throw new Error("Switching to the editor lost the chat draft.");
+  if (hasAudio && !(await until(() => !win.webContents.isCurrentlyAudible(), { timeoutMs: 3000 })))
+    throw new Error("The hidden player kept making sound inside the editor.");
+  if (!(await inPage("document.querySelector('.chat-moment').hidden")))
+    throw new Error("The simple player's moment leaked into the editor.");
+  await shot("editor");
+  if (!(await inPage("document.querySelector('.editor-words')?.textContent.includes('Inspector') && document.querySelector('.editor-words').textContent.includes('Change it')")))
+    throw new Error("The full editor has no plain explanation of its words.");
+  await inPage("document.querySelector('.help-button').click()");
+  if (!(await inPage("document.querySelector('.help-content details[data-help=edit]').open")))
+    throw new Error("Help did not explain the full editor first.");
+  await shot("help-editor");
+  await inPage("document.querySelector('.help-close').click()");
+  await inPage("document.querySelector('.editor-toggle').click()");
+  if (!(await until(() => inPage("document.body.dataset.screen === 'watch' && document.body.dataset.studio === 'loaded'"),
+    { timeoutMs: 60_000 }))) throw new Error("Watch video did not return to the simple player.");
+  if ((await inPage("document.querySelector('.composer textarea').value")) !== draft)
+    throw new Error("Returning to the player lost the chat draft.");
+  if ((await state()).playing) throw new Error("Returning to the player unexpectedly started playback.");
+  if (!(await until(() => inPage("!document.querySelector('.chat-moment').hidden"), { timeoutMs: 5000 })))
+    throw new Error("Returning to the player did not restore its moment beside the message box.");
+  result.chatMoment.switchViews = true;
+  await inPage("document.querySelector('.editor-toggle').click()");
+  if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
+    { timeoutMs: 60_000 }))) throw new Error("The full editor could not be reopened.");
+  result.player.switchViews = true;
+  result.player.hiddenPlaybackStops = true;
+  result.editingButtons.opensEditor = true;
 }
 
 /** A few seconds of moving picture with a tone, made with the real FFmpeg: footage for an agent to cut. */
@@ -187,7 +443,10 @@ async function studyStep({ result, inPage, shot, dir, outDir }) {
   await shot("study");
   await inPage("[...document.querySelectorAll('.study button')].find((b) => b.textContent === 'Review clips').click()");
   if (!(await until(() => inPage("(() => { const img = document.querySelector('.footage-review[open] img'); return img?.complete && img.naturalWidth > 0; })()"),
-    { timeoutMs: 10_000 }))) throw new Error("The saved frame sheet could not be reviewed in the app.");
+    { timeoutMs: 10_000 }))) {
+    result.studyReviewState = await inPage("(() => { const img = document.querySelector('.footage-review[open] img'); const r = img?.getBoundingClientRect(); return { image: Boolean(img), complete: img?.complete, loading: img?.loading, naturalWidth: img?.naturalWidth, srcKind: img?.src.slice(0, 32), bounds: r && { x: r.x, y: r.y, width: r.width, height: r.height } }; })()");
+    throw new Error("The saved frame sheet could not be reviewed in the app.");
+  }
   result.studyReview = true;
   await shot("study-review");
   await inPage("document.querySelector('.footage-review-head button').click()");
@@ -248,6 +507,21 @@ function durationOf(file) {
 async function agentStep({ result, inPage, shot, dir }) {
   const engine = process.env.HFWIN_SMOKE_AGENT;
   result.agent = engine;
+  // Optional context check: one tiny real turn from the watching screen instead of an editor selection.
+  const at = process.env.HFWIN_SMOKE_AT;
+  if (at !== undefined) {
+    if (!Number.isFinite(Number(at)) || Number(at) < 0) throw new Error("Use a valid smoke playback time.");
+    if (await inPage("document.body.dataset.screen === 'edit'"))
+      await inPage("document.querySelector('.editor-toggle').click()");
+    if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 60_000 })))
+      throw new Error("The watching screen did not load for the chat moment check.");
+    await inPage(`(() => { const bar = document.querySelector('.player-seek'); bar.value = ${Number(at)}; bar.dispatchEvent(new Event('input')); })()`);
+    const seconds = Math.floor(Number(at));
+    const when = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+    if (!(await until(() => inPage(`document.querySelector('.chat-moment').textContent === ${inJs(`At ${when}`)}`),
+      { timeoutMs: 5000 }))) throw new Error("The requested chat moment did not appear.");
+    result.expectedMoment = when;
+  }
   let request =
     process.env.HFWIN_SMOKE_REQUEST ||
     `Change the visible title text in this video to "${AGENT_TITLE}". Change nothing else.`;
@@ -311,6 +585,14 @@ async function agentStep({ result, inPage, shot, dir }) {
   }
 
   result.agentReply = await chatTurn({ result, inPage, engine, request });
+  if (result.expectedMoment) {
+    const saved = JSON.parse(fs.readFileSync(path.join(dir, ".hyperframes", "studio-win-chat.json"), "utf8"));
+    result.sentMoment = saved.messages.filter((message) => message.role === "user").at(-1)?.moment;
+    if (result.sentMoment?.when !== result.expectedMoment)
+      throw new Error("The sent message lost its current video moment.");
+    if (!(await inPage(`document.querySelector('.msg.user .msg-pointing')?.textContent === ${inJs(`At ${result.expectedMoment}`)}`)))
+      throw new Error("The message on screen does not show the moment that was sent.");
+  }
   // Studio reloads the preview when the file changes.
   await wait(4000);
   await shot("chat-done");
@@ -349,8 +631,11 @@ async function agentStep({ result, inPage, shot, dir }) {
  */
 async function pointingStep({ win, result, inPage, shot }) {
   const page = win.webContents;
-  const studio = page.mainFrame.framesInSubtree.find((frame) => frame.parent === page.mainFrame);
-  const outer = await inPage("(() => { const r = document.querySelector('iframe').getBoundingClientRect(); return { x: r.x, y: r.y }; })()");
+  const studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
+  const studio = page.mainFrame.framesInSubtree.find((frame) => frame.parent === page.mainFrame &&
+    frame.url.split("?")[0] === studioUrl.split("?")[0]);
+  if (!studio) throw new Error("The full editor has no browser frame.");
+  const outer = await inPage("(() => { const r = document.querySelector('iframe[title=\"HyperFrames Studio\"]').getBoundingClientRect(); return { x: r.x, y: r.y }; })()");
   // The picture is a frame inside Studio's player element, which keeps it in a shadow root.
   const inner = await studio.executeJavaScript(
     `(() => {
@@ -415,6 +700,9 @@ async function soundProbe({ win, outDir, result, shot }) {
   page.send("app:open-project", { dir });
   if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 180_000 })))
     throw new Error("The project did not open in Studio.");
+  await inPage("document.querySelector('.editor-toggle').click()");
+  if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
+    { timeoutMs: 60_000 }))) throw new Error("The project did not switch to its editor for the sound probe.");
   await wait(10_000);
   if (process.env.HFWIN_SMOKE_SOUND === "point") {
     try {
@@ -425,7 +713,9 @@ async function soundProbe({ win, outDir, result, shot }) {
     return;
   }
   const frames = () => page.mainFrame.framesInSubtree;
-  const studio = frames().find((frame) => frame.parent === page.mainFrame);
+  const studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
+  const studio = frames().find((frame) => frame.parent === page.mainFrame &&
+    frame.url.split("?")[0] === studioUrl.split("?")[0]);
   const media = async () =>
     Promise.all(
       frames().map(async (frame) => ({
@@ -524,6 +814,9 @@ export async function runSmoke({ win, outDir }) {
   });
   const shot = async (name) => {
     try {
+      // An occluded Windows window can otherwise give the last painted frame of a long assistant turn.
+      page.invalidate();
+      await wait(100);
       const image = await page.capturePage();
       fs.writeFileSync(path.join(outDir, `${name}.png`), image.toPNG());
     } catch (error) {
@@ -539,6 +832,7 @@ export async function runSmoke({ win, outDir }) {
   try {
     if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 15_000 })))
       throw new Error("Home never appeared.");
+    await helpStep({ win, result, inPage, shot });
     await wait(400);
     await shot("home");
     if (process.env.HFWIN_SMOKE_SOUND && process.env.HFWIN_SMOKE_REAL_PROJECT) {
@@ -576,6 +870,16 @@ export async function runSmoke({ win, outDir }) {
       fs.readFileSync(path.join(source, "assets", name)).equals(content),
     );
     if (!result.importedFootage) throw new Error("Footage was not copied safely.");
+    const fixtureIndex = path.join(project.dir, "index.html");
+    const starter = fs.readFileSync(fixtureIndex, "utf8").replaceAll('data-duration="10"', 'data-duration="70"');
+    if (hasFfmpeg) {
+      const video = '<video id="test-video" class="clip" data-start="0" data-duration="6" ' +
+        'data-track-index="1" src="assets/test-clip.mp4" playsinline></video>';
+      fs.writeFileSync(fixtureIndex, starter.replace("</style>",
+        "#root { position: relative; } #test-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; } " +
+        "#title { position: relative; z-index: 1; text-shadow: 0 2px 12px black; }</style>")
+        .replace(/<h1\b/, `${video}<h1`));
+    } else fs.writeFileSync(fixtureIndex, starter);
 
     const framed = await until(() => inPage("document.body.dataset.studio === 'loaded'"), {
       timeoutMs: 120_000,
@@ -584,12 +888,14 @@ export async function runSmoke({ win, outDir }) {
       result.pageError = await inPage("document.body.dataset.error ?? ''");
       throw new Error(`Studio never loaded. ${result.pageError}`);
     }
-    result.studioUrl = await inPage("document.querySelector('iframe')?.src ?? ''");
+    result.playerUrl = await inPage("document.querySelector('.player iframe')?.src ?? ''");
     // Studio paints its panels, then the composition's first frame.
     await wait(8000);
     await shot("project");
     result.importDraft = await inPage("document.querySelector('.composer textarea').value");
     if (!result.importDraft.includes("orientation")) throw new Error("No footage review request was prepared.");
+    await playerStep({ win, result, inPage, shot, dir: project.dir, hasAudio: hasFfmpeg });
+    result.studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
     await accessStep({ result, inPage, shot });
     if (hasFfmpeg) await studyStep({ result, inPage, shot, dir: project.dir, outDir });
     let chatProject = project.dir;
@@ -617,10 +923,24 @@ export async function runSmoke({ win, outDir }) {
         "window.__player.seek(3.1); ({ ready: window.__renderReady === true, duration: window.__player.getDuration() })",
       );
       if (!result.realPreview.ready) throw new Error("The real project's media are not ready.");
+      const savedChat = path.join(realProject, ".hyperframes", "studio-win-chat.json");
+      if (fs.existsSync(savedChat)) {
+        const saved = JSON.parse(fs.readFileSync(savedChat, "utf8"));
+        const moment = saved.messages?.filter((message) => message.role === "user").at(-1)?.moment;
+        if (moment) {
+          const shown = await inPage("[...document.querySelectorAll('.msg.user .msg-pointing')].at(-1)?.textContent");
+          if (shown !== `At ${moment.when}`) throw new Error("Reopening a video lost its saved message moment.");
+          result.reloadedMoment = moment;
+          result.reloadedTitle = await frame.executeJavaScript("document.querySelector('#title')?.textContent");
+        }
+      }
       await wait(1000);
       await shot("real-project");
       result.realProject = realProject;
       chatProject = realProject;
+      await inPage("document.querySelector('.editor-toggle').click()");
+      if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
+        { timeoutMs: 60_000 }))) throw new Error("The real project did not switch to its editor.");
     }
     await pointingStep({ win, result, inPage, shot });
     if (process.env.HFWIN_SMOKE_AGENT) await agentStep({ result, inPage, shot, dir: chatProject });

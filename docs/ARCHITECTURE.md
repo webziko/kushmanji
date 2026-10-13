@@ -23,12 +23,51 @@ app covers those).
                 │ IPC through preload.cjs (named calls only)
 ┌───────────────┴──────── Renderer: the shell page (app/src/renderer) ─────────────────┐
 │  Home (project list)                                                                 │
-│  Project view:  [ chat panel ]  [ <iframe> Studio at http://127.0.0.1:48620 ]        │
+│  Project view:  [ large video player ]  [ chat panel ]                              │
+│  Edit by hand: [ chat panel ]  [ <iframe> Studio at http://127.0.0.1:48620 ]          │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 Studio itself is unchanged upstream code, served by `hyperframes preview`. The shell frames it and adds what the
 closed app adds around it.
+
+Projects open on Kushmanji's own watching screen first (M14-01). `renderer/player.js` frames the root
+composition at the same server's `/api/projects/:id/preview`, scales its declared dimensions to fit, and adds
+play/pause, ten-second skips, scrubbing, master sound and full screen. The full Studio iframe loads only after
+"Edit by hand". Changing rooms removes the inactive frame's source and keeps the same chat instance; returning
+to the player keeps its position and stays paused. Studio's saved scene remains an editor choice, while the
+watching screen always shows the whole video.
+
+`main/player.js` accepts only fixed playback actions and finite numeric values through `player:command`, and
+targets only the active project's direct root preview frame. The sandboxed composition gains no preload API.
+Editor readiness checks a preview under the matching Studio frame, allowing the playhead and tab query that
+Studio adds to its URL; an outgoing simple preview cannot satisfy that check.
+
+The preview manager watches source and media with a short quiet period, ignores hidden journals, saved
+versions, dependencies and exports, and emits `preview:changed`. The player reloads at its last position and
+playback state. On folders Windows cannot watch it also refreshes after an assistant's turn ends. Timers,
+watchers and player listeners are closed with the project. Assistant and clip settings live in an expandable
+control; the sentence describing the current allowed tools stays visible below the chat box.
+
+On the watching screen the player supplies its time to the chat's "At 0:42" line (M14-02). Sending carries
+only a boolean `moment` flag across IPC. The main process reads the active root player again at Send,
+before the footage study starts, and attaches a bounded numeric snapshot and a short context note to the
+chosen assistant's request. The snapshot is saved beside the user message and included in the journal's
+request, so reopening the chat or changing assistants preserves its meaning. Studio continues to use its
+own selection instead. Home's initial request and "Build it" do not inherit a watching position.
+
+`renderer/editActions.js` supplies the persistent, collapsible editing buttons (M14-03). Each opens a native
+dialog explaining its limits, then appends a suggested request to the existing draft. It never starts an
+assistant turn; the person still presses Send. Saving opens Studio and describes the pending Windows export
+checks. Automatic subtitles, stock/generated music and automatic noise-tool setup are not advertised as
+working. Dialogs are removed with the project; buttons are disabled during an assistant turn.
+
+`renderer/help.js` holds the screen guide, three-step welcome walkthrough and shared editor-word glossary
+(M14-04). One native dialog and Help button live for the shell page's lifetime and survive project/room changes;
+full-screen playback has its own Help entry. The walkthrough stores only its seen flag in the shell origin's
+localStorage (`hfwin-help-seen-v1`), with an in-memory fallback when storage is unavailable. Help makes no IPC
+calls, starts no assistant and changes no project files. The glossary sits above the unchanged Studio iframe,
+which gets the remaining stage height. Playback keyboard shortcuts ignore an open dialog's contents.
 
 ## Decisions
 
@@ -59,7 +98,8 @@ The full picture, with what is still open, is in `SECURITY.md`. The mechanics:
 - Browser permissions are refused app-wide, except the clipboard, full screen and the font list for Studio's
   local server (`lockDownSession`).
 - Studio's iframe is another origin. It cannot reach the shell page or the preload API.
-- The agent can edit files and run commands. What it may do is the access level the person picks under the chat
+- The agent can edit files and run commands. What it may do is the access level the person picks in the chat's
+  expandable settings. The current level is described below the chat
   box (see "Access levels" below).
 
 ## IPC contract
@@ -77,6 +117,8 @@ and the caller in `renderer/`.
 | `projects.addMedia(dir)` | Native media picker; safe copies into an existing project's assets and start its study |
 | `projects.pickFolder()` | Folder dialog; must contain `index.html` |
 | `projects.open(dir)` | Starts the preview server; returns `{ port, serverUrl, studioUrl, projectName }` |
+| `projects.ready(dir)` | Whether the active editor's root or selected-scene preview has finished loading |
+| `player.command({ dir, action, value })` | Only `state`, `play`, `pause`, `seek`, `skip`, `volume`; finite numeric values for the last three. Returns `{ ready, time, duration, playing, width, height }` or `{ ready: false }` while loading |
 | `projects.ready(dir)` | Boolean: the current project's root or selected-scene preview reports `__renderReady === true` |
 | `projects.close()` | Stops the server |
 | `projects.reveal(dir)` / `projects.forget(dir)` | File Explorer / drop from the list (files untouched) |
@@ -88,7 +130,7 @@ and the caller in `renderer/`.
 | `agent.status()` | `[{ id, name, install, signIn, tested, state, version?, detail?, untested, models, model }]`, one per bridge. Starts each tool, so it takes seconds |
 | `agent.history(dir)` | `{ messages, engine, running, agents: [{ id, name }], access, accessLevels: [{ id, name, about }] }` from the project's `.hyperframes/studio-win-chat.json` and the app's settings. Instant |
 | `selection.get(dir)` | What is selected in Studio now, for the chat's "Pointing at" line: `{ key, name, kind, when }` or `null`. Read from Studio's own server |
-| `agent.send({ dir, text, pointing })` | Starts one chat turn. `pointing: true` asks the main process to read Studio's selection and tell the agent which element the request is about. Refused while another turn is running |
+| `agent.send({ dir, text, pointing, moment })` | Starts one chat turn. `moment: true` reads the active root player at Send and returns the captured `{ seconds, when }` for the message. Otherwise `pointing: true` reads Studio's selection. Refused while another turn is running |
 | `agent.chooseMode({ dir, mode })` | How involved the person wants to be in this project: `build`, `review` or `codirect`. Kept with the project's chat |
 | `agent.chooseAccess({ dir, level })` | How much the agents may do in this project, from the next message. Only `project`, `tools` or `full` is accepted. Kept in the app's settings, not in the project |
 | `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message |
@@ -96,6 +138,7 @@ and the caller in `renderer/`.
 | `agent.stop()` / `agent.reset(dir)` | Stop the run / forget the conversation (project files untouched) |
 | event `app:open-project` | `{ dir }`: open this project (command line, second launch, smoke test) |
 | event `preview:exit` | `{ dir, code }`: the server died by itself |
+| event `preview:changed` | `{ dir }`: visible project source or media changed; refresh the simple player |
 | event `agent:event` | `{ dir, event }`: one event from the running turn (see the contract below) |
 
 ## Agent bridge contract
@@ -139,7 +182,7 @@ event. Tool steps carry `tool_name` (`view_file`, `replace_file_content`, `run_c
 
 ## Access levels
 
-The person picks one of three levels in the menu under the chat box (`agents/access.js`):
+The person picks one of three levels in the expandable chat settings (`agents/access.js`):
 
 | Level | The agent may | How each bridge enforces it |
 | --- | --- | --- |
@@ -273,7 +316,7 @@ Rules every bridge follows on Windows:
 ```
 cd app
 npm run check     # every source file parses (seconds, no window)
-npm run smoke     # the real app: Home → create project → Studio; screenshots in app/.smoke/
+npm run smoke     # the real app: Home → create project → player → Studio; screenshots in app/.smoke/
 ```
 
 `npm run smoke` uses a throwaway projects folder, so it never touches real projects. Look at the screenshots, not

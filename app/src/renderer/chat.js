@@ -5,6 +5,7 @@
 // agent there needs no change here.
 import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
+import { createEditActions } from "./editActions.js";
 
 const api = window.hfwin;
 
@@ -13,14 +14,6 @@ const STATE_NOTES = {
   "not-signed-in": "not signed in",
   broken: "will not start",
 };
-
-// Requests to start from, for someone facing an empty box. Each fills the box for the person to finish; none
-// sends by itself. Only requests that have been seen to work belong here.
-const STARTERS = [
-  ["Add a voiceover", "Add a voiceover that says: "],
-  ["Add a title", "Add a title that says: "],
-  ["Change the look", "Change the colours and fonts so the video feels "],
-];
 
 /** Inline `code` and **bold**, built as nodes so the agent's text is never parsed as HTML. */
 function formatted(text) {
@@ -38,10 +31,11 @@ function formatted(text) {
 /** "the video clip “City Centre”, 0:26 to 0:41": what the person had selected, in their words. */
 const pointingText = ({ name, kind, when }) => `the ${kind} “${name}”${when ? `, ${when}` : ""}`;
 
-function userMessage({ text, pointing }) {
+function userMessage({ text, pointing, moment }) {
   return h(
     "div",
     { class: "msg user" },
+    moment && h("div", { class: "msg-pointing" }, `At ${moment.when}`),
     pointing && h("div", { class: "msg-pointing" }, `Pointing at ${pointingText(pointing)}`),
     text,
   );
@@ -96,7 +90,7 @@ function liveMessage(name) {
   };
 }
 
-export function createChat(dir) {
+export function createChat(dir, { onEdit } = {}) {
   /** Every agent the app knows: `{ id, name }` at once, then `state`, `install` and `signIn` once checked. */
   let agents = [];
   let engine = null;
@@ -104,6 +98,8 @@ export function createChat(dir) {
   let live = null;
   /** A message that arrived before the agent was known to be ready (Home's "Make it"). */
   let waiting = null;
+  let editor = false;
+  let moment = null;
 
   const current = () => agents.find((agent) => agent.id === engine);
   const nameOf = (id) => agents.find((agent) => agent.id === id)?.name ?? "Agent";
@@ -123,36 +119,24 @@ export function createChat(dir) {
   let planActions = null;
 
   const input = h("textarea", {
+    id: "chat-request",
     class: "field",
     rows: "3",
     placeholder: "Describe a change\nEnter to send · Shift+Enter for a new line",
-    "aria-label": "Message to the agent",
+    "aria-label": "Message to the assistant",
   });
+  const hint = h("p", { class: "muted" }, "Move to a moment in the video, then tell the assistant what to change there.");
   const empty = h(
     "div",
     { class: "chat-empty" },
-    h("p", {}, "Describe a change and the agent edits your video. The picture updates as it works."),
-    h("p", { class: "muted" }, "Click anything in the picture or on the timeline first, and the agent knows which thing you mean."),
-    h(
-      "div",
-      { class: "starters" },
-      STARTERS.map(([label, text]) =>
-        h(
-          "button",
-          {
-            class: "secondary small",
-            type: "button",
-            onclick: () => {
-              input.value = text;
-              input.focus();
-              input.setSelectionRange(text.length, text.length);
-            },
-          },
-          label,
-        ),
-      ),
-    ),
+    h("p", {}, "Tell the assistant what you would like to change. Your video updates as it works."),
+    hint,
   );
+  const editActions = createEditActions({ onEdit, onDraft: (text) => {
+    input.value = input.value.trim() ? `${input.value.trimEnd()}\n\n${text}` : text;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  } });
   const send = h("button", { class: "primary", type: "submit", disabled: true }, "Send");
   const stop = h(
     "button",
@@ -189,6 +173,12 @@ export function createChat(dir) {
   const modeAbout = h("p", { class: "access-about muted" });
   // What is selected in Studio, said back to the person before they send, with a way to leave it out.
   const pointingName = h("span", {});
+  const momentChip = h("div", { class: "pointing chat-moment", hidden: true,
+    title: "The assistant receives this video moment when you send your message." });
+  function renderMoment() {
+    momentChip.hidden = editor || moment === null;
+    momentChip.textContent = moment === null ? "" : `At ${moment.when}`;
+  }
   const pointingChip = h(
     "div",
     { class: "pointing", hidden: true },
@@ -208,7 +198,7 @@ export function createChat(dir) {
       "✕",
     ),
   );
-  const accessConfirm = h("div", { class: "chat-notice", hidden: true });
+  const accessConfirm = h("div", { class: "chat-notice access-confirm", hidden: true });
   // Agents update themselves often. This says so when the installed one is newer than the app was tried with.
   const versionNote = h("p", { class: "chat-version muted", hidden: true });
 
@@ -229,10 +219,11 @@ export function createChat(dir) {
     modelPick.disabled = running;
     accessPick.disabled = running;
     modePick.disabled = running;
+    editActions.setRunning(running);
   };
 
   /** The selection to send with the next message, or null. */
-  const pointed = () => (pointing && pointing.key !== dismissed ? pointing : null);
+  const pointed = () => (editor && pointing && pointing.key !== dismissed ? pointing : null);
 
   // `data-pointing` is what the smoke test reads.
   function renderPointing() {
@@ -246,7 +237,9 @@ export function createChat(dir) {
   // Asked for, not pushed: Studio keeps its selection on its own local server, and a look every second and a
   // half is cheap. A selection the person has just dismissed stays dismissed until they select something else.
   const watchPointing = setInterval(async () => {
+    if (!editor) return;
     const found = await api.selection.get(dir).catch(() => null);
+    if (!editor) return;
     if (found?.key === pointing?.key) return;
     pointing = found;
     renderPointing();
@@ -277,7 +270,8 @@ export function createChat(dir) {
     planActions = h(
       "div",
       { class: "notice-actions plan-actions" },
-      h("button", { class: "primary small", type: "button", onclick: () => void submit("Yes. Build the plan you just showed me.") }, "Build it"),
+      h("button", { class: "primary small", type: "button",
+        onclick: () => void submit("Yes. Build the plan you just showed me.", false) }, "Build it"),
       h(
         "button",
         {
@@ -338,21 +332,25 @@ export function createChat(dir) {
     );
   });
 
-  async function submit(text) {
+  async function submit(text, includeMoment = true) {
     if (live) return;
     const about = pointed();
     planActions?.remove();
     planActions = null;
-    append(userMessage({ text, pointing: about }));
+    const watched = includeMoment && !editor ? moment : null;
+    const sent = userMessage({ text, pointing: about, moment: watched });
+    append(sent);
     live = liveMessage(nameOf(engine));
     append(live.el);
     setRunning(true);
     try {
-      await api.agent.send({ dir, text, pointing: Boolean(about) });
+      const accepted = await api.agent.send({ dir, text, pointing: Boolean(about), moment: Boolean(watched) });
+      sent.replaceWith(userMessage({ text, pointing: about, moment: accepted?.moment }));
     } catch (error) {
       live.finish({ ok: false, error: error.message });
       live = null;
       setRunning(false);
+      if (!input.value.trim()) input.value = text;
     }
   }
 
@@ -425,7 +423,7 @@ export function createChat(dir) {
       const text = waiting;
       waiting = null;
       input.value = "";
-      void submit(text);
+      void submit(text, false);
     }
   }
 
@@ -459,17 +457,15 @@ export function createChat(dir) {
     "form",
     { class: "composer", onsubmit: onSubmit },
     pointingChip,
+    h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, "Your message"), momentChip),
     input,
-    h("div", { class: "composer-row" }, h("label", { class: "access muted" }, "How we work", modePick)),
     h(
       "div",
       { class: "composer-row" },
-      h("label", { class: "access muted" }, "Access", accessPick),
       h("span", { class: "spacer" }),
       stop,
       send,
     ),
-    modeAbout,
     accessAbout,
   );
   const element = h(
@@ -478,9 +474,7 @@ export function createChat(dir) {
     h(
       "div",
       { class: "chat-head" },
-      h("strong", {}, "Chat"),
-      picker,
-      modelPick,
+      h("strong", {}, "What would you like to change?"),
       h("span", { class: "spacer" }),
       h(
         "button",
@@ -490,11 +484,19 @@ export function createChat(dir) {
           title: "Clear this chat and start a new conversation. Your video is not changed.",
           onclick: reset,
         },
-        "New chat",
+        "Start over",
       ),
     ),
-    versionNote,
-    studyBar.element,
+    h("details", { class: "chat-settings" },
+      h("summary", {}, "Assistant and clip settings"),
+      h("div", { class: "chat-head" }, h("label", {}, "Assistant", picker), modelPick),
+      h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Ask me first", modePick)),
+      modeAbout,
+      h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Allowed tools", accessPick)),
+      versionNote,
+      studyBar.element,
+    ),
+    editActions.element,
     log,
     notice,
     accessConfirm,
@@ -550,6 +552,21 @@ export function createChat(dir) {
 
   return {
     element,
+    setTime(seconds) {
+      const whole = Math.floor(seconds);
+      moment = Number.isFinite(seconds) && seconds >= 0
+        ? { seconds, when: `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}` } : null;
+      renderMoment();
+    },
+    setEditor(shown) {
+      editor = shown;
+      hint.textContent = shown
+        ? "Click something in the picture or on the timeline, then tell the assistant what to change."
+        : "Move to a moment in the video, then tell the assistant what to change there.";
+      if (!shown) pointing = null;
+      renderPointing();
+      renderMoment();
+    },
     /** Importing footage prepares a request, without spending agent usage or replacing what was typed. */
     draft(text) {
       if (!input.value.trim()) input.value = text;
@@ -557,7 +574,7 @@ export function createChat(dir) {
     },
     /** Send now if the agent is ready; otherwise keep it in the box and send once it is. */
     send(text) {
-      if (isReady()) return void submit(text);
+      if (isReady()) return void submit(text, false);
       waiting = text;
       input.value = text;
     },
@@ -565,6 +582,7 @@ export function createChat(dir) {
       stopListening();
       clearInterval(watchPointing);
       studyBar.destroy();
+      editActions.destroy();
       delete document.body.dataset.agent;
       delete document.body.dataset.access;
       delete document.body.dataset.mode;
