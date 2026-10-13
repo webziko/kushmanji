@@ -134,6 +134,69 @@ async function helpStep({ win, result, inPage, shot }) {
 }
 
 /** Ordinary playback, then the same project in the workshop, without an AI request. */
+/**
+ * In "Edit by hand", while the video plays, a real arrow key skips ten seconds and the video keeps playing.
+ * Paused, or with the keyboard in the chat box, the key is left alone. Keys are sent the way Windows sends them.
+ */
+async function editorArrowStep({ win, result, inPage }) {
+  const page = win.webContents;
+  const frames = () => page.mainFrame.framesInSubtree;
+  const studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
+  const studio = frames().find((frame) => frame.parent === page.mainFrame &&
+    frame.url.split("?")[0] === studioUrl.split("?")[0]);
+  const picture = frames().find((frame) => frame.parent === studio && /\/preview(\?|\/|$)/.test(frame.url));
+  if (!studio || !picture) throw new Error("The editor's picture was not found for the arrow-key check.");
+  const press = (label) => studio.executeJavaScript(
+    `(() => { const b = [...document.querySelectorAll('button')].find((b) => ${label}.test(b.getAttribute('aria-label') || b.title || ''));
+      if (!b) return false; b.click(); b.blur(); return true; })()`, true);
+  const now = () => picture.executeJavaScript("({ time: window.__player.getTime(), playing: window.__player.isPlaying() })");
+  const key = async (keyCode) => {
+    page.sendInputEvent({ type: "keyDown", keyCode });
+    page.sendInputEvent({ type: "keyUp", keyCode });
+    await wait(700);
+    return now();
+  };
+  const inEditor = "document.querySelector('iframe[title=\"HyperFrames Studio\"]').focus()";
+  win.focus();
+  page.focus();
+  await inPage(inEditor);
+  await picture.executeJavaScript("window.__player.seek(20)", true);
+  await wait(300);
+  if (!(await press("/^play/i"))) throw new Error("The editor's Play button was not found.");
+  if (!(await until(async () => (await now()).playing, { timeoutMs: 5000 })))
+    throw new Error("The editor did not start playing for the arrow-key check.");
+  await inPage(inEditor);
+  await wait(600);
+  const start = await now();
+  const forward = await key("Right");
+  if (!forward.playing || forward.time - start.time < 9 || forward.time - start.time > 13)
+    throw new Error(`The right arrow in the editor did not skip ten seconds and keep playing (${start.time.toFixed(2)} to ${forward.time.toFixed(2)}, playing ${forward.playing}).`);
+  const back = await key("Left");
+  if (!back.playing || forward.time - back.time < 7 || forward.time - back.time > 11)
+    throw new Error(`The left arrow in the editor did not skip back ten seconds and keep playing (${forward.time.toFixed(2)} to ${back.time.toFixed(2)}).`);
+  // With the keyboard in the chat box the arrow moves the text cursor, not the video.
+  await inPage("document.querySelector('.composer textarea').focus()");
+  await wait(400);
+  const typing = await now();
+  const typed = await key("Right");
+  if (typed.time - typing.time > 3) throw new Error("An arrow typed in the chat box moved the video in the editor.");
+  // Paused, the editor keeps its own key: one frame, not ten seconds.
+  await inPage(inEditor);
+  await press("/^pause/i");
+  if (!(await until(async () => !(await now()).playing, { timeoutMs: 5000 })))
+    throw new Error("The editor did not pause for the arrow-key check.");
+  await inPage(inEditor);
+  await wait(600);
+  const paused = await now();
+  const stepped = await key("Right");
+  if (stepped.playing || Math.abs(stepped.time - paused.time) > 1)
+    throw new Error("Paused, the right arrow in the editor did more than the editor's own one-frame step.");
+  result.editorArrows = {
+    skipsWhilePlaying: true, keepsPlaying: true, chatBoxKeepsItsArrows: true,
+    pausedStepSeconds: Math.round((stepped.time - paused.time) * 1000) / 1000,
+  };
+}
+
 async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   if (!(await inPage("document.body.dataset.screen === 'watch' && Boolean(document.querySelector('.player'))")))
     throw new Error("A video did not open on the simple player screen.");
@@ -261,18 +324,25 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
     throw new Error("The sound control did not show that sound is muted.");
   await inPage("document.querySelector('.player-mute').click()");
   await inPage("document.querySelector('.player-fullscreen').click()");
-  // Windows can take several seconds to put a window into full screen when another program is in front: three
-  // seconds failed one run in two on the owner's PC while the picture showed the window already full size.
-  if (!(await until(() => inPage("document.fullscreenElement?.classList.contains('player')"), { timeoutMs: 15_000 })))
-    throw new Error("Full screen did not open the player.");
-  await wait(250);
-  await shot("player-fullscreen");
-  await inPage("document.querySelector('.player-help').click()");
-  if (!(await inPage("document.querySelector('.help-dialog').open")))
-    throw new Error("Help is not reachable in full-screen playback.");
-  await shot("help-fullscreen");
-  await inPage("document.querySelector('.help-close').click()");
-  await inPage("document.exitFullscreen()");
+  // Windows gives full screen only to the window in front. With another program (or a second self-test) in
+  // front, the window grows to the screen's size and the page never hears that it is full screen: seen twice on
+  // the owner's PC, with any length of wait. That is not a fault in the player, so it is noted, not failed.
+  const wentFull = await until(() => inPage("document.fullscreenElement?.classList.contains('player')"), { timeoutMs: 8000 });
+  if (!wentFull && win.isFocused()) throw new Error("Full screen did not open the player.");
+  if (wentFull) {
+    await wait(250);
+    await shot("player-fullscreen");
+    await inPage("document.querySelector('.player-help').click()");
+    if (!(await inPage("document.querySelector('.help-dialog').open")))
+      throw new Error("Help is not reachable in full-screen playback.");
+    await shot("help-fullscreen");
+    await inPage("document.querySelector('.help-close').click()");
+    await inPage("document.exitFullscreen()");
+  } else {
+    result.fullscreenNotChecked = "Another window was in front, and Windows gives full screen only to the window in front.";
+    win.setFullScreen(false);
+    await wait(1500);
+  }
   await inPage("document.querySelector('.composer textarea').focus(); document.querySelector('.composer textarea').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))");
   await wait(300);
   if (Math.abs((await state()).time - afterBack.time) > 0.2)
@@ -304,7 +374,7 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   if (!(await until(() => inPage("(() => { const r = document.querySelector('.player iframe').getBoundingClientRect(); return r.height > r.width; })()"),
     { timeoutMs: 5000 }))) throw new Error("The portrait picture did not fit the player.");
   await shot("player-portrait");
-  result.player = { playback: true, arrowsKeepPlaying: true, seek: true, fullscreen: true,
+  result.player = { playback: true, arrowsKeepPlaying: true, seek: true, fullscreen: wentFull,
     sound: hasAudio ? true : "No FFmpeg for the audio fixture", editRefresh: true, portrait: true,
     ignoresJournal: true, smallWindow: true };
   await shot("player-updated");
@@ -326,6 +396,7 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   if (!(await inPage("document.querySelector('.chat-moment').hidden")))
     throw new Error("The simple player's moment leaked into the editor.");
   await shot("editor");
+  await editorArrowStep({ win, result, inPage });
   if (!(await inPage("document.querySelector('.editor-words')?.textContent.includes('Inspector') && document.querySelector('.editor-words').textContent.includes('Change it')")))
     throw new Error("The full editor has no plain explanation of its words.");
   await inPage("document.querySelector('.help-button').click()");
@@ -838,6 +909,21 @@ export async function runSmoke({ win, outDir }) {
     await helpStep({ win, result, inPage, shot });
     await wait(400);
     await shot("home");
+    // HFWIN_SMOKE_JUST_ASK with HFWIN_SMOKE_REAL_PROJECT and an agent: one real job on a real project, without
+    // the self-test's own steps. The request goes from the editor screen, so it carries no "At 0:00".
+    if (process.env.HFWIN_SMOKE_JUST_ASK && process.env.HFWIN_SMOKE_REAL_PROJECT && process.env.HFWIN_SMOKE_AGENT) {
+      const dir = process.env.HFWIN_SMOKE_REAL_PROJECT;
+      page.send("app:open-project", { dir });
+      if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 180_000 })))
+        throw new Error("The project did not open.");
+      await inPage("document.querySelector('.editor-toggle').click()");
+      if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
+        { timeoutMs: 90_000 }))) throw new Error("The project did not switch to its editor.");
+      await agentStep({ result, inPage, shot, dir });
+      result.ok = true;
+      fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
+      return app.exit(0);
+    }
     if (process.env.HFWIN_SMOKE_PLAYBACK && process.env.HFWIN_SMOKE_REAL_PROJECT) {
       await playbackProbe({ win, outDir, result, shot });
       result.ok = true;

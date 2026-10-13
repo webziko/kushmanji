@@ -43,6 +43,14 @@ targets only the active project's direct root preview frame. The sandboxed compo
 Editor readiness checks a preview under the matching Studio frame, allowing the playhead and tab query that
 Studio adds to its URL; an outgoing simple preview cannot satisfy that check.
 
+In "Edit by hand" the arrow keys are the editor's, where one press means one frame and stops the video. While
+the video is playing, `main/editorKeys.js` takes a plain left or right arrow before the editor's page sees it
+(`before-input-event`) and sends the same fixed ten-second skip the watching screen uses, so the video keeps
+playing. It leaves the key alone when the video is paused, when a modifier is held, when the key repeats, when
+the keyboard is in the chat box, and when the editor's focus is on anything that uses arrows itself (a text
+box, a slider, a menu, an open dialog). Whether a key is ours has to be answered at once, so what the editor
+is doing is asked four times a second while an editor is on screen. Nothing is added to the editor's page.
+
 The preview manager watches source and media with a short quiet period, ignores hidden journals, saved
 versions, dependencies and exports, and emits `preview:changed`. The player reloads at its last position and
 playback state. On folders Windows cannot watch it also refreshes after an assistant's turn ends. Timers,

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
 import { cliVersion } from "./cli.js";
+import { watchEditorKeys } from "./editorKeys.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
@@ -125,6 +126,7 @@ function createWindow() {
     if (/^https?:\/\//.test(url)) void shell.openExternal(url);
     return { action: "deny" };
   });
+  watchEditorKeys(win, () => preview.current);
   win.on("closed", () => (win = null));
   return win.loadFile(RENDERER);
 }

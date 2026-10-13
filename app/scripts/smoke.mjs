@@ -7,7 +7,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const appDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outDir = path.join(appDir, ".smoke");
+// HFWIN_SMOKE_NAME=job keeps a run's files in app/.smoke-job, so a long real job and the ordinary self-test
+// can run at the same time without wiping each other's folder. Letters, digits and dashes only: the folder is
+// deleted at the start of every run.
+const named = /^[a-z0-9-]{1,40}$/i.test(process.env.HFWIN_SMOKE_NAME ?? "") ? `-${process.env.HFWIN_SMOKE_NAME}` : "";
+const outDir = path.join(appDir, `.smoke${named}`);
 const electron = createRequire(import.meta.url)("electron");
 
 fs.rmSync(outDir, { recursive: true, force: true });
@@ -48,6 +52,7 @@ try {
 if (result?.ok) {
   console.log(`smoke: PASS (steps: ${result.steps.join(", ")}; Studio at ${result.studioUrl})`);
   if (result.consoleErrors.length) console.log(`smoke: ${result.consoleErrors.length} console error(s), see result.json`);
+  if (result.fullscreenNotChecked) console.log(`smoke: full screen was NOT checked. ${result.fullscreenNotChecked}`);
 } else {
   console.error(`smoke: FAIL (exit ${run.status}${run.error ? `, ${run.error.message}` : ""})`);
   if (result?.error) console.error(result.error);

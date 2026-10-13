@@ -45,6 +45,23 @@ HFWIN_SMOKE_REAL_PROJECT=<the project folder>
 The numbers land in `app/.smoke/result.json` under `playback`; how to read them is at the top of
 `app/src/main/playbackProbe.js`.
 
+To send one real request to a real project through the chat, without the self-test's own steps (this spends
+usage; it is how the owner's vlog and shorts are edited from here):
+
+```
+HFWIN_SMOKE_JUST_ASK=1
+HFWIN_SMOKE_REAL_PROJECT=<the project folder>
+HFWIN_SMOKE_REQUEST_FILE=<a text file holding the request>
+HFWIN_SMOKE_ACCESS=tools            # optional: project, tools or full
+HFWIN_SMOKE_MODEL=sonnet            # optional: a model from the chat's menu
+HFWIN_SMOKE_TURN_MINUTES=45         # a long edit needs longer than the seven-minute default
+HFWIN_SMOKE_NAME=vlog               # optional: keep this run's files in app/.smoke-vlog
+```
+
+then `npm run smoke:agent` (or `smoke:codex`, `smoke:antigravity`). With `HFWIN_SMOKE_NAME` set, several runs
+can go at once. The full-screen check passes only while the self-test's window is in front; with another
+window in front the run says "full screen was NOT checked" instead of failing.
+
 ## Where things live
 
 ```
@@ -57,6 +74,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   proc.js                end a process tree; collect a child's output
   state.js  jsonFile.js  settings and safe file writes
   selection.js           what is selected in the editor, for the chat's "Pointing at"
+  editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
   smoke.js               the self-test's steps
   playbackProbe.js       the self-test's playback measurement on a real project
   study.js  studyPlan.js the footage study: transcripts and frame sheets written into the project

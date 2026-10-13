@@ -9,6 +9,7 @@ node_modules/
 /app/dist/
 /app/out/
 /app/.smoke/
+/app/.smoke-*/
 *.log
 .DS_Store
 Thumbs.db
