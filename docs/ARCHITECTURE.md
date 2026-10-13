@@ -144,6 +144,9 @@ and the caller in `renderer/`.
 | `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message |
 | `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default. Only an id from that agent's `models()` is accepted |
 | `agent.stop()` / `agent.reset(dir)` | Stop the run / forget the conversation (project files untouched) |
+| `save.start(dir)` | Make the project's video file with the CLI's own `render`, in the person's Downloads folder, named after the project and the time. One at a time; refused while an assistant works. Returns the status below |
+| `save.stop()` / `save.status(dir)` / `save.show()` | Stop saving (no half-made file is kept) / `{ state: idle, saving, busy, saved, stopped or failed, percent?, name?, megabytes?, message? }` / show the file this app last finished in File Explorer |
+| event `save:event` | `{ dir, status }`: saving started, moved on or ended. The taskbar button shows the same count |
 | event `app:open-project` | `{ dir }`: open this project (command line, second launch, smoke test) |
 | event `preview:exit` | `{ dir, code }`: the server died by itself |
 | event `preview:changed` | `{ dir }`: visible project source or media changed; refresh the simple player |

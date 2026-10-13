@@ -772,3 +772,7 @@ h2 {
     animation: none;
   }
 }
+
+/* Save video: the count sits beside the project's name and must never push the buttons off the bar. */
+.save-status { min-width: 0; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.save-video { white-space: nowrap; }

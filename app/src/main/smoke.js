@@ -135,6 +135,42 @@ async function helpStep({ win, result, inPage, shot }) {
 
 /** Ordinary playback, then the same project in the workshop, without an AI request. */
 /**
+ * "Save video" on a throwaway one-second project: the count moves, a real file lands in the self-test's own
+ * Downloads folder, and a message cannot be sent meanwhile. Run last, on its own project.
+ */
+async function saveStep({ result, inPage, shot, outDir }) {
+  const project = await createProject("save test");
+  const index = path.join(project.dir, "index.html");
+  fs.writeFileSync(index, fs.readFileSync(index, "utf8").replace(/data-duration="[^"]*"/g, 'data-duration="1"'));
+  await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← Home').click()");
+  if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 10_000 })))
+    throw new Error("Could not return Home before the save check.");
+  const nativeDialog = dialog.showOpenDialog;
+  try {
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [project.dir] });
+    await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === 'Open a folder').click()");
+    if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 120_000 })))
+      throw new Error("The project for the save check did not open.");
+  } finally { dialog.showOpenDialog = nativeDialog; }
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Save the video').click(); document.querySelector('.edit-action-use').click()");
+  if (!(await until(() => inPage("document.body.dataset.save === 'saving'"), { timeoutMs: 10_000 })))
+    throw new Error("Save video did not start: " + (await inPage("document.querySelector('.save-status').textContent")));
+  await shot("saving");
+  if (!(await until(() => inPage("document.body.dataset.save !== 'saving'"), { timeoutMs: 300_000, everyMs: 500 })))
+    throw new Error("Saving the video never finished.");
+  const said = await inPage("document.querySelector('.save-status').textContent");
+  if ((await inPage("document.body.dataset.save")) !== "saved") throw new Error("The video was not saved: " + said);
+  const folder = path.join(outDir, "downloads");
+  const files = fs.readdirSync(folder).filter((name) => name.endsWith(".mp4"));
+  if (files.length !== 1 || fs.statSync(path.join(folder, files[0])).size < 1000)
+    throw new Error("Saving reported success, but no video file is in the Downloads folder.");
+  if (!said.includes(files[0])) throw new Error("The page did not name the saved file.");
+  if (await inPage("document.querySelector('.save-show').hidden")) throw new Error("There is no way to show the saved file.");
+  await shot("saved");
+  result.saved = { file: files[0], bytes: fs.statSync(path.join(folder, files[0])).size, seconds: durationOf(path.join(folder, files[0])) };
+}
+
+/**
  * In "Edit by hand", while the video plays, a real arrow key skips ten seconds and the video keeps playing.
  * Paused, or with the keyboard in the chat box, the key is left alone. Keys are sent the way Windows sends them.
  */
@@ -384,7 +420,7 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   await inPage("document.querySelector('.player-play').click()");
   if (!(await until(async () => (await state()).playing, { timeoutMs: 3000 })))
     throw new Error("The video could not play before switching to the editor.");
-  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Save the video').click(); document.querySelector('.edit-action-use').click()");
+  await inPage("document.querySelector('.editor-toggle').click()");
   await wait(2000);
   result.editorFrames = frames().map((item) => ({ url: item.url, parent: item.parent?.url }));
   if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
@@ -1039,6 +1075,7 @@ export async function runSmoke({ win, outDir }) {
     }
     await pointingStep({ win, result, inPage, shot });
     if (process.env.HFWIN_SMOKE_AGENT) await agentStep({ result, inPage, shot, dir: chatProject });
+    await saveStep({ result, inPage, shot, outDir });
     result.ok = true;
   } catch (error) {
     result.error = error instanceof Error ? error.message : String(error);

@@ -13,7 +13,7 @@ const EDITOR_WORDS = [
   ["Variables", "Things you can swap", "Change a name, colour or other value that a scene makes available."],
   ["Lint", "Check for mistakes", "Look for things that could break the video."],
   ["Renders", "Saved videos", "Find video files made by the editor."],
-  ["Export", "Save the video", "Make a video file; the saving choices are still being checked on Windows."],
+  ["Export", "Save the video", "Make a video file with the editor's own choices. Save video at the top does it in one press."],
   ["Capture", "Save a picture", "Save a still picture of the current frame."],
   ["Code", "Video instructions", "The written instructions behind the video, for people who want to edit them."],
   ["Window", "Arrange the editor", "Choose which editor panels are shown."],
@@ -34,7 +34,7 @@ const SECTIONS = [
     ["Editing buttons", "See what an action can do, then prepare a message you can check before sending."],
     ["Assistant and clip settings", "Choose your assistant and its allowed tools, or review your clips."],
     ["Edit by hand", "Open the full editor to make changes yourself."],
-    ["Save the video", "Open the editor for its saving controls; one-click saving is still coming."],
+    ["Save video", "Make a video file in your Downloads folder. A long video takes a while; the count shows how far it is."],
   ] },
   { id: "edit", name: "Editing by hand", parts: EDITOR_WORDS.map(([word, plain, sentence]) =>
     [`${plain} (${word})`, sentence]),
@@ -47,7 +47,7 @@ const WALK = [
   ["Watch, then ask for a change",
     "Move to the moment you mean, write what you want in the chat, and press Send when you are ready."],
   ["Check the result",
-    "Watch the change, then use Edit by hand when you want the full editor; its Export button makes a file."],
+    "Watch the change, then press Save video to make a file in your Downloads folder. Edit by hand opens the full editor."],
 ];
 
 /** Help changes only the shell page; editor files and the assistant are never involved. */
@@ -80,7 +80,7 @@ export function createHelp() {
     content.replaceChildren(...[
       h("p", { class: "help-walk-copy" }, WALK[step][1]),
       step === 1 && h("p", { class: "muted" }, "Sending a message uses your chosen assistant's allowance."),
-      step === 2 && h("p", { class: "muted" }, "One-click saving and automatic subtitles are still being built."),
+      step === 2 && h("p", { class: "muted" }, "Saving a long video takes a while. Automatic subtitles are still being built."),
     ].filter(Boolean));
     footer.replaceChildren(
       h("button", { class: "ghost help-close", type: "button", onclick: close }, "Skip for now"),

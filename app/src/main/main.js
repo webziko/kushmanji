@@ -5,6 +5,7 @@ import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
 import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
+import { ExportManager } from "./exporter.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
@@ -87,6 +88,16 @@ const agent = new AgentRunner({
     }
   },
 });
+
+// Saving a video: the file goes to the person's Downloads folder, and the taskbar button shows how far it is.
+const exporter = new ExportManager({
+  folder: () => app.getPath("downloads"),
+  emit: (payload) => {
+    win?.setProgressBar(payload.status.state === "saving" ? Math.max(0.02, payload.status.percent / 100) : -1);
+    win?.webContents.send("save:event", payload);
+  },
+});
+const samePath = (a, b) => Boolean(a && b) && path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
 
 /** A project folder passed on the command line, the way the official app is handed one by `hyperframes open`. */
 function folderFromArgv(argv, cwd) {
@@ -226,6 +237,21 @@ function registerIpc() {
     if (problem) throw new Error(problem);
   });
   handle("projects:forget", (dir) => forgetFolder(String(dir)));
+  // One video at a time, and never while an assistant is changing one: the file would hold half an edit.
+  handle("save:start", (dir) => {
+    dir = requireProject(dir);
+    if (agent.busy) throw new Error("The assistant is still working. Save the video when it has finished.");
+    return exporter.start(dir);
+  });
+  handle("save:stop", () => exporter.stop());
+  handle("save:status", (dir) => exporter.status(requireProject(dir)));
+  // Only the file this app has just made can be shown: the page never names a path.
+  handle("save:show", () => {
+    const file = exporter.lastFile;
+    if (!file) return false;
+    shell.showItemInFolder(file);
+    return true;
+  });
   handle("preview:log", () => preview.log);
   handle("player:command", ({ dir, action, value } = {}) => {
     requireProject(dir);
@@ -264,6 +290,8 @@ function registerIpc() {
   // `moment` likewise requests a fresh root-player snapshot, not a time or note supplied by the page.
   handle("agent:send", async ({ dir, text, pointing, moment = false } = {}) => {
     dir = requireProject(dir);
+    if (samePath(exporter.dir, dir))
+      throw new Error("This video is being saved. Wait until it is saved, or stop saving, then send your message.");
     if (typeof moment !== "boolean") throw new Error("Choose whether to include the current video moment.");
     let captured = null;
     if (moment) {
@@ -294,7 +322,11 @@ function registerIpc() {
 
 // The self-test keeps its own settings folder, so it cannot change the person's settings, and it can run while
 // their app is open (the one-copy lock below is per settings folder). Must be set before that lock is taken.
-if (process.env.HFWIN_SMOKE) app.setPath("userData", path.join(process.env.HFWIN_SMOKE, "user-data"));
+if (process.env.HFWIN_SMOKE) {
+  app.setPath("userData", path.join(process.env.HFWIN_SMOKE, "user-data"));
+  // The self-test saves a video too, and must not leave it in the person's real Downloads folder.
+  app.setPath("downloads", path.join(process.env.HFWIN_SMOKE, "downloads"));
+}
 // The playback measurement counts pictures really put on screen. Windows stops painting a window that another
 // one covers, which would read as a frozen video, so for that one test run the window is always painted.
 if (process.env.HFWIN_SMOKE_PLAYBACK) {
@@ -317,6 +349,7 @@ if (!app.requestSingleInstanceLock()) {
   // Synchronous: an async kill started here is abandoned when the process exits, leaving the server running.
   app.on("will-quit", () => {
     agent.stop({ sync: true });
+    exporter.stop({ sync: true });
     study.close({ sync: true });
     preview.stop({ sync: true });
   });

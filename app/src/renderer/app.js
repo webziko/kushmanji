@@ -4,6 +4,7 @@ import { createChat } from "./chat.js";
 import { h } from "./dom.js";
 import { createPlayer } from "./player.js";
 import { createEditorWords, createHelp } from "./help.js";
+import { createSaveVideo } from "./saveVideo.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
@@ -243,7 +244,8 @@ function setStudio(state, error = "") {
 async function openProject(dir, { request } = {}) {
   open?.destroy();
   const project = { dir, name: folderName(dir) };
-  project.chat = createChat(dir, { onEdit: () => { if (!project.editing) edit.click(); } });
+  const save = createSaveVideo(dir);
+  project.chat = createChat(dir, { onEdit: () => { if (!project.editing) edit.click(); }, onSave: () => save.start() });
   open = project;
   document.body.dataset.view = "project";
   document.body.dataset.screen = "watch";
@@ -283,7 +285,7 @@ async function openProject(dir, { request } = {}) {
     onTime: (time) => project.chat.setTime(time),
     onHelp: () => help.show(),
     onError: (message) => { if (open === project) project.fail("failed", message); } });
-  project.destroy = () => { player.destroy(); project.chat.destroy(); };
+  project.destroy = () => { player.destroy(); project.chat.destroy(); save.destroy(); };
   const edit = h("button", {
     class: "secondary editor-toggle", disabled: true, type: "button", "aria-pressed": "false",
     onclick: () => {
@@ -353,7 +355,10 @@ async function openProject(dir, { request } = {}) {
       h("button", { class: "ghost", onclick: goHome, title: "Back to your projects" }, "← Home"),
       h("span", { class: "project-name", title: dir }, project.name),
       mediaStatus,
+      save.status,
       h("span", { class: "spacer" }),
+      save.show,
+      save.button,
       addMedia,
       edit,
       h(

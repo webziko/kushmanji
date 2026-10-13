@@ -49,12 +49,14 @@ const ACTIONS = [
   },
   {
     label: "Save the video",
-    about: "One-click saving is not ready yet. The full editor has an Export button for making a video file, " +
-      "but its saving choices still need checking on Windows. This button opens that editor.",
+    about: "Makes one video file from your whole video and puts it in your Downloads folder. It takes a while: " +
+      "a four-minute video can take most of an hour. You can keep watching while it works, and the assistant " +
+      "waits until the video is saved.",
+    save: true,
   },
 ];
 
-export function createEditActions({ onDraft, onEdit }) {
+export function createEditActions({ onDraft, onEdit, onSave }) {
   const title = h("h2", { id: "edit-action-title" });
   const about = h("p", { id: "edit-action-about" });
   const note = h("p", { class: "muted" });
@@ -64,6 +66,7 @@ export function createEditActions({ onDraft, onEdit }) {
   const use = h("button", { class: "primary edit-action-use", type: "button", onclick: () => {
     dialog.close();
     if (chosen.request) onDraft(chosen.request);
+    else if (chosen.save) onSave();
     else onEdit();
   } });
   const dialog = h("dialog", { class: "edit-action-dialog", "aria-labelledby": "edit-action-title",
@@ -78,8 +81,9 @@ export function createEditActions({ onDraft, onEdit }) {
       about.textContent = action.about;
       note.textContent = action.request
         ? "This prepares a message. You can change it before pressing Send. Sending uses your chosen assistant."
+        : action.save ? "Nothing leaves your computer. You can stop saving at any time."
         : "Your chat and message stay with you in the editor.";
-      use.textContent = action.request ? "Write request" : "Open editor";
+      use.textContent = action.request ? "Write request" : action.save ? "Save video" : "Open editor";
       dialog.showModal();
     },
   }, action.label));

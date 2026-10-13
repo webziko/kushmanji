@@ -90,7 +90,7 @@ function liveMessage(name) {
   };
 }
 
-export function createChat(dir, { onEdit } = {}) {
+export function createChat(dir, { onEdit, onSave } = {}) {
   /** Every agent the app knows: `{ id, name }` at once, then `state`, `install` and `signIn` once checked. */
   let agents = [];
   let engine = null;
@@ -132,7 +132,7 @@ export function createChat(dir, { onEdit } = {}) {
     h("p", {}, "Tell the assistant what you would like to change. Your video updates as it works."),
     hint,
   );
-  const editActions = createEditActions({ onEdit, onDraft: (text) => {
+  const editActions = createEditActions({ onEdit, onSave, onDraft: (text) => {
     input.value = input.value.trim() ? `${input.value.trimEnd()}\n\n${text}` : text;
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);

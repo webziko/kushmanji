@@ -10,7 +10,7 @@ const call =
     return reply.value;
   };
 
-const EVENTS = new Set(["app:open-project", "preview:exit", "preview:changed", "agent:event", "study:event"]);
+const EVENTS = new Set(["app:open-project", "preview:exit", "preview:changed", "agent:event", "study:event", "save:event"]);
 
 contextBridge.exposeInMainWorld("hfwin", {
   app: { info: call("app:info") },
@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld("hfwin", {
   },
   preview: { log: call("preview:log") },
   player: { command: call("player:command") },
+  save: { start: call("save:start"), stop: call("save:stop"), status: call("save:status"), show: call("save:show") },
   selection: { get: call("selection:get") },
   study: {
     status: call("study:status"),
