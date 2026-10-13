@@ -48,6 +48,34 @@ export const isCurrent = (entry, found) =>
   entry.source?.modifiedMs === Math.round(found.modifiedMs) &&
   entry.spoken === found.spoken;
 
+/**
+ * How long a clip's picture and its sound really last, from ffprobe's own report. They often differ: a file
+ * trimmed to 15 seconds can hold 15 seconds of sound and 14.8 of picture, and a clip played to the end of the
+ * file then freezes on its last frame before every join (measured on the owner's vlog, 2026-10-13).
+ */
+export function streamLengths(info) {
+  const hundredths = (seconds) => (seconds > 0 ? Math.round(seconds * 100) / 100 : null);
+  const length = (stream) => {
+    if (!stream) return null;
+    if (Number(stream.duration) > 0) return hundredths(Number(stream.duration));
+    // Some containers (WebM, MKV) give no length per stream: count the frames instead.
+    const [num, den] = String(stream.avg_frame_rate ?? "0/1").split("/").map(Number);
+    return num > 0 && den > 0 && Number(stream.nb_frames) > 0 ? hundredths((Number(stream.nb_frames) * den) / num) : null;
+  };
+  const streams = info?.streams ?? [];
+  return {
+    pictureSeconds: length(streams.find((stream) => stream.codec_type === "video" && stream.disposition?.attached_pic !== 1)),
+    soundSeconds: length(streams.find((stream) => stream.codec_type === "audio")),
+  };
+}
+
+/** The sentence an agent reads when a clip's picture stops before the file does, or null when it does not. */
+export function shortPictureNote({ seconds, pictureSeconds }) {
+  if (!(pictureSeconds > 0) || !(seconds - pictureSeconds > 0.05)) return null;
+  return `The picture ends at ${pictureSeconds} seconds; the sound runs on to ${seconds}. ` +
+    `Never play this clip past ${pictureSeconds} seconds, or its last frame freezes.`;
+}
+
 const COLUMNS = 4;
 const ROWS = 6;
 const MAX_SHEETS = 4;

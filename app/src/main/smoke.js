@@ -5,6 +5,7 @@ import path from "node:path";
 import { whereAll } from "./agents/launcher.js";
 import { cliVersion, runCli } from "./cli.js";
 import { createProject, listProjects } from "./projects.js";
+import { playbackProbe } from "./playbackProbe.js";
 import { isCompositionPreview } from "./preview.js";
 
 // The end-to-end check behind `npm run smoke`: the real app opens Home, makes a project if there is none, opens
@@ -260,7 +261,9 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
     throw new Error("The sound control did not show that sound is muted.");
   await inPage("document.querySelector('.player-mute').click()");
   await inPage("document.querySelector('.player-fullscreen').click()");
-  if (!(await until(() => inPage("document.fullscreenElement?.classList.contains('player')"), { timeoutMs: 3000 })))
+  // Windows can take several seconds to put a window into full screen when another program is in front: three
+  // seconds failed one run in two on the owner's PC while the picture showed the window already full size.
+  if (!(await until(() => inPage("document.fullscreenElement?.classList.contains('player')"), { timeoutMs: 15_000 })))
     throw new Error("Full screen did not open the player.");
   await wait(250);
   await shot("player-fullscreen");
@@ -835,6 +838,12 @@ export async function runSmoke({ win, outDir }) {
     await helpStep({ win, result, inPage, shot });
     await wait(400);
     await shot("home");
+    if (process.env.HFWIN_SMOKE_PLAYBACK && process.env.HFWIN_SMOKE_REAL_PROJECT) {
+      await playbackProbe({ win, outDir, result, shot });
+      result.ok = true;
+      fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
+      return app.exit(0);
+    }
     if (process.env.HFWIN_SMOKE_SOUND && process.env.HFWIN_SMOKE_REAL_PROJECT) {
       await soundProbe({ win, outDir, result, shot });
       result.ok = true;

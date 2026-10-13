@@ -17,6 +17,8 @@ import {
   sheetPlan,
   slugFor,
   STUDY_FOLDER,
+  shortPictureNote,
+  streamLengths,
   STUDY_VERSION,
   transcriptText,
 } from "./studyPlan.js";
@@ -34,7 +36,8 @@ const TILE_WIDTH = 320;
 const SETTLE_MS = 2000;
 const ABOUT =
   "Made by Kushmanji from the footage in this project. Read this before working with a clip. " +
-  "Each clip lists its length in seconds, sheets of still frames (`sheets`: open the picture to see the clip; " +
+  "Each clip lists its length in seconds (`seconds` is the whole file; `pictureSeconds` is how long a video's " +
+  "picture really lasts, often a little less: never play a clip past it or its last frame freezes), sheets of still frames (`sheets`: open the picture to see the clip; " +
   "`times` gives the second each frame was taken at, row by row from the top left, and the same time is printed " +
   "on the frame), and a transcript (`transcript.text`: one line per phrase with the times it runs between; " +
   "`transcript.words`: every word with its start and end, in HyperFrames' own format). When " +
@@ -221,7 +224,10 @@ export class FootageStudy {
     const stale = footage.filter((clip) => force || !isCurrent(previous.get(clip.file), clip));
     const kept = footage.filter((clip) => !stale.includes(clip)).map((clip) => previous.get(clip.file));
     const gone = (old?.clips ?? []).filter((clip) => !footage.some((found) => found.file === clip.file));
-    if (stale.length === 0 && gone.length === 0) return;
+    // Studies made before the picture's own length was recorded get it added: one quick look per clip, with no
+    // new pictures or transcripts.
+    const unmeasured = kept.filter((clip) => clip.kind === "video" && clip.seconds > 0 && clip.pictureSeconds === undefined);
+    if (stale.length === 0 && gone.length === 0 && unmeasured.length === 0) return;
 
     const tools = {
       ffmpeg: findTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
@@ -229,6 +235,13 @@ export class FootageStudy {
       whisper: Boolean(findTool("whisper-cli", process.env.HYPERFRAMES_WHISPER_PATH)),
       parakeet: stale.length > 0 ? await this.#hasParakeet(job) : false,
     };
+    for (const clip of tools.ffprobe ? unmeasured : []) {
+      if (job.cancelled) return;
+      const info = await this.#probe(job, path.join(dir, clip.file), tools);
+      Object.assign(clip, { pictureSeconds: null, soundSeconds: null }, info ? streamLengths(info) : {});
+      const note = shortPictureNote(clip);
+      if (note) clip.notes = [...(clip.notes ?? []), note];
+    }
     job.total = stale.length;
     job.done = 0;
     const studied = [];
@@ -268,6 +281,23 @@ export class FootageStudy {
     }
   }
 
+  /** ffprobe's report on one file, or null when it cannot be read. */
+  async #probe(job, source, tools) {
+    const probed = await this.#run(
+      job,
+      spawn(tools.ffprobe, ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", source], {
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "pipe"],
+      }),
+      60_000,
+    );
+    try {
+      return JSON.parse(probed.stdout);
+    } catch {
+      return null;
+    }
+  }
+
   async #studyClip(job, clip, tools, before) {
     const { dir } = job;
     const source = path.join(dir, clip.file);
@@ -303,20 +333,7 @@ export class FootageStudy {
 
     job.step = "reading";
     this.#tell(job);
-    const probed = await this.#run(
-      job,
-      spawn(tools.ffprobe, ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", source], {
-        windowsHide: true,
-        stdio: ["ignore", "pipe", "pipe"],
-      }),
-      60_000,
-    );
-    let info = null;
-    try {
-      info = JSON.parse(probed.stdout);
-    } catch {
-      // Handled just below.
-    }
+    const info = await this.#probe(job, source, tools);
     const video = info?.streams?.find((stream) => stream.codec_type === "video" && stream.disposition?.attached_pic !== 1);
     const audio = info?.streams?.find((stream) => stream.codec_type === "audio");
     const seconds = Number(info?.format?.duration);
@@ -332,7 +349,10 @@ export class FootageStudy {
         width: video.width,
         height: video.height,
         fps: den ? Math.round((num / den) * 100) / 100 : null,
+        ...streamLengths(info),
       });
+      const short = shortPictureNote(entry);
+      if (short) entry.notes.push(short);
     }
 
     if (video && sameFile) {

@@ -157,3 +157,23 @@ The feature-by-feature list is `docs/PARITY.md`. The points that change how this
 Sources: `upstream/docs`, https://www.hyperframes.dev/studio,
 https://runtimewire.com/article/heygen-hyperframes-studio-agent-video-editor,
 https://techpilot.ai/tools/hyperframes-studio/
+
+## Why the preview felt "stuck" on the owner's vlog (measured 2026-10-13)
+
+Measured in the real app on the real vlog (19 clips, 1080p, H.264 at 16 Mbps, 4 min 29 s), with the browser's
+own per-picture callback, on the watching screen and in the editor. How to run it: `CONTRIBUTING.md`.
+
+- **Inside a clip, playback is smooth.** 29 to 30 pictures a second, the clock keeps real time (0.997 to
+  1.000), and under 1% of pictures are dropped (15 of 1,323 and 4 of 884 on the watching screen; 11 of 1,321
+  and 6 of 882 in the editor). The two screens measure the same.
+- **The picture freezes for about a third of a second before most joins.** The cause is in the clips, not the
+  player: 15 of the 19 clips have 15.0 seconds of sound and only 14.77 to 14.83 seconds of picture, and each is
+  set to play for the full 15. The last frame holds for 0.2 seconds, steps back one frame as the player pulls
+  the clip into step, and the next clip's first moving picture arrives 0.05 to 0.1 seconds later.
+- **Lighter copies would not fix it.** The next clip's first picture is already drawn before its turn and it is
+  moving within two or three frames. HyperFrames' `media.autoProxy` is not for this either: it re-encodes
+  only video a browser cannot play (HEVC, ProRes, AV1), not large H.264.
+- **What was done:** the footage study records each clip's picture length (`pictureSeconds`) with a plain note
+  when it is shorter than the file, and the editing guide tells every assistant never to play a clip past it.
+- **Two measuring runs were spoiled by real mouse clicks** landing in the test window (twelve were counted;
+  the playhead was dragged). The measuring run now keeps the mouse out of its window.

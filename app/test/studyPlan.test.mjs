@@ -13,7 +13,9 @@ import {
   parakeetSpeaks,
   phrasesFrom,
   sheetPlan,
+  shortPictureNote,
   slugFor,
+  streamLengths,
   STUDY_VERSION,
   transcriptText,
 } from "../src/main/studyPlan.js";
@@ -151,4 +153,25 @@ test("with the language left to the app, Parakeet's transcript is marked as a gu
   assert.equal(detected.sure, true);
   assert.ok(!detected.args.includes("--language"));
   assert.equal(chooseEngine({ language: null, parakeet: false, whisper: false }).engine, null);
+});
+
+test("a clip's picture and sound are measured apart, because the picture often stops first", () => {
+  // The owner's vlog, clip 03: a file of 15 seconds whose picture is 444 frames long.
+  const info = { streams: [
+    { codec_type: "video", duration: "14.800000", avg_frame_rate: "30/1", nb_frames: "444" },
+    { codec_type: "audio", duration: "15.000000" },
+  ] };
+  assert.deepEqual(streamLengths(info), { pictureSeconds: 14.8, soundSeconds: 15 });
+  // WebM gives no length per stream: the frames are counted. A cover picture inside a song is not a video.
+  assert.deepEqual(streamLengths({ streams: [{ codec_type: "video", avg_frame_rate: "25/1", nb_frames: "50" }] }),
+    { pictureSeconds: 2, soundSeconds: null });
+  assert.deepEqual(streamLengths({ streams: [{ codec_type: "video", duration: "9", disposition: { attached_pic: 1 } }] }),
+    { pictureSeconds: null, soundSeconds: null });
+  assert.deepEqual(streamLengths(null), { pictureSeconds: null, soundSeconds: null });
+});
+
+test("a short picture is said in plain words, and a matching one is not mentioned", () => {
+  assert.match(shortPictureNote({ seconds: 15.01, pictureSeconds: 14.8 }), /Never play this clip past 14\.8 seconds/);
+  assert.equal(shortPictureNote({ seconds: 15, pictureSeconds: 14.97 }), null);
+  assert.equal(shortPictureNote({ seconds: 15, pictureSeconds: null }), null);
 });

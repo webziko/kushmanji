@@ -34,7 +34,8 @@ test("every assistant is told where the guide is, by the same path the app write
 });
 
 test("the guide covers what went wrong on the first real video", () => {
-  for (const lesson of [/two takes of the same lines/, /cross-fade/, /click or a hole of silence/, /moves everything after it/]) {
+  for (const lesson of [/two takes of the same lines/, /cross-fade/, /click or a hole of silence/, /moves everything after it/,
+    /never plays past its last picture/, /pictureSeconds/, /only the incoming picture fades in/]) {
     assert.match(GUIDE, lesson);
   }
 });

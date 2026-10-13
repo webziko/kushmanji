@@ -32,12 +32,18 @@ something else, the person wins.
 - A shot of things (shelves, a street, a view) earns 2 to 5 seconds, longer only if something happens in it.
 - Mix long and short shots. A run of clips that are all the same length feels like a slideshow.
 - Trimming needs no new file: set where the clip starts in its file and how long it plays.
+- A clip never plays past its last picture. A file's sound is often a little longer than its picture (0.2
+  seconds is common). Take the picture's length from the footage study ("pictureSeconds" in
+  .hyperframes/study/index.json), not the file's length, and end the clip there or earlier. A clip that plays
+  to the end of its file freezes on its last frame just before the join.
 
 ## Joining two clips
 
 - Inside one scene: a plain cut.
 - Between two scenes, places or times of day: a soft cross-fade of 0.3 to 0.5 seconds, the next clip fading in
   over the end of the last. Use HyperFrames' own clip fades and overlapping tracks for this.
+- In a cross-fade only the incoming picture fades in, on top of the outgoing one, which stays solid until its
+  clip ends. Fading both at once lets the background show through as a dark flash in the middle of the join.
 - Sound always joins softly, even on a plain cut: fade each clip's sound out and in over 0.15 to 0.3 seconds, so
   there is never a click or a hole of silence.
 - At most two kinds of join in one video. A different wipe on every cut looks like a demo.

@@ -247,7 +247,10 @@ every video and sound file it writes, inside the project at `.hyperframes/study/
   `hyperframes transcribe`. `<clip>/transcript.txt`: the same as readable lines, `[0:06.7 - 0:10.8] Finally…`.
 - `index.json`: one entry per clip (length, size, frame rate, the sheets with the second of each frame, the
   transcript, and `notes` in plain words for anything that could not be studied), plus an `about` line that
-  tells an agent how to read it.
+  tells an agent how to read it. A video also has `pictureSeconds` and `soundSeconds`, each stream's own
+  length. They often differ by a fifth of a second, and a clip played past its picture freezes on its last
+  frame before the join; the entry gets a note saying so. A study made before these existed has them added
+  by one quick look per clip, without being studied again.
 
 It lives in the project so that every agent, and any tool outside this app, reads the same thing. The house
 note points agents at `index.json`. A clip is studied again only when its size or date changes, or when the

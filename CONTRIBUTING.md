@@ -33,6 +33,18 @@ npm run smoke:codex         # Codex
 npm run smoke:antigravity   # Antigravity (Gemini)
 ```
 
+To measure how smoothly a real project plays (dropped pictures, how long the picture holds at each join,
+whether the clock keeps time), on the watching screen and in the editor. It changes nothing in the project,
+spends no usage, and keeps the mouse out of its window while it runs. Set both, then `npm run smoke`:
+
+```
+HFWIN_SMOKE_PLAYBACK=1                       # or "watch" or "edit" for one screen
+HFWIN_SMOKE_REAL_PROJECT=<the project folder>
+```
+
+The numbers land in `app/.smoke/result.json` under `playback`; how to read them is at the top of
+`app/src/main/playbackProbe.js`.
+
 ## Where things live
 
 ```
@@ -46,6 +58,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   state.js  jsonFile.js  settings and safe file writes
   selection.js           what is selected in the editor, for the chat's "Pointing at"
   smoke.js               the self-test's steps
+  playbackProbe.js       the self-test's playback measurement on a real project
   study.js  studyPlan.js the footage study: transcripts and frame sheets written into the project
   studyRead.js           bounded read-only review of indexed study files
   agents/

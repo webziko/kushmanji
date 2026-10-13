@@ -293,6 +293,12 @@ function registerIpc() {
 // The self-test keeps its own settings folder, so it cannot change the person's settings, and it can run while
 // their app is open (the one-copy lock below is per settings folder). Must be set before that lock is taken.
 if (process.env.HFWIN_SMOKE) app.setPath("userData", path.join(process.env.HFWIN_SMOKE, "user-data"));
+// The playback measurement counts pictures really put on screen. Windows stops painting a window that another
+// one covers, which would read as a frozen video, so for that one test run the window is always painted.
+if (process.env.HFWIN_SMOKE_PLAYBACK) {
+  app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
+  app.commandLine.appendSwitch("disable-renderer-backgrounding");
+}
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
