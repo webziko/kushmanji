@@ -254,13 +254,18 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       worked around both: downloading a rounder font, and running a script of its own to write eight similar
       files. Decide whether that level should also allow fetching fonts into the project and running the
       HyperFrames skills' own scripts (`node <skill>/scripts/...`); several upstream workflows need the latter
-- [~] M10-16 English subtitles on the vlog (Claude). 44 lines are on the video as one scene
+- [x] M10-16 English subtitles on the vlog (Claude, 2026-10-13; the owner looked and said "its good"). 44 lines are on the video as one scene
       (`compositions/subtitles.html`), built by Claude Code through the app's chat from `subtitles.json`; lint
       has no errors, five still frames looked at. The words come from two machines listening to Kannada
       (Gemini through `agy`, and Whisper large-v3); nobody here can verify them. **Open until the owner has
       checked the lines** in `SUBTITLES.md`; 14 were heard by one machine only. Gemini's listening is the
       better of the two, but its sign-in expired after 25 minutes in one long run: keep batches to five clips
-- [ ] M10-17 Clean a voice out of real background noise. Tried on the vlog through the app's chat at "Editing
+- [~] M10-17 (Claude; the owner said yes to the download on 2026-10-13) Clean a voice out of real background noise.
+      Done by hand so far: DeepFilterNet 0.5.6 (one 27 MB program, MIT or Apache-2.0, in `tools/voice-clean`,
+      git-ignored) cleaned the vlog's 13 talking clips into `assets/voice-clean`. Measured between her words:
+      mall clips about 13 dB quieter (FFmpeg alone: about 1 dB); the loud street clip barely changed. Still to
+      do: the app fetches the program itself with the person's yes, and "Editing tools" may run it as
+      `clean-voice` behind the same check as FFmpeg. Earlier attempt, for the record: Tried on the vlog through the app's chat at "Editing
       tools" (2026-10-13): Claude Code made cleaned copies of 14 talking clips with FFmpeg (rumble cut, noise
       reduction, loudness back to -18 LUFS; lengths and loudness measured) and turned six no-talking clips to
       40%. Honest result: the background dropped about 1 dB, because the noise is shop music, crowds and
@@ -338,6 +343,67 @@ with a checklist they can follow (2026-10-13, from a proposal they worked out wi
 - [ ] M13-04 One review by a different agent and one round of fixes, then the person watches. Never a loop
 - [ ] M13-05 A panel in the app that shows the board, who is working, and what is waiting on the person
 - [ ] M13-06 Each agent spends its own account's allowance. Show which agent did what, so the cost is no surprise
+
+## M14 · Kushmanji's own face: simple, in plain words
+
+The owner, 2026-10-13: "it should be very very easy to understand and easy to do", "even small kid could
+understand", "inspector mean what I really don't know", "we somehow copied the hyperframes ... lets come out of
+this hyperframes fully ... from names, logo and many things", "review the ui ux fully". The engine stays
+HyperFrames, credited where the licence asks. Everything a person sees becomes Kushmanji's own. **This milestone
+now comes first**: it changes what every later feature looks like. The review itself is `docs/UX.md`.
+
+- [ ] M14-01 A simple screen, shown first: the video, big, with the controls of an ordinary player (play, back
+      and forward ten seconds, a bar to drag, sound, full screen), and the chat. No panels, no jargon. The full
+      editor is one button away ("Edit by hand") for people who want it. The owner's own case: pressing the
+      arrow key to go forward pauses the video, because in the editor an arrow means "one frame"
+- [ ] M14-02 The chat says where you are: "At 0:42" goes with a message on the simple screen, the way
+      "Pointing at" does in the editor
+- [ ] M14-03 Big plain buttons for what people ask for most: fix the sound, add subtitles, make it shorter,
+      add music, change the look, add a title, save the video. Each one says what will happen before it does it
+- [ ] M14-04 "What is what": a guide a person can open anywhere, one sentence per part, and a first-time walk
+      through. In the full editor, a plain name beside each of the editor's own words (Inspector = "change the
+      thing you clicked", Compositions = "your scenes", Lint = "check for mistakes")
+- [ ] M14-05 Every word the app itself shows, reread for a twelve-year-old: no "agent", "access level",
+      "composition", "render", "lint" without a plain twin. One list of words in `docs/UX.md`, used everywhere
+- [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
+      HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
+- [ ] M14-07 The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
+      an idea", "Carry on with ..." with a picture of each video
+- [ ] M14-08 Try it on someone who has never seen it, and fix what they stumble on
+
+## M15 · Spend less: smaller models, and a team you choose
+
+The owner, 2026-10-13: usage runs out during editing; "maybe you guiding different smaller models", "use
+antigravity also", "the user also should have the option to work with 1 app model or 2 ... some might not have
+subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each job).
+
+- [ ] M15-01 "Your team": tick which assistants you have (one, two or three). The app only ever uses those, and
+      says what each is used for. Someone with one subscription gets a complete app
+- [ ] M15-02 The right size of model for the job, chosen by the app: a small fast one for "make this red", a
+      large one for planning a whole video. The person can still pick by hand
+- [ ] M15-03 Heavy looking and listening goes to the assistant that does it cheapest (today Gemini: it listened
+      to 20 clips), and comes back as a short note the others read, instead of each one studying the footage
+- [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
+      conversation when a job is done, carrying a short summary forward
+- [ ] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13)
+- [x] M15-06 A smaller model works through the chat's model menu (Claude, 2026-10-13): the vlog's third version
+      was edited by Claude Code on Sonnet. See M16-02
+
+## M16 · Editing that looks edited
+
+The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth cut", "much more motion graphics",
+"maybe more research you could do about video technics", "many free github opensource project also".
+
+- [~] M16-01 An editing guide every assistant is given before it cuts (Claude): pacing, when to cut, smooth
+      joins of picture and sound, no repeated takes, how long a title stays, where subtitles sit, how loud music
+      is under a voice. First version: `app/src/main/agents/craft.js`. To grow from research and from what the
+      owner sends back
+- [~] M16-02 The vlog, third version (Claude): one opening take instead of two, soft joins between clips, the
+      cleaned voice. Made through the app's chat on a smaller model
+- [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
+      assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
+- [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,
+      speed ramp, title styles, lower thirds, end card. From HyperFrames' own catalog first
 
 ## Upstream
 

@@ -261,6 +261,18 @@ async function agentStep({ result, inPage, shot, dir }) {
   // HFWIN_SMOKE_UNPOINT: the request is about the whole video, so the selection left by the pointing step is
   // dismissed the way a person would, with the ✕.
   if (process.env.HFWIN_SMOKE_UNPOINT) await inPage("document.querySelector('.pointing button')?.click()");
+  // HFWIN_SMOKE_MODEL: pick this model in the chat's model menu first (for example "sonnet"), the way a person
+  // would to spend less on a job. The menu only fills once the agent has been checked, so wait for the option.
+  const wantModel = process.env.HFWIN_SMOKE_MODEL;
+  if (wantModel) {
+    const offered = `[...document.querySelectorAll('.chat-head .agent-pick')[1].options].some((o) => o.value === ${inJs(wantModel)})`;
+    if (!(await until(() => inPage(offered), { timeoutMs: 90_000 }))) throw new Error(`The model "${wantModel}" is not offered.`);
+    await inPage(
+      `(() => { const pick = document.querySelectorAll('.chat-head .agent-pick')[1]; pick.value = ${inJs(wantModel)}; pick.dispatchEvent(new Event('change')); })()`,
+    );
+    await wait(500);
+    result.agentModel = wantModel;
+  }
   // HFWIN_SMOKE_REQUEST_FILE: a long request, read from a file instead of the environment.
   if (process.env.HFWIN_SMOKE_REQUEST_FILE) request = fs.readFileSync(process.env.HFWIN_SMOKE_REQUEST_FILE, "utf8").trim();
 

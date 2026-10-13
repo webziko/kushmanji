@@ -47,6 +47,7 @@ If `npm start` reports that Electron is missing, run `node node_modules/electron
 | What works and what is waiting on the owner | `CHECKLIST.md` |
 | Every task, done and open | `PROGRESS.md` |
 | Every feature of the official app, and where this one stands | `docs/PARITY.md` |
+| How the app should look and speak, and why | `docs/UX.md` |
 | How to work on the code | `CONTRIBUTING.md` |
 | How the app is built, and why | `docs/ARCHITECTURE.md` |
 | What it is trusted with and how that is limited | `SECURITY.md` |

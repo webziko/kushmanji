@@ -15,22 +15,30 @@ Two shortcuts are on your Desktop:
 
 ## Waiting on you
 
-- [ ] **Check the English subtitle lines** in `reviews/city-centre-vlog/SUBTITLES.md`. Nobody here understands
-      Kannada; the lines come from two machines listening. In the app, click a subtitle and tell the agent the
-      right words.
-- [ ] **Real noise removal needs one more tool. Yes or no?** The app cleaned the vlog's sound with FFmpeg, and
-      it barely helped (about 1 dB): the noise is shop music, crowds and traffic, and FFmpeg cannot tell those
-      from her voice. A voice-isolation model can. It is free and runs on this PC, but it is a download of
-      several hundred megabytes, so I am asking first.
-- [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools",
-      because it is what makes "cut my clips" work, and it stays inside the project.
-- [ ] **Play the vlog again and tell me about the sound.** I could not make the app go silent. ChatGPT's draft
-      had six clips turned down to about a quarter; they are at 40% now, and her talking clips are at full.
-- [ ] **What felt "not smooth"?** One example is enough.
+- [ ] **Watch the third version of the vlog** and tell me what still feels wrong. One example is enough each time.
+- [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
+- [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools".
 - [ ] **Music made on this PC?** It needs a few gigabytes of extra software. Yes or no.
 
 Answered on 2026-10-13: the name (**Kushmanji**), the GitHub home (`github.com/webziko/kushmanji`, public), the
-licence (Apache-2.0), and saving the work (committed and pushed).
+licence (Apache-2.0), saving the work (committed and pushed), the noise tool (yes), the subtitles ("its good"),
+and the order ("however you recommend").
+
+## What comes first now
+
+You asked for an app that is its own thing and easy enough for a child, and for it to spend less of your
+usage. So the order changed. The review you asked for is `docs/UX.md`.
+
+1. [ ] **A simple screen, shown first**: your video, big, with ordinary player buttons (play, back and forward
+       ten seconds, a bar to drag), and the chat. The full editor is one button away
+2. [ ] **Big plain buttons**: fix the sound, add subtitles, make it shorter, change the look, save the video
+3. [ ] **"What is what"**: a guide in one sentence per part, and plain names instead of Inspector, Lint and the rest
+4. [ ] **Kushmanji's own logo, icon and colours**, and HyperFrames credited in an About box instead of the header
+5. [ ] **Your team**: tick which assistants you have (one, two or three); the app uses only those
+6. [ ] **The right size of model for each job**, so small changes cost little
+7. [~] **An editing guide every assistant follows** (the first version is in; it grows from what you send back)
+
+Then the list further down, starting with one-click export.
 
 ## Works today
 
@@ -63,7 +71,10 @@ licence (Apache-2.0), and saving the work (committed and pushed).
 - [x] **Second version (made through Kushmanji's own chat):** 4 min 29 s, all 20 clips, nearly everything with
       her in it kept. Cute intro "A Happy Day Out", heart-sticker labels, "Thanks for watching" on her wave
 - [x] **English subtitles:** 44 lines in cream pills at the bottom. A draft until you have checked the words
-- [~] **Noise:** a first cleaning pass is in. It made little difference; see "Waiting on you"
+- [x] **Noise:** her voice is cleaned on the 13 talking clips with a voice-cleaning program (DeepFilterNet).
+      Measured indoors: the background between her words dropped about 13 dB. On the loud street the gain is
+      small. The six clips with no talking play at 40%
+- [~] **Third version:** one opening take, soft cross-fades, labels and subtitles back in step. See `PROGRESS.md`, M16-02
 - [ ] Not exported to a video file yet. Watch it in the app first
 - **Earlier versions are saved** inside the project, in `.hyperframes/versions`: ChatGPT's first draft, and the
   second version before the noise pass
@@ -109,6 +120,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | What | Where | How to undo |
 | --- | --- | --- |
 | Two shortcuts: "Kushmanji" and "Kushmanji - City Centre vlog" | Your Desktop | Delete them |
+| A voice-cleaning program, DeepFilterNet 0.5.6 (27 MB, from its official GitHub release) | `C:\hyperframewindows\tools\voice-clean` | Delete that folder |
 | The app's settings folder under its new name | `%APPDATA%\Kushmanji` | Delete that folder (the old `HyperFrames Studio Win` one can go too) |
 | Codex updated from 0.145.0 to 0.162.1 | Global npm package | `npm install -g @openai/codex@0.145.0` |
 | Google's `agy` tool installed | `%LOCALAPPDATA%\agy\bin`, added to your PATH | Delete that folder |

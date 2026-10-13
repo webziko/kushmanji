@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
 import { cliVersion } from "./cli.js";
 import { isCompositionPreview, PreviewManager } from "./preview.js";
@@ -196,6 +197,8 @@ function registerIpc() {
   handle("projects:open", async (dir) => {
     requireProject(dir);
     rememberFolder(dir);
+    // Every project carries the current editing guide, for whichever assistant cuts next.
+    writeGuide(dir);
     const started = await preview.start(dir);
     // After Studio is up, so the two do not compete while the person is waiting for the editor.
     study.open(dir);

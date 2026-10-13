@@ -44,6 +44,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   cli.js                 run the HyperFrames CLI with Electron's own Node
   proc.js                end a process tree; collect a child's output
   state.js  jsonFile.js  settings and safe file writes
+  selection.js           what is selected in the editor, for the chat's "Pointing at"
   smoke.js               the self-test's steps
   study.js  studyPlan.js the footage study: transcripts and frame sheets written into the project
   studyRead.js           bounded read-only review of indexed study files
@@ -54,6 +55,8 @@ app/src/main/            the main process (Node): the only code with file and pr
     house.js             the note every agent is given
     versions.js          "is the installed agent newer than we tested?"
     access.js            the three access levels and which one a project is on
+    working.js           the three ways of working, and the plan that waits for a yes
+    craft.js             the editing guide written into every project
     mediaTools.js        puts the FFmpeg check on an agent's PATH
     tools/               the check itself: rules.js (what is allowed), guard.mjs, and bin/ (the stand-ins)
     claude.js  codex.js  antigravity.js     one bridge per agent

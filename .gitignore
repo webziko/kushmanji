@@ -12,3 +12,6 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+
+# Tools fetched onto this computer for the app to use (a voice-cleaning program, later Whisper). Never committed.
+/tools/

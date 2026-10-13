@@ -5,6 +5,21 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## Start here (written 2026-10-13, evening)
+
+**The order changed.** The owner wants the app to be its own thing and easy enough for a child: M14 in
+`PROGRESS.md` comes first now, starting with M14-01, the simple screen. Read `docs/UX.md` before touching any
+screen. Then M15 (spend less, a team you choose), then the list at the end of `docs/PARITY.md`.
+
+The owner's usage is limited and they come back after it resets. Work in short sittings, commit each finished
+task (they said "its time to put this on github"), and leave this file true. They said yes to the noise tool,
+yes to the subtitles ("its good"), and "however you recommend" to the order.
+
+Their vlog is `reviews/city-centre-vlog` (never uploaded). What they want from it is in the memory note and in
+M16. Ask before exporting a final file: they have only watched it in the app.
+
+---
+
 ## 2026-10-13 · Claude · Kushmanji: the new name, GitHub, Codex's repair, the full checklist (later the same day)
 
 **The owner decided:** the app is **Kushmanji**; it lives at `github.com/webziko/kushmanji`, public, Apache-2.0;
@@ -120,7 +135,7 @@ and open this same app with isolated settings. Normal app: Open a folder → rev
 
 ---
 
-## Start here (written 2026-10-12, end of the first day)
+## An older "Start here" (written 2026-10-12, end of the first day; replaced by the one at the top)
 
 **The owner said go on the advanced plan (M10).** Their words: "yes you have full access you can do and add
 those features and all". Read that as approval to build all of M10, including the editing-tools access level
