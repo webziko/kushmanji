@@ -1,0 +1,14 @@
+# Reference clone of heygen-com/hyperframes (1.5 GB, its own git repo). Read-only; never committed here.
+/upstream/
+
+# Real test videos and the footage they are made from: someone's own recordings, gigabytes of them. They stay
+# on this computer and never go into the repository.
+/reviews/
+
+node_modules/
+/app/dist/
+/app/out/
+/app/.smoke/
+*.log
+.DS_Store
+Thumbs.db

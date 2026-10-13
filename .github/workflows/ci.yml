@@ -1,0 +1,33 @@
+# Runs on every push and pull request once the project is on GitHub. Not yet run for real: the repository has
+# no remote. The first run should be watched (PROGRESS.md, M9-03).
+#
+# It covers what needs no window and no agent sign-in: every file parses, the unit tests pass, and no dependency
+# has a known vulnerability. The end-to-end self-test (`npm run smoke`) and the agent tests stay local, because
+# they need a desktop, FFmpeg, Chrome and signed-in agents.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # Windows, because that is the only platform this app is for.
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm audit --audit-level=high

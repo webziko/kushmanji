@@ -1,0 +1,7 @@
+# LF everywhere, on every OS. Two AIs and a Windows machine edit this repo; without this, a CRLF save makes
+# every line of a file differ. Windows-only script types keep CRLF because cmd.exe needs it.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.ico binary
