@@ -8,7 +8,7 @@ The owner's short version is `CHECKLIST.md`.
 
 ## Where things stand
 
-_Updated 2026-10-13, late evening, by Claude after ChatGPT; existing tasks keep their original ownership._
+_Updated 2026-10-14, in the night, by Claude; existing tasks keep their original ownership._
 
 **The app is called Kushmanji** (owner, 2026-10-13), is public at `github.com/webziko/kushmanji` under
 Apache-2.0, and has its first commits. The owner wants every feature of the official app, one by one: the order
@@ -43,8 +43,11 @@ before most joins, because the clips' pictures are 0.2 seconds shorter than thei
 
 **Proven at the command line only, not yet through the chat:** captions from speech.
 
-**Not there yet:** an installer (today it starts with `npm start`), drawing on the picture,
-one-click export to Downloads, updates.
+**New on 2026-10-14:** "Save video" makes the file in the Downloads folder in one press, with a count; in "Edit
+by hand" the arrow keys skip ten seconds while the video plays instead of pausing it; the owner's vlog has its
+fourth version (the channel's name, an ending card, a little music) and three upright shorts (M17).
+
+**Not there yet:** an installer (today it starts with `npm start`), drawing on the picture, updates.
 
 **Next up:** M14-05 (plain wording, with M14-11), then branding, Home improvements and M15 (spend less).
 Nothing is claimed right now. Today's commits are on this PC only; the owner has not asked for a push.
@@ -138,8 +141,12 @@ Do not build them.
 ## M4 · Export
 
 - [ ] M4-01 Prove Studio's own Export on Windows: MP4, WebM, MOV at 1080p and 4K
-- [ ] M4-02 Save to Downloads as "Project name date time", then "Open video" and "Show in folder"
-- [ ] M4-03 No export while the agent is working; show progress on the taskbar button
+- [x] M4-02 "Save video" (Claude, 2026-10-14): one press makes the file in the Downloads folder as "project name
+      date time.mp4", with "Show the file" afterwards. `main/exporter.js`, `renderer/saveVideo.js`; the "Save the
+      video" editing button does the same. Tried in the self-test on a one-second video. Still open: "Open
+      video" beside "Show the file", and a choice of size or quality (it uses HyperFrames' own defaults)
+- [x] M4-03 No saving while an assistant works, no message to a video that is being saved, one save at a time,
+      and the count on the taskbar button (Claude, 2026-10-14)
 
 ## M5 · Installer and updates
 
@@ -473,6 +480,49 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,
       speed ramp, title styles, lower thirds, end card. From HyperFrames' own catalog first
+
+## M17 · Shorts and reels from a finished video
+
+The owner, 2026-10-14: "i need shorts also reels and for youtube also shorts, maybe 2-3 ... to increase followers
+and subscribers", "a good intro ... happywithshisha", "background music if needed + outro", "this export
+everything i want ai to do". The channel's own notes are in `C:\Creators\happywithshisha` (read only from here).
+
+- [x] M17-01 Three upright shorts cut from the City Centre vlog (Claude, 2026-10-14; waiting for the owner to
+      watch). Each is its own project in `reviews/shisha-shorts`, made through the app's chat by Codex at
+      "Editing tools": "Boring day? Mall time!" (27 s), "So pretty!" (19 s), "Day out: done!" (21 s). Full
+      screen, cropped around her face, the vlog's look, an ending card with the channel's name. Claude checked
+      still frames of each and frames of each finished file; short 2 went back once (see M17-07) and two top
+      titles were restyled by hand to be readable. Nobody has listened to them
+- [x] M17-02 The vlog's fourth version (Claude, 2026-10-14; waiting for the owner to watch): her first two
+      lines with nothing over them, a "Happy with Shisha" name card of 2.6 s in the pause after them, a 7 s
+      ending card with room for YouTube's own buttons, and music on those two cards only (a YouTube Audio
+      Library track the owner already downloaded for the channel). 4:13.5. Built through the chat by Claude
+      Code on Sonnet, which was stopped by the usage limit before its own check (M17-06); Claude then checked
+      the still frames, moved the chime onto the name card and brought the storyboard up to date. The finished
+      file was checked too: no frozen stretch outside the two cards
+- [ ] M17-08 A saved video comes out at the project's own loudness: about -19 LUFS for all four of the owner's
+      videos, where YouTube and Instagram play at about -14. Tonight the upload copies were raised by hand
+      (`reviews/m16-playback/finish.sh`). "Save video" should offer the usual loudness itself
+- [ ] M17-09 One kit for a channel's shorts: the three ending cards and the top titles came out a little
+      different each time, because each short was a separate request. Goes with M17-04 and M10-04
+- [x] M17-03 Arrow keys in "Edit by hand" (Claude, 2026-10-14): while the video plays they skip ten seconds and
+      it keeps playing, as on the watching screen; while it is paused, with a modifier, in the chat box, or on
+      a control that uses arrows, the editor keeps its key. `main/editorKeys.js`. Tried in the self-test with
+      real key presses. The owner hit this twice: "its not going forward its pausing". Not yet said anywhere
+      in Help (with M14-05)
+- [ ] M17-04 "Make shorts from this video" as something the app does: pick the moments, make an upright project
+      in the video's own look, keep her face in frame. Today it is done by hand with three requests
+- [x] M17-05 "Save the video" done by the app, not by the person: done as M4-02 (Claude, 2026-10-14). An
+      assistant is the wrong tool for it: a four-minute video takes most of an hour to make here, far longer
+      than an assistant's command may run
+- [ ] M17-06 When an assistant is stopped by its usage limit in the middle of a job, the work is left half
+      done and unchecked, and the chat only shows the limit message. Seen twice on 2026-10-14 (the vlog's
+      fourth version stopped before its own check; a short never started). Say plainly what was and was not
+      finished, and offer to carry on with another assistant (with M12-04)
+- [ ] M17-07 Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
+      ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
+      good short that way, with two faults a look would have caught (lips not matching the words, a strip
+      across the top). Find a way for Codex to take still frames inside its sandbox (with M2-21)
 
 ## Upstream
 

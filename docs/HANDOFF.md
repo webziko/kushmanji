@@ -5,6 +5,55 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-14 · Claude · Save video, arrow keys, the vlog's fourth version and three shorts (through the night)
+
+The owner, before sleeping: push; the arrow key pauses in "Edit by hand"; the video is nice; shorts and reels,
+"2-3"; an intro with the channel's name, an outro, music if needed, cute; "this export everything i want ai
+to do"; "do it 1 by 1, morning i will come and check".
+
+**Done, in this order**
+- Pushed. Then again at the end of the night.
+- **M17-03 Arrow keys** (`main/editorKeys.js`): while the editor's video plays, a plain arrow is taken in
+  `before-input-event` and becomes the watching screen's ten-second skip. Tried with real key presses.
+- **M4-02, M4-03, M17-05 "Save video"** (`main/exporter.js`, `renderer/saveVideo.js`): the CLI's own `render`
+  into the person's Downloads folder, a count, stop, "Show the file". The "Save the video" editing button now
+  does this instead of opening the editor. The self-test saves a one-second video into its own Downloads folder.
+- **M17-02 The vlog's fourth version** and **M17-01 three shorts**. Finished files:
+  `reviews/READY` (four MP4s and a note for the owner). Details are in the two tasks.
+
+**What would surprise you**
+- The owner's channel has its own rulebook in `C:\Creators\happywithshisha` (read only from here):
+  `00_PROFILE.md`, `DECISIONS.md`, `_brand/EDIT_STYLE_GUIDE.md`, `MUSIC.md`. It settles things this repository
+  kept asking: shorts are full screen and upright, no Kannada word cards, no blurring, no clock times on screen,
+  no MusicGen, music only from the YouTube Audio Library or Pixabay, and Kish wants the plan before a cut.
+- **Nested Claude Code runs spend the same Claude limit as the session that starts them.** Two of them were
+  stopped by "You've hit your session limit" (the self-test still said PASS, because the file it looks for
+  existed). Codex did the shorts instead, on the ChatGPT plan, in 15 to 25 minutes each. Prefer Codex for
+  jobs sent through the chat from a Claude session, and read `agentReply` in `result.json`, not the PASS line.
+- **Codex cannot see what it builds** at "Editing tools" (M17-07). It says so honestly. Always take still
+  frames yourself afterwards: `hyperframes snapshot <project> --at ...`.
+- The footage is wide. A full-screen upright short is a crop around her face, a little soft, and looks fine.
+- A saved video is about 5 dB quieter than YouTube plays (M17-08).
+- **The full-screen check only passes with the self-test's window in front.** It now says "NOT checked"
+  instead of failing. `HFWIN_SMOKE_NAME` lets several runs go at once; `HFWIN_SMOKE_JUST_ASK` sends one
+  real request without the self-test's own steps (`CONTRIBUTING.md`).
+- A render reported `media_readiness_timeout` and still made a good file. Check the file, not the message:
+  frames across it, and `freezedetect` for stretches that do not move.
+
+**Shared files touched:** `main.js` (the save calls, the editor keys, a guard in `agent:send`), `preload.cjs`
+(`save`), `app.js` (the button in the bar), `chat.js` and `editActions.js` (`onSave`), `help.js` (four
+sentences), `styles.css` (two rules), `smoke.js`, `scripts/smoke.mjs`. ChatGPT: the Help text does not yet
+mention the editor's arrow keys; that belongs with M14-05.
+
+**Not done, next in line:** M14-05 (plain wording, with M14-11), M17-04 and M17-09 (shorts as something the
+app does, with one kit), M17-06 (say what a stopped assistant left unfinished), M17-08 (loudness when saving),
+then the list at the end of `docs/PARITY.md`. Nothing is claimed.
+
+Check (57 files), 109 tests and the self-test pass. Paid requests: two on Claude, both cut off by its
+usage limit; four on Codex.
+
+---
+
 ## 2026-10-13 · Claude · ChatGPT's work reviewed, the "stuck" preview measured, the vlog's third version (late evening)
 
 The owner asked for four things in order; the first three are done, the fourth is not started.

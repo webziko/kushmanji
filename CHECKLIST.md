@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-13, late evening. The app is now called **Kushmanji**._
+_Updated 2026-10-14, in the night. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -15,16 +15,16 @@ Two shortcuts are on your Desktop:
 
 ## Waiting on you
 
-- [ ] **Close Kushmanji and open it again.** The copy on your screen has been open since the morning, so it
-      still shows the old screen. The new simple screen appears after a restart.
-- [ ] **Say "push" when you want today's work on GitHub.** It is saved on this PC (committed), not uploaded.
-
-- [ ] **Watch the vlog's third version** (4 minutes 4 seconds) and say what still feels wrong. Labels and
-      subtitles are back on their clips, the clip changes are soft cross-fades, and the freeze before each
-      change is gone.
+- [ ] **Watch the four finished videos** in `C:\hyperframewindows\reviews\READY`: the vlog (4 min 13 s) and
+      three upright shorts. A note in that folder says what to listen for and gives title ideas. Nothing was
+      posted anywhere.
+- [ ] **Listen to the music** on the vlog's name card and ending card, and under the shorts. A computer
+      checked the pictures; nobody has listened.
+- [ ] **Close Kushmanji and open it again** to get "Save video" and the new arrow keys.
 - [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
 - [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools".
-- [ ] **Music made on this PC?** It needs a few gigabytes of extra software. Yes or no.
+- [ ] **Music made on this PC?** Your channel's own notes say no (its licence does not allow earning from
+      it), so your videos use YouTube Audio Library tracks. Still open for other people who use Kushmanji.
 
 Answered on 2026-10-13: the name (**Kushmanji**), the GitHub home (`github.com/webziko/kushmanji`, public), the
 licence (Apache-2.0), saving the work (committed and pushed), the noise tool (yes), the subtitles ("its good"),
@@ -63,6 +63,15 @@ Claude measured your vlog playing in the real app, picture by picture.
 - Fixed in the app for every future video: Kushmanji now measures how long each clip's picture really lasts
   and tells every assistant never to play a clip past it.
 - Fixed in your vlog: see "Your City Centre vlog" below.
+
+## New in the night of 14 October
+
+- [x] **Save video.** A button at the top of every video (and the "Save the video" editing button) makes the
+      video file and puts it in your Downloads folder. It shows a count, also on the taskbar button, and
+      "Show the file" when it is done. No editor needed, no assistant used
+- [x] **Arrow keys in "Edit by hand".** While the video plays, left and right skip ten seconds and it keeps
+      playing. While it is paused they still move one frame, as editors do
+- [x] **Pushed to GitHub**, as you asked
 
 ## Works today
 
@@ -111,7 +120,11 @@ Claude measured your vlog playing in the real app, picture by picture.
       when she talks; no more frozen picture before a clip change. The two heart wipes are gone, because the
       cross-fades do that job. One thing to listen for: the very end of "...kurta sets" lost a sliver of sound
 - [x] It was made with the smaller, cheaper Claude model (Sonnet) in one request of about 17 minutes
-- [ ] Not exported to a video file yet. Watch it in the app first
+- [x] **Fourth version (2026-10-14):** your first two lines play clean, then a "Happy with Shisha" name card,
+      and an ending card with "Subscribe for more happy days". A little music on those two cards only. 4 min 13 s
+- [x] **Three shorts** for YouTube Shorts and Instagram Reels, upright and full screen: "Boring day? Mall
+      time!" (27 s), "So pretty!" (19 s), "Day out: done!" (21 s)
+- [x] **All four are saved as video files** in `C:\hyperframewindows\reviews\READY`, with a note of title ideas
 - **Earlier versions are saved** inside the project, in `.hyperframes/versions`: ChatGPT's first draft, and the
   second version before the noise pass
 - **Open it:** the Desktop shortcut, or `C:\hyperframewindows\reviews\city-centre-vlog`
@@ -124,7 +137,7 @@ inside Kushmanji, because the editor is the same one (panels, keyframes, sound t
 catalog, variables, export choices): those need trying on Windows, not building. What has to be built is the
 app around the editor. The full list with a mark on every line is `docs/PARITY.md`. The order:
 
-1. [ ] One-click export to Downloads
+1. [x] One-click export to Downloads ("Save video")
 2. [ ] Undo for each agent step
 3. [ ] The editor's "Ask agent" button goes to the chat
 4. [~] Agents that keep working when they update (Codex's repair is in; the check-up and "test this agent" are next)
@@ -145,8 +158,7 @@ app around the editor. The full list with a mark on every line is `docs/PARITY.m
 ## Not possible right now
 
 - **HeyGen's better voices, stock images and music.** Their tool does not run on Windows yet ("coming soon").
-- **Automatic subtitles and one-click saving.** The buttons explain the limits. You can supply subtitle
-  words/times and use the full editor's saving controls; its Windows saving choices still need checking.
+- **Automatic subtitles.** The button explains the limit. You can supply the subtitle words and times.
 - **Framey and HeyGen sign-in.** They are HeyGen's own; Kushmanji will not copy them.
 - **Taking the official app apart** (the REA tool you linked). Not needed and a legal risk: the editor is open
   source and the features are documented. Nothing was installed.
@@ -169,8 +181,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.
 
-The player, message moments, editing buttons and Help are now committed on this PC. Nothing has been pushed
-to GitHub since the morning. This evening's session installed no software and changed no other program's
-settings. While it measured, a second Kushmanji window opened and closed by itself a few times: that was the
-test copy, with its own settings. Next is clearer wording throughout Kushmanji. The cancelled browser and
-social-posting work stays cancelled.
+Everything up to the night of 14 October is committed and pushed to GitHub. That night installed no software
+and changed no other program's settings. One licensed music file was copied (not moved) from your channel folder
+into the vlog and the shorts. Your Claude usage limit was reached once during the night; the three shorts were
+then made with ChatGPT's Codex instead. The cancelled browser and social-posting work stays cancelled.
