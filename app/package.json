@@ -1,0 +1,28 @@
+{
+  "name": "kushmanji",
+  "productName": "Kushmanji",
+  "version": "0.1.0",
+  "description": "An unofficial Windows AI video editor built on HyperFrames, supporting Claude Code, Codex and Antigravity (Gemini).",
+  "private": true,
+  "type": "module",
+  "main": "src/main/main.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "electron .",
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:study": "node scripts/smoke.mjs --study",
+    "smoke:agent": "node scripts/smoke.mjs --agent",
+    "smoke:codex": "node scripts/smoke.mjs --agent=codex",
+    "smoke:antigravity": "node scripts/smoke.mjs --agent=antigravity",
+    "check": "node scripts/check.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "hyperframes": "0.8.149"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0"
+  }
+}

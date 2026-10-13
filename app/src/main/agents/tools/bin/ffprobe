@@ -1,0 +1,4 @@
+#!/bin/sh
+# Puts the check in ../guard.mjs in front of the real ffprobe for Git Bash. The app sets HFWIN_NODE and HFWIN_GUARD;
+# see ../../mediaTools.js. Arguments pass through untouched.
+ELECTRON_RUN_AS_NODE=1 exec "$HFWIN_NODE" "$HFWIN_GUARD" ffprobe "$@"
