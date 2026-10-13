@@ -15,6 +15,12 @@ The owner's usage is limited and they come back after it resets. Work in short s
 task (they said "its time to put this on github"), and leave this file true. They said yes to the noise tool,
 yes to the subtitles ("its good"), and "however you recommend" to the order.
 
+**The vlog is out of step and waiting for you (M16-02).** Labels and subtitles sit 15 seconds late after a clip
+was removed by hand. The fix was sent through the app's chat and stopped at once: the owner's Claude usage
+limit was reached. Do this first when usage is back: open the vlog in the app, "Editing tools" access, and send
+the request kept in M16-02's words (realign labels, wipes, sounds; rebuild the subtitle scene from
+`subtitles.json`; soft cross-fades; slow push-ins). Then look at still frames before telling the owner.
+
 Their vlog is `reviews/city-centre-vlog` (never uploaded). What they want from it is in the memory note and in
 M16. Ask before exporting a final file: they have only watched it in the app.
 

@@ -386,8 +386,9 @@ subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each jo
 - [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
       conversation when a job is done, carrying a short summary forward
 - [ ] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13)
-- [x] M15-06 A smaller model works through the chat's model menu (Claude, 2026-10-13): the vlog's third version
-      was edited by Claude Code on Sonnet. See M16-02
+- [ ] M15-06 Prove a smaller model through the chat's model menu. Tried 2026-10-13: Sonnet was picked in the
+      menu and the request was sent, but Claude Code answered "You've hit your session limit" before doing
+      anything. Not proven
 
 ## M16 · Editing that looks edited
 
@@ -398,8 +399,14 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       joins of picture and sound, no repeated takes, how long a title stays, where subtitles sit, how loud music
       is under a voice. First version: `app/src/main/agents/craft.js`. To grow from research and from what the
       owner sends back
-- [~] M16-02 The vlog, third version (Claude): one opening take instead of two, soft joins between clips, the
-      cleaned voice. Made through the app's chat on a smaller model
+- [~] M16-02 The vlog, third version (Claude). **Not made yet, and the vlog is out of step right now.** The
+      second opening take (clip 01) was removed in the editor, the clips after it moved 15 seconds earlier, and
+      the labels, wipes, sounds and all subtitles stayed at their old times. The cleaned voice files are in use
+      and `subtitles.json` is already remade for the new clip positions (40 lines), but
+      `compositions/subtitles.html` and the label positions in `index.html` are not. The request that fixes it
+      and adds soft cross-fades is written and ready; it stopped because the owner's Claude usage ran out
+      (2026-10-13, resets 1:40 pm). The state before it is saved in
+      `.hyperframes/versions/2026-10-13-before-third-version`
 - [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,
