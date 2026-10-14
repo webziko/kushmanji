@@ -409,6 +409,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const models = agent?.models ?? [];
     modelPick.hidden = models.length === 0;
     modelPick.replaceChildren(
+      // "Auto": the app sends small changes to a smaller model (main/agents/sizing.js).
+      h("option", { value: "auto" }, "Auto (saves usage)"),
       h("option", { value: "" }, "Default"),
       ...models.map((model) => h("option", { value: model.id }, model.name)),
     );

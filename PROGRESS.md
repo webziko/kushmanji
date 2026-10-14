@@ -418,9 +418,9 @@ now comes first**: it changes what every later feature looks like. The review it
       (`preview:changed`, then `reload()` in `renderer/player.js`). Not yet watched during a long real turn on
       a long video: check that it does not flash "Loading your video" over and over, and wait for a quiet
       stretch or the end of the turn if it does
-- [ ] M14-11 Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
+- [~] M14-11 (Claude) Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
       can change this project's files and run HyperFrames"), "Start over", the header's "built on HyperFrames"
-- [ ] M14-05 Every word the app itself shows, reread for a twelve-year-old: no "agent", "access level",
+- [~] M14-05 (Claude) Every word the app itself shows, reread for a twelve-year-old: no "agent", "access level",
       "composition", "render", "lint" without a plain twin. One list of words in `docs/UX.md`, used everywhere
 - [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
       HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
@@ -436,8 +436,12 @@ subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each jo
 
 - [ ] M15-01 "Your team": tick which assistants you have (one, two or three). The app only ever uses those, and
       says what each is used for. Someone with one subscription gets a complete app
-- [ ] M15-02 The right size of model for the job, chosen by the app: a small fast one for "make this red", a
-      large one for planning a whole video. The person can still pick by hand
+- [~] M15-02 (Claude) The right size of model for the job, chosen by the app: a small fast one for "make this red", a
+      large one for planning a whole video. The person can still pick by hand. Built (2026-10-14): "Auto (saves
+      usage)" in the model menu, and the choice when none was made; a short request about one thing goes to
+      Sonnet, a Codex "mini" or a Gemini "flash" model, found by name in the assistant's own list, anything
+      about the whole video, shorts, subtitles or a plan to the default (`agents/sizing.js`). Not yet tried
+      with a real assistant
 - [ ] M15-03 Heavy looking and listening goes to the assistant that does it cheapest (today Gemini: it listened
       to 20 clips), and comes back as a short note the others read, instead of each one studying the footage
 - [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
@@ -537,10 +541,13 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
 - [x] M17-05 "Save the video" done by the app, not by the person: done as M4-02 (Claude, 2026-10-14). An
       assistant is the wrong tool for it: a four-minute video takes most of an hour to make here, far longer
       than an assistant's command may run
-- [ ] M17-06 When an assistant is stopped by its usage limit in the middle of a job, the work is left half
+- [~] M17-06 (Claude) When an assistant is stopped by its usage limit in the middle of a job, the work is left half
       done and unchecked, and the chat only shows the limit message. Seen twice on 2026-10-14 (the vlog's
       fourth version stopped before its own check; a short never started). Say plainly what was and was not
-      finished, and offer to carry on with another assistant (with M12-04)
+      finished, and offer to carry on with another assistant (with M12-04). Main process done (2026-10-14):
+      `agents/limits.js` recognises the three assistants' limit messages, and the saved turn carries
+      `limited`, `resets` and the files changed; the shared record says the work is unchecked. The chat's card
+      and the "carry on with" button are next
 - [ ] M17-07 Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
       ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
       good short that way, with two faults a look would have caught (lips not matching the words, a strip

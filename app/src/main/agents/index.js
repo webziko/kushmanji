@@ -6,6 +6,8 @@ import * as antigravity from "./antigravity.js";
 import * as claude from "./claude.js";
 import * as codex from "./codex.js";
 import { filesChangedSince, handoverNote, recordTurn } from "./journal.js";
+import { usageLimit } from "./limits.js";
+import { AUTO, sizeModel } from "./sizing.js";
 import { isNewer } from "./versions.js";
 import { DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles } from "./working.js";
 
@@ -25,6 +27,8 @@ const NAMES = Object.fromEntries(Object.entries(BRIDGES).map(([id, bridge]) => [
 const chatFile = (dir) => path.join(dir, ".hyperframes", "studio-win-chat.json");
 
 const knownEngine = (id) => (Object.hasOwn(BRIDGES, id) ? id : null);
+/** The person's model choice for an agent. Nothing chosen yet means "Auto"; null means the agent's own default. */
+const chosenModel = (models, engine) => (models && Object.hasOwn(models, engine) ? models[engine] : AUTO);
 
 /** A new project starts with the agent the person last chose anywhere. */
 const emptyChat = () => ({
@@ -87,8 +91,9 @@ export class AgentRunner {
           ...state,
           untested: isNewer(state.version, bridge.about.tested),
           models,
-          // A model the agent no longer offers falls back to the agent's own default.
-          model: models.some((model) => model.id === chosen[id]) ? chosen[id] : null,
+          // Nothing chosen yet means "Auto" (sizing.js). A model the agent no longer offers falls back to the
+          // agent's own default.
+          model: chosenModel(chosen, id) === AUTO ? AUTO : models.some((model) => model.id === chosen[id]) ? chosen[id] : null,
         };
       }),
     );
@@ -127,11 +132,11 @@ export class AgentRunner {
     updateState({ agent: engine });
   }
 
-  /** Pick the model an agent uses, everywhere. `model` null means the agent's own default. */
+  /** Pick the model an agent uses, everywhere. `model` null means the agent's own default, AUTO the app's choice. */
   async chooseModel(engine, model) {
     if (!knownEngine(engine)) throw new Error("That agent is not known to this app.");
     // Only an id the agent itself lists is accepted: the value ends up on that agent's command line.
-    if (model !== null && !(await BRIDGES[engine].models()).some((offered) => offered.id === model)) {
+    if (model !== null && model !== AUTO && !(await BRIDGES[engine].models()).some((offered) => offered.id === model)) {
       throw new Error("That model is not offered by this agent.");
     }
     updateState({ models: { ...readState().models, [engine]: model } });
@@ -189,18 +194,33 @@ export class AgentRunner {
       handle: null,
     };
     this.#active = turn;
-    const start = () => {
+    const start = async () => {
+      let model = chosenModel(readState().models, engine);
+      if (model === AUTO) {
+        const offered = await BRIDGES[engine].models().catch(() => []);
+        const sized = sizeModel({ engine, models: offered, text: message, mode, pointing: Boolean(pointing) });
+        model = sized.model;
+        if (sized.small) {
+          const name = offered.find((item) => item.id === model)?.name ?? model;
+          this.#onEvent(turn, { type: "activity", label: `${name} for a small change` });
+        }
+      }
       if (turn.stopped) return this.#onEvent(turn, { type: "done", ok: false, stopped: true });
       turn.handle = BRIDGES[engine].run({
         dir,
         text: preface ? `${preface}\n\nThe person's request now:\n${message}` : message,
         sessionId: turn.resumed,
-        model: readState().models?.[engine] ?? null,
+        model,
         access,
         onEvent: (event) => this.#onEvent(turn, event),
       });
     };
-    if (!this.#prepare) return start();
+    // Stop works from the first moment, even while the model is being chosen or the footage studied.
+    const waiting = { stop() { turn.stopped = true; } };
+    if (!this.#prepare) {
+      turn.handle = waiting;
+      return void start();
+    }
     // Stop must work while the preparation is still going: it ends the wait, and the preparation carries on
     // behind the scenes for the next message.
     const halted = new Promise((resolve) => {
@@ -236,6 +256,13 @@ export class AgentRunner {
         delete chat.sessions[turn.engine];
         delete chat.told[turn.engine];
       }
+      // Stopped by its plan's usage limit part-way through (M17-06): the page says so plainly, names the files it
+      // had already changed, and offers another assistant. Some assistants end such a turn "ok".
+      const limit = event.stopped ? null : usageLimit({ error: event.error, text: turn.text });
+      if (limit) {
+        event = { ...event, ok: false, limited: true, resets: limit.resets,
+          changed: filesChangedSince(turn.dir, turn.startedAt).slice(0, 50) };
+      }
       // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
       // and the names of any files the agent changed that are not the plan: it was told to change none.
       const read = turn.mode === "build" || !event.ok ? { text: turn.text, plan: false } : readPlan(turn.text);
@@ -252,11 +279,14 @@ export class AgentRunner {
         stopped: Boolean(event.stopped),
         error: event.error ?? null,
         ...(read.plan ? { plan: true, touched: event.touched } : {}),
+        ...(limit ? { limited: true, resets: limit.resets, changed: event.changed } : {}),
         at: Date.now(),
       });
       writeChat(turn.dir, chat);
       // A stopped or failed turn is recorded too: it may have changed files before it ended.
-      const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : ` (failed: ${event.error ?? "unknown"})`;
+      const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : limit
+        ? " (stopped by its usage limit before finishing; its work is unchecked)"
+        : ` (failed: ${event.error ?? "unknown"})`;
       recordTurn(turn.dir, {
         engine: turn.engine,
         asked: turn.asked,
