@@ -1,6 +1,6 @@
 // The only bridge between the page and the main process. CommonJS because a sandboxed preload cannot be an ES
 // module. The page gets named calls, never `ipcRenderer` itself, so it cannot reach a channel not listed here.
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 const call =
   (channel) =>
@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     create: call("projects:create"),
     fromFootage: call("projects:fromFootage"),
     addMedia: call("projects:addMedia"),
+    addDropped: call("projects:addDropped"),
     pickFolder: call("projects:pickFolder"),
     open: call("projects:open"),
     ready: call("projects:ready"),
@@ -28,6 +29,21 @@ contextBridge.exposeInMainWorld("hfwin", {
     forget: call("projects:forget"),
   },
   storage: { status: call("storage:status"), free: call("storage:free") },
+  mentions: { list: call("mentions:list") },
+  files: {
+    /**
+     * Where a file the person dropped on the page really is. Electron removed `File.path`; this reads it from the
+     * file itself, so the page cannot name a path it was not handed: a file the page made up has none, and "" is
+     * returned. The main process still checks every path before it touches it.
+     */
+    pathOf(file) {
+      try {
+        return String(webUtils.getPathForFile(file) ?? "");
+      } catch {
+        return "";
+      }
+    },
+  },
   preview: { log: call("preview:log") },
   player: { command: call("player:command") },
   save: { start: call("save:start"), stop: call("save:stop"), status: call("save:status"), show: call("save:show") },

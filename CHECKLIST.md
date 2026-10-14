@@ -82,6 +82,8 @@ Claude measured your vlog playing in the real app, picture by picture.
       found mistakes, with "Ask to fix them"
 - [x] **"Test it now"** when an assistant has updated past the version Kushmanji was tried with: one tiny job,
       and a plain answer such as "Claude works with Kushmanji"
+- [x] **Type `@` in the message box** to name a clip or "this moment"; **drop clips on the chat** to add them
+- [x] **"Make it" asks three quick questions** (how long, which shape, what feel) before it starts
 - [x] **Type while the assistant works**: "Send when done" or "Stop and send now"
 - [x] **The editor's own "Ask agent" buttons** now put their request in the chat box instead of copying it
 - [x] **"Your assistants: tick the ones you have."** In the chat's settings. Someone with only ChatGPT never

@@ -164,6 +164,9 @@ and the caller in `renderer/`.
 | `projects.create(name)` | `hyperframes init` in the projects folder |
 | `projects.fromFootage()` | Native folder picker; scan up to 200 media files, create a project, copy into assets, return project and imported files |
 | `projects.addMedia(dir)` | Native media picker; safe copies into an existing project's assets and start its study |
+| `projects.addDropped({ dir, paths })` | Clips dropped on the chat (M3-03). `paths` come from `files.pathOf`; one to 50 absolute paths of real files with a media extension, else the whole drop is refused in plain words (`mentions.js`, `validateDropped`). Then the same safe copy and study as `addMedia`, returning the same `{ files, count }`. Refused while an assistant works |
+| `files.pathOf(file)` | Not an IPC call: a function in `preload.cjs` that returns the real path of a `File` the page got from a drop (`webUtils.getPathForFile`; Electron removed `File.path`), or `""` for a file the page made itself |
+| `mentions.list(dir)` | The "@" list in the message box (M3-03): `[{ path, name, kind, mention }]`, `kind` being `video`, `audio`, `image` or `scene`, `path` with forward slashes. Up to 500 files, four folders deep, nearest the top first; skips hidden folders, `node_modules`, `renders` and links; `index.html` of the video is left out. `mention` is the file name, or its whole path when another file has the same name |
 | `projects.pickFolder()` | Folder dialog; must contain `index.html` |
 | `projects.open(dir)` | Starts the preview server; returns `{ port, serverUrl, studioUrl, projectName }` |
 | `projects.ready(dir)` | Whether the active editor's root or selected-scene preview has finished loading |

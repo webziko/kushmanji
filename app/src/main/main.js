@@ -17,6 +17,7 @@ import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
 import { importMedia, mediaFilesIn, MEDIA_EXTENSIONS } from "./mediaImport.js";
+import { listMentionable, validateDropped } from "./mentions.js";
 import {
   createProject,
   forgetFolder,
@@ -245,6 +246,17 @@ function registerIpc() {
     void study.run(dir);
     return imported;
   });
+  // Clips dropped on the chat (M3-03). The page gives the paths of what a real drop handed it; they are checked
+  // again here and copied by the same safe import as the picker above. Never while an assistant works.
+  handle("projects:addDropped", async ({ dir, paths } = {}) => {
+    requireProject(dir);
+    if (agent.busy) throw new Error("The assistant is still working. Wait for it to finish before adding clips.");
+    const imported = await importMedia(dir, await validateDropped(paths));
+    void study.run(dir);
+    return imported;
+  });
+  // The clips, sounds, pictures and scenes of the open video, for the "@" list in the message box.
+  handle("mentions:list", (dir) => listMentionable(requireProject(dir)));
   handle("projects:pickFolder", async () => {
     const options = { title: "Open the folder of a video", properties: ["openDirectory"] };
     const picked = win

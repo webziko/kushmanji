@@ -698,16 +698,294 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     input.focus();
   };
   window.addEventListener("message", fromEditor);
-  input.addEventListener("input", () => { askNote.hidden = true; });
+
+  // "@" in the message box (M3-03): a list of the video's clips, sounds, pictures and scenes, and the moment
+  // the video is at. Choosing one writes a plain `@name` into the text. Nothing else is attached: the
+  // assistant reads the file itself. The names come from the main process (main/mentions.js), asked for again
+  // each time a new "@" is typed.
+  const MENTION_GROUPS = [["video", "Clips"], ["audio", "Sounds"], ["image", "Pictures"], ["scene", "Scenes"]];
+  const MENTION_ROWS = 40;
+  const mentionList = h("div", { class: "mention-list", id: "chat-mentions", role: "listbox", hidden: true,
+    "aria-label": "Things you can mention" });
+  /** What the list can offer: the files the main process last named. */
+  let mentionable = [];
+  let mentionsLoaded = false;
+  let mentionAsk = 0;
+  /** The "@" being completed: where it starts, where the caret is, what was typed, and what is offered. */
+  let mention = null;
+  /** The "@" the person closed with Escape. It stays closed until they start another one. */
+  let mentionClosed = null;
+  /** The "@" the files were last asked for, so one "@" asks once however much is typed after it. */
+  let mentionAskedAt = null;
+  let mentionDrawn = "";
+  const dropNote = h("p", { class: "composer-note muted", role: "status", hidden: true });
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-controls", "chat-mentions");
+  input.setAttribute("aria-expanded", "false");
+
+  /** The words after an "@" must read back as one word, so a name with spaces goes in quotes. */
+  const mentionText = (name) => `@${/\s/.test(name) ? `"${name}"` : name}`;
+
+  /** Where the caret is inside an "@" that starts a word, or null. An address like a@b.com is not one. */
+  function mentionTrigger() {
+    if (input.selectionStart !== input.selectionEnd) return null;
+    const caret = input.selectionStart;
+    const typed = /(^|\s)@([^\s@]*)$/u.exec(input.value.slice(0, caret));
+    return typed ? { start: caret - typed[2].length - 1, caret, query: typed[2].replace(/^"/, "") } : null;
+  }
+
+  /** Everything that fits what was typed, in the order shown: this moment, clips, sounds, pictures, scenes. */
+  function mentionChoices(query, at) {
+    const wanted = query.toLowerCase();
+    const choices = [];
+    if (at && ["this moment", "moment", "now", at.when].some((word) => word.startsWith(wanted))) {
+      choices.push({ group: "In the video", id: "moment", label: "This moment", detail: `At ${at.when}`,
+        insert: `@${at.when}` });
+    }
+    for (const [kind, title] of MENTION_GROUPS) {
+      const ranked = mentionable
+        .filter((file) => file.kind === kind)
+        .map((file) => {
+          const name = file.name.toLowerCase();
+          return { file, rank: name.startsWith(wanted) ? 0 : name.includes(wanted) ? 1
+            : file.path.toLowerCase().includes(wanted) ? 2 : 3 };
+        })
+        .filter((found) => found.rank < 3)
+        .sort((a, b) => a.rank - b.rank);
+      for (const { file } of ranked) {
+        const folder = file.path.slice(0, file.path.length - file.name.length).replace(/\/$/, "");
+        choices.push({ group: title, id: file.path, label: file.name, detail: folder,
+          insert: mentionText(file.mention ?? file.name) });
+      }
+    }
+    return choices;
+  }
+
+  function closeMentions() {
+    if (!mention) return;
+    mention = null;
+    mentionDrawn = "";
+    mentionList.hidden = true;
+    mentionList.replaceChildren();
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  }
+
+  function paintMentionChoice() {
+    const rows = [...mentionList.querySelectorAll('[role="option"]')];
+    rows.forEach((row, i) => {
+      const on = i === mention?.active;
+      row.setAttribute("aria-selected", String(on));
+      row.classList.toggle("active", on);
+      if (on) {
+        input.setAttribute("aria-activedescendant", row.id);
+        row.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }
+
+  function drawMentions() {
+    const shown = mention.choices.slice(0, MENTION_ROWS);
+    // The same list again (a refresh that found nothing new) is left alone: a click needs the row it hit.
+    const key = `${mention.query}\n${shown.map((choice) => choice.id).join("\n")}\n${mention.choices.length}`;
+    mentionList.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    if (key !== mentionDrawn) {
+      mentionDrawn = key;
+      const groups = [];
+      shown.forEach((choice, i) => {
+        if (groups.at(-1)?.title !== choice.group) groups.push({ title: choice.group, rows: [] });
+        groups.at(-1).rows.push(h("div", {
+          class: "mention-item", role: "option", id: `chat-mention-${i}`, "aria-selected": "false",
+          onclick: () => chooseMention(i),
+          onmousemove: () => {
+            if (mention && mention.active !== i) {
+              mention.active = i;
+              paintMentionChoice();
+            }
+          },
+        }, h("span", { class: "mention-name" }, choice.label),
+        choice.detail && h("span", { class: "mention-detail" }, choice.detail)));
+      });
+      const note = !mention.choices.length ? "Nothing to mention yet. Drop clips onto this chat to add them."
+        : mention.choices.length > shown.length ? "Keep typing to see the others." : "";
+      mentionList.replaceChildren(
+        ...groups.map((group) => h("div", { class: "mention-group", role: "group", "aria-label": group.title },
+          h("div", { class: "mention-title", "aria-hidden": "true" }, group.title), ...group.rows)),
+        ...(note ? [h("div", { class: "mention-note" }, note)] : []),
+      );
+    }
+    paintMentionChoice();
+  }
+
+  /** Open, narrow or close the list to match the "@" at the caret. `refresh` keeps the row that was chosen. */
+  function updateMentions(refresh = false) {
+    const trigger = mentionTrigger();
+    if (!trigger) {
+      mentionClosed = null;
+      mentionAskedAt = null;
+      return closeMentions();
+    }
+    // A new "@" asks again which files there are, so a clip the assistant just made is on the list.
+    if (mentionAskedAt !== trigger.start) {
+      mentionAskedAt = trigger.start;
+      void refreshMentionable();
+    }
+    if (mentionClosed === trigger.start) return closeMentions();
+    const opening = !mention;
+    // The moment is taken when the list opens and kept, so the rows do not change under a pointer.
+    const at = opening ? (!editor && moment) || null : mention.at;
+    const choices = mentionChoices(trigger.query, at);
+    // Nothing fits what was typed: no list. With nothing typed yet, say why it is empty, once that is known.
+    if (!choices.length && (trigger.query || !mentionsLoaded)) return closeMentions();
+    const same = !opening && mention.start === trigger.start && mention.query === trigger.query;
+    const kept = refresh && same ? Math.min(mention.active, Math.max(0, choices.length - 1)) : 0;
+    mention = { ...trigger, at, choices, active: kept };
+    drawMentions();
+  }
+
+  async function refreshMentionable() {
+    const ask = ++mentionAsk;
+    try {
+      const found = await api.mentions.list(dir);
+      if (ask !== mentionAsk) return;
+      mentionable = Array.isArray(found) ? found : [];
+    } catch {
+      // Not readable just now: the list keeps what it had.
+    }
+    mentionsLoaded = true;
+    if (document.activeElement === input) updateMentions(true);
+  }
+
+  function chooseMention(index) {
+    const picked = mention?.choices[index];
+    if (!picked) return;
+    const { start, caret } = mention;
+    const spaced = /^\s/.test(input.value.slice(caret));
+    mentionClosed = null;
+    closeMentions();
+    input.focus();
+    input.setSelectionRange(start, caret);
+    // Typed in, so the box's own undo still works. The fallback is for a page that refuses.
+    const text = spaced ? picked.insert : `${picked.insert} `;
+    if (!document.execCommand("insertText", false, text)) {
+      input.setRangeText(text, start, caret, "end");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (spaced) input.setSelectionRange(start + text.length + 1, start + text.length + 1);
+  }
+
+  /** The keys the open list takes. True when it took the key, so the box does not also act on it. */
+  function mentionKey(event) {
+    if (!mention || event.isComposing) return false;
+    if (event.key === "Escape") {
+      mentionClosed = mention.start;
+      closeMentions();
+      event.stopPropagation();
+    } else if (!mention.choices.length) {
+      return false;
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const count = Math.min(mention.choices.length, MENTION_ROWS);
+      mention.active = (mention.active + (event.key === "ArrowDown" ? 1 : count - 1)) % count;
+      paintMentionChoice();
+    } else if ((event.key === "Enter" && !event.shiftKey) || (event.key === "Tab" && !event.shiftKey)) {
+      chooseMention(mention.active);
+    } else {
+      return false;
+    }
+    event.preventDefault();
+    return true;
+  }
+
+  // The list never takes the pointer's focus away from the box, so choosing a row does not close it first.
+  mentionList.addEventListener("mousedown", (event) => event.preventDefault());
+  input.addEventListener("input", (event) => {
+    askNote.hidden = true;
+    dropNote.hidden = true;
+    // Typing an "@" starts a new mention, whatever was closed or asked before at the same place in the text.
+    if (event.data === "@") mentionClosed = mentionAskedAt = null;
+    updateMentions();
+  });
+  input.addEventListener("click", () => updateMentions());
+  input.addEventListener("keyup", (event) => {
+    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) updateMentions();
+  });
+  input.addEventListener("blur", closeMentions);
+
+  // Clips dropped from File Explorer onto the chat (M3-03). Each is copied into the video's own files, so the
+  // original stays where it was, and the message box gets an "@" for each. The preload reads which path each
+  // dropped file really has (files.pathOf); the main process checks every one again before it copies anything.
+  const dropHint = h("div", { class: "drop-hint", hidden: true, "aria-hidden": "true" },
+    h("p", {}, "Drop clips to add them to this video"));
+  const say = (text, problem = false) => {
+    dropNote.hidden = !text;
+    dropNote.textContent = text;
+    dropNote.classList.toggle("problem", problem);
+  };
+  const carriesFiles = (event) => [...(event.dataTransfer?.types ?? [])].includes("Files");
+  // Enter and leave come in pairs for the panel and everything in it; the hint goes when they balance. A drag
+  // that is called off (Escape, or let go outside the window) may not say so, so the hint also goes when the
+  // page has heard nothing of the drag for a moment: a drag over the panel is heard from every few dozen
+  // milliseconds, held still or not.
+  let overChat = 0;
+  let hintTimer = 0;
+  const hideHint = () => {
+    clearTimeout(hintTimer);
+    overChat = 0;
+    dropHint.hidden = true;
+  };
+  const dragOver = (event) => {
+    if (!carriesFiles(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    dropHint.hidden = false;
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(hideHint, 1500);
+  };
+  const dragIn = (event) => {
+    if (carriesFiles(event)) overChat++;
+    dragOver(event);
+  };
+  const dragOut = () => {
+    overChat = Math.max(0, overChat - 1);
+    if (overChat === 0) hideHint();
+  };
+
+  const clipCount = (n) => `${n} ${n === 1 ? "clip" : "clips"}`;
+
+  async function addDropped(paths, dropped) {
+    if (live) return say("The assistant is still working. Wait for it to finish before adding clips.", true);
+    if (!paths.length || paths.length < dropped) {
+      return say("Only files from File Explorer can be added here, so nothing was added.", true);
+    }
+    say("Adding clips…");
+    try {
+      const added = await api.projects.addDropped({ dir, paths });
+      await refreshMentionable();
+      const byPath = new Map(mentionable.map((file) => [file.path, file]));
+      const called = (file) => byPath.get(file)?.mention ?? file.split("/").pop();
+      const tokens = added.files.map((file) => mentionText(called(file)));
+      const before = input.value.trimEnd();
+      input.value = `${before}${before ? " " : ""}${tokens.join(" ")} `;
+      input.dispatchEvent(new Event("input"));
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      say(`Added ${clipCount(added.count)} to this video.`);
+    } catch (error) {
+      say(error.message, true);
+    }
+  }
 
   const form = h(
     "form",
     { class: "composer", onsubmit: onSubmit },
     askNote,
+    dropNote,
     queuedNote,
     pointingChip,
     h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, "Your message"), momentChip),
-    input,
+    h("div", { class: "composer-field" }, mentionList, input),
     h(
       "div",
       { class: "composer-row" },
@@ -754,9 +1032,22 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     notice,
     accessConfirm,
     form,
+    dropHint,
   );
+  element.addEventListener("dragenter", dragIn);
+  element.addEventListener("dragover", dragOver);
+  element.addEventListener("dragleave", dragOut);
+  element.addEventListener("drop", (event) => {
+    if (!carriesFiles(event)) return;
+    event.preventDefault();
+    hideHint();
+    // Read at once: the list of dropped files is only valid while the event is being handled.
+    const dropped = [...event.dataTransfer.files];
+    void addDropped(dropped.map((file) => api.files.pathOf(file)).filter(Boolean), dropped.length);
+  });
 
   input.addEventListener("keydown", (event) => {
+    if (mentionKey(event)) return;
     // isComposing: Enter that confirms an IME word (Hindi, Telugu, Japanese...) must not send the message.
     if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
     event.preventDefault();
@@ -862,6 +1153,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       input.value = text;
     },
     destroy() {
+      mentionAsk++;
+      clearTimeout(hintTimer);
       stopListening();
       window.removeEventListener("message", fromEditor);
       clearInterval(watchPointing);

@@ -150,7 +150,12 @@ Do not build them.
       clipboard; the app wraps the clipboard in Studio's page and hands those copies, recognised by how they
       begin, to the chat's message box, where the person presses Send (`main/askAgent.js`). Other copies still
       reach the clipboard. Tried in the real app
-- [ ] M3-03 `@` in the message box to mention files, media and moments
+- [x] M3-03 `@` in the message box to mention files, media and moments (Claude, 2026-10-14; built by a Sonnet
+      helper, reviewed). Typing `@` lists "This moment", then the video's clips, sounds, pictures and scenes;
+      it filters as you type and inserts `@clip-03.mp4`. Clips dropped from File Explorer onto the chat are
+      copied into the video by the same safe import as "Add clips" and mentioned (`main/mentions.js`; Electron's
+      `webUtils.getPathForFile` in the preload). Tried in the real app here; a non-ASCII file name dropped on
+      Windows is still to be tried
 - [ ] M3-04 Pending edits: collect up to 10 picks and send them as one request
 - [ ] M3-05 Draw and comment on the frame (needs Studio's components mounted directly; see ARCHITECTURE "Later")
 
@@ -187,7 +192,9 @@ Do not build them.
 ## M7 · Catching up with the official app
 
 - [ ] M7-01 "Get inspired" example library
-- [~] M7-02 (Claude) Guided first video (hook, proof, turn, call to action)
+- [x] M7-02 Guided first video (hook, proof, turn, call to action) (Claude, 2026-10-14): "Make it" on Home
+      asks how long, which shape and what feel, as buttons to tap, then asks for a hook, the main moment, a turn
+      and a call to action (`renderer/guided.js`). "Just make it" skips the questions
 - [ ] M7-03 Settings screen
 - [ ] M7-04 Keyboard shortcuts that work the same in the frame and inside Studio
 
