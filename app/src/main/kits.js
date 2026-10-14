@@ -12,8 +12,9 @@ const MAX_KITS = 100;
 /** A kit's file name from the name the person gave it: letters (with their marks, which Kannada and Hindi need),
  * digits, spaces and dashes only. */
 export function kitFileName(name) {
-  const clean = String(name ?? "").normalize("NFC").replace(/[^\p{L}\p{M}\p{N} _-]+/gu, "").replace(/\s+/g, " ")
-    .trim().slice(0, 60);
+  // Cut by letters, not UTF-16 units, so a letter outside the basic plane is never split in half.
+  const kept = String(name ?? "").normalize("NFC").replace(/[^\p{L}\p{M}\p{N} _-]+/gu, "").replace(/\s+/g, " ");
+  const clean = Array.from(kept).slice(0, 60).join("").trim();
   if (!clean) throw new Error("Give the look a name, for example the name of your channel.");
   // Windows keeps a few names for devices; a file cannot have one.
   return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(clean) ? `${clean} look.md` : `${clean}.md`;
@@ -57,8 +58,25 @@ export function saveKit(folder, dir, name) {
   const target = path.join(folder, kitFileName(name));
   const temp = `${target}.${process.pid}.tmp`;
   fs.writeFileSync(temp, text);
-  fs.renameSync(temp, target);
+  try {
+    fs.renameSync(temp, target);
+  } catch {
+    // Windows refuses the rename while an antivirus or indexer holds the old file. A plain write still works.
+    fs.writeFileSync(target, text);
+    fs.rmSync(temp, { force: true });
+  }
   return { name: kitFileName(name).replace(/\.md$/, "") };
+}
+
+// Whether `text` is one of the saved looks word for word, so it was put there by "Use" and is kept already.
+function isSavedLook(folder, text) {
+  return listKits(folder).some(({ name }) => {
+    try {
+      return fs.readFileSync(path.join(folder, `${name}.md`), "utf8") === text;
+    } catch {
+      return false;
+    }
+  });
 }
 
 /** Copy the saved look `name` into this video as its STYLE.md, keeping any look it had as STYLE.before.md. */
@@ -67,8 +85,9 @@ export function useKit(folder, dir, name) {
   if (!fs.existsSync(source)) throw new Error("That look is no longer saved.");
   const text = readStyle(source);
   const target = path.join(dir, STYLE_FILE);
-  // Never lose what was there: the person's or an assistant's own description of this video.
-  if (hasStyle(dir)) fs.copyFileSync(target, path.join(dir, "STYLE.before.md"));
+  // Never lose what was there: the person's or an assistant's own description of this video. A look that is only a
+  // copy of a saved one is kept already, and must not replace the video's own in STYLE.before.md.
+  if (hasStyle(dir) && !isSavedLook(folder, readStyle(target))) fs.copyFileSync(target, path.join(dir, "STYLE.before.md"));
   fs.writeFileSync(target, text);
   return { name: kitFileName(name).replace(/\.md$/, "") };
 }

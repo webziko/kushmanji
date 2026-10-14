@@ -1,30 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { runCli } from "./cli.js";
+import { folderNameFor } from "./folderName.js";
 import { projectsRoot, readState, updateState } from "./state.js";
 
-const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
 const MAX_RECENT = 30;
 
 /** Windows compares paths without regard to case, so `C:\Videos\Demo` and `c:\videos\demo` are one project. */
 const pathKey = (dir) => path.resolve(dir).toLowerCase();
-
-/**
- * A folder name Windows accepts and a URL carries unescaped: lowercase letters, digits and hyphens.
- * Device names (CON, NUL, COM1...) are refused by Windows even with an extension, so they get a suffix.
- */
-export function folderNameFor(name) {
-  const slug = String(name ?? "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48)
-    .replace(/-+$/, "");
-  if (!slug) return "untitled";
-  return RESERVED.test(slug) ? `${slug}-video` : slug;
-}
 
 /** A HyperFrames project is a folder with a root composition. */
 export const isProject = (dir) =>

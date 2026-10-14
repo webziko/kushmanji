@@ -54,6 +54,18 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 
 Then the list further down, starting with one-click export.
 
+## New in the afternoon of 14 October: a fuller look, and a review of everything
+
+- [x] **A more finished look on every screen.** Softer cards that lift under the mouse, a coral Play button with
+      its icon, your messages on the right of the chat in a warm colour, and a blurred background behind every
+      box that asks you something. Nothing moved: the buttons are where they were
+- [x] **A full review of the app's insides**, with 93 new tests (313 in all). It found and fixed: "Test it now"
+      would have failed almost every time on Windows; "Undo this change" stopped working once a chat passed
+      200 messages; a reply that put "rate limits" in a title was taken for a used-up allowance; using a saved
+      look twice lost the video's own look; a locked folder could leave "Making clips smooth" stuck for good
+- [x] **A video named in Kannada (or any language) keeps its name**, and the window opens where you left it
+- [ ] **Still to try on your PC:** the new look, and "Test it now" for each assistant
+
 ## Why the preview felt "stuck", and what was done
 
 Claude measured your vlog playing in the real app, picture by picture.
@@ -122,7 +134,7 @@ Claude measured your vlog playing in the real app, picture by picture.
 
 ## New in the night of 14 October
 
-- [x] **Save video.** A button at the top of every video (and the "Save the video" editing button) makes the
+- [x] **Save video.** A button at the top of every video (and the "Save video" editing button) makes the
       video file and puts it in your Downloads folder. It shows a count, also on the taskbar button, and
       "Show the file" when it is done. It also sets the sound to the loudness YouTube and Instagram expect.
       No editor needed, no assistant used

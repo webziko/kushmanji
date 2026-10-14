@@ -77,11 +77,17 @@ Do not build them.
 - [x] M1-05 Home and project screens (Claude, 2026-10-12)
 - [x] M1-06 One running copy; a folder on the command line opens that project (Claude, 2026-10-12)
 - [x] M1-07 Self-test with screenshots: `npm run smoke` (Claude, 2026-10-12)
-- [ ] M1-08 Real thumbnails on the Home cards (now a letter on a dark tile)
+- [x] M1-08 Real thumbnails on the Home cards (now a letter on a dark tile) (Claude, 2026-10-14: done by M14-07's
+      pictures, `covers.js`)
 - [ ] M1-09 Follow Studio's light and dark toggle in the frame around it
 - [ ] M1-10 Rename a project; delete one to the Recycle Bin
-- [ ] M1-11 Project names in any language (a name with no Latin letters becomes "untitled" today)
-- [ ] M1-12 Remember the window's size and place, and reopen the last project
+- [x] M1-11 Project names in any language (a name with no Latin letters becomes "untitled" today) (Claude,
+      2026-10-14): letters of any script keep themselves ("ನನ್ನ ಊರಿನ ವ್ಲಾಗ್" becomes the folder
+      `ನನ್ನ-ಊರಿನ-ವ್ಲಾಗ್`); Latin accents are still dropped. A video in a Kannada folder was opened, edited by
+      a stand-in assistant, recorded for Undo and checked, in the real app
+- [x] M1-12 Remember the window's size and place, and reopen the last project (Claude, 2026-10-14): the size,
+      place and maximised state are kept as the window closes and used next time, unless that place is on a
+      monitor no longer connected (`windowPlace.js`); the last project is Home's "Carry on" (M14-07)
 - [ ] M1-13 Drag the divider to resize the chat; hide and show the chat
 
 ## M2 · Chat with an agent
@@ -249,7 +255,10 @@ is making sure each one runs on Windows from inside the app, and making it easy 
 - [x] M9-04 Guides for people: `CONTRIBUTING.md`, `docs/MAINTENANCE.md`, `CHECKLIST.md` (Claude, 2026-10-12)
 - [ ] M9-05 Lint and type-check (`// @ts-check` with JSDoc types, checked by `tsc --noEmit`)
 - [ ] M9-06 Unit tests for the parts that still have none: project names, the preview's ready line, each
-      bridge's event handling against recorded real output
+      bridge's event handling against recorded real output. (Claude, 2026-10-14, not claimed: while reviewing the main
+      process for the owner, 93 tests were added for the runner's paths, light copies, storage, health, looks,
+      the look tool, covers, the "Ask agent" catcher, the journal and the Windows rules. The recorded-output
+      tests for each bridge are still open, and still ChatGPT's.)
 - [ ] M9-07 A log file the owner can send when something goes wrong, with nothing private in it
 - [~] M9-08 Licence file and third-party notices. The owner chose Apache-2.0 and `LICENSE` is in the repository
       (2026-10-13). Still to write: the notices for HyperFrames and Electron
@@ -490,6 +499,11 @@ now comes first**: it changes what every later feature looks like. The review it
       last video's picture, "From my clips" and "From an idea" cards, then "My videos" as pictures. The picture
       is taken from the player as the person leaves a video (`covers.js`; nearly black frames are skipped)
 - [ ] M14-08 Try it on someone who has never seen it, and fix what they stumble on
+- [x] M14-13 A finished, premium look (owner, 2026-10-14: "not premium or user friendly") (Claude, 2026-10-14):
+      `styles.css` only, plus `color-scheme: light` in `index.html`. One type scale, an 8 px grid, layered
+      shadows, one focus ring, hover lift, chat bubbles, a raised player bar, one dialog look with a blurred
+      backdrop, reduced motion respected. Contrast checked at 4.5:1 or better. No layout or words changed.
+      A before-and-after picture was sent to the owner; not yet seen on a Windows screen
 - [ ] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
       use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
       one list per language (`docs/UX.md` is the English one). The assistants already answer in the language

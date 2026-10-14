@@ -23,15 +23,29 @@ const LIMIT = new RegExp([
 // "resets 3pm (Europe/London)", "resets at 15:00", "try again in 2 days", "try again at 4:05 PM".
 const WHEN = /\b(?:resets?(?: at)?|try again(?: in| at| after)?)\s+([^.\n|·]{1,40})/i;
 
+// Wording that only ever means the plan is spent, never a video about "rate limits".
+const SPENT = new RegExp([
+  "(?:hit|reached) (?:your|the) (?:session |weekly |daily |usage )?limit",
+  "usage limit reached",
+  "limit reached\\|\\d{10}",
+  "out of (?:usage|credits)",
+  "quota (?:exceeded|exhausted)",
+  "resource[ _]exhausted",
+  "insufficient[ _]quota",
+].join("|"), "i");
+
 /**
  * Whether a finished turn was stopped by the assistant's usage limit, and when it says it will work again.
  * `error` is the turn's error and `text` its reply: some assistants put the limit in the reply and end "ok".
+ * A turn that ended `ok` counts only when its reply ends saying the plan is spent: an assistant may well write
+ * "rate limits" into a title card.
  */
-export function usageLimit({ error, text } = {}) {
-  // Only the end of a reply counts: an assistant may well write about limits while doing its job.
-  const said = [error ?? "", String(text ?? "").slice(-400)].join("\n");
+export function usageLimit({ error, text, ok = false } = {}) {
+  const reply = String(text ?? "");
+  const said = [error ?? "", reply.slice(-400)].join("\n");
   const found = said.match(LIMIT);
   if (!found) return null;
+  if (ok && !error && !SPENT.test(reply.slice(-400))) return null;
   // Claude Code's older wording ends in the reset time as seconds since 1970: "usage limit reached|1760000000".
   const epoch = said.match(/limit reached\|(\d{10})\b/i);
   if (epoch) return { resets: new Date(Number(epoch[1]) * 1000).toISOString() };

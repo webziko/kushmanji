@@ -76,6 +76,7 @@ window in front the run says "full screen was NOT checked" instead of failing.
 app/src/main/            the main process (Node): the only code with file and process access
   main.js                window, security rules, the list of calls the page may make
   projects.js            list, create, open a project
+  folderName.js          a new video's folder name, in any script
   mediaImport.js         safe footage copies and bounded folder scanning
   preview.js             start and stop the HyperFrames preview server
   cli.js                 run the HyperFrames CLI with Electron's own Node

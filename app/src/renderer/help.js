@@ -41,7 +41,7 @@ const SECTIONS = [
     ["Checked for mistakes", "After every change the app looks for mistakes itself, for free, and says what it found."],
     ["Editing buttons", "See what an action can do, then prepare a message you can check before sending."],
     ["Assistant and clip settings", "Tick the assistants you have, choose one, what it may do, and when it asks " +
-      "you first. Auto picks a smaller model for small changes to save your allowance. Look saves this video's " +
+      "you first. Auto uses a quicker setting for small changes to save your allowance. Look saves this video's " +
       "colours, fonts and titles under a name, or gives it a saved look. You can also see what the app saw in " +
       "your clips."],
     ["Start over", "Start a new conversation with the assistant. Your video is not changed."],

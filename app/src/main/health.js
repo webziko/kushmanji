@@ -53,19 +53,28 @@ export function readDoctor(answer) {
   return { ready: !items.some((item) => item.need), items, checked: checks.length > 0 };
 }
 
+// Doctor takes seconds and Home is visited often: its answer is kept a while, unless the person asks again.
+const KEEP_MS = 10 * 60_000;
+let kept = null;
+
 /** Run doctor and read it. When doctor itself cannot run, say nothing rather than something wrong. */
-export async function checkHealth() {
+export async function checkHealth({ again = false } = {}) {
+  if (!again && kept && Date.now() - kept.at < KEEP_MS) return kept.value;
   const out = await runCli(["doctor", "--json"], { timeoutMs: 120_000 });
   const text = String(out.stdout ?? "");
+  let value;
   try {
-    return readDoctor(JSON.parse(text.slice(text.indexOf("{"))));
+    value = readDoctor(JSON.parse(text.slice(text.indexOf("{"))));
   } catch {
-    return { ready: true, items: [], checked: false };
+    value = { ready: true, items: [], checked: false };
   }
+  kept = value.checked ? { at: Date.now(), value } : null;
+  return value;
 }
 
 /** Fetch HyperFrames' browser for saving videos (about 100 MB, once). True when it is there afterwards. */
 export async function getBrowser() {
+  kept = null;
   const out = await runCli(["browser", "ensure"], { timeoutMs: 900_000 });
   return out.code === 0;
 }

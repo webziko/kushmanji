@@ -62,7 +62,8 @@ function resetsText(resets) {
   const date = /^\d{4}-\d\d-\d\dT/.test(resets ?? "") ? new Date(resets) : null;
   if (date && !Number.isNaN(date.getTime()))
     return date.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
-  return resets ?? "";
+  // "2 days" reads as an answer to "when?" only with "in".
+  return /^\d+\s*(?:second|minute|hour|day|week)s?\b/i.test(resets ?? "") ? `in ${resets}` : resets ?? "";
 }
 
 /** The plain account of a turn its assistant's usage limit cut short (M17-06). */
@@ -82,7 +83,7 @@ function limitNote(name, { changed, resets }) {
 function usageNote(name, usage) {
   if (!usage?.level) return null;
   return h("div", { class: "msg-usage muted",
-    title: `About ${usage.tokens.toLocaleString()} tokens: ${usage.fresh.toLocaleString()} read new, ` +
+    title: `About ${usage.tokens.toLocaleString()} word pieces (tokens): ${usage.fresh.toLocaleString()} read new, ` +
       `${usage.cached.toLocaleString()} read again, ${usage.written.toLocaleString()} written.` },
   `Used ${usage.level === "little" ? "a little" : usage.level} of ${name}'s allowance`);
 }
@@ -163,6 +164,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   const current = () => agents.find((agent) => agent.id === engine);
   // The assistants the person ticked under "Your assistants". Older main processes send no `inTeam`: all.
   const team = () => agents.filter((agent) => agent.inTeam !== false);
+  // Assistants that can take a request now: ticked and, once the check has answered, installed and signed in.
+  const usable = () => team().filter((agent) => !checked || agent.state === "ready");
   const nameOf = (id) => {
     const agent = agents.find((item) => item.id === id);
     return agent?.label ?? agent?.name ?? "Assistant";
@@ -175,6 +178,10 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   let sending = null;
   /** The assistant whose work is being reviewed, while a review runs. */
   let reviewing = null;
+  /** The review round's buttons on the latest reply, removed when a newer request goes out. */
+  let roundActions = null;
+  /** True while "Test it now" runs: nothing else is sent meanwhile. */
+  let testing = false;
 
   /**
    * One review by a different assistant, then one round of fixes, never a loop (M13-04). Under a reply that
@@ -182,9 +189,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
    * by the main process to change nothing.
    */
   function reviewButtons({ engine: author, asked, files = [] }) {
-    const others = team().filter((agent) => agent.id !== author);
+    const others = usable().filter((agent) => agent.id !== author);
     if (!others.length || !files.length) return null;
-    const ask = `Please check what ${nameOf(author)} just did for my request: “${short(asked ?? "", 300)}”. ` +
+    const ask = `Please check what ${nameOf(author)} just did for my request: “${short(asked ?? "", 400)}”. ` +
       `Files it changed: ${files.slice(0, 12).join(", ")}.`;
     return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
       class: "secondary small", type: "button",
@@ -202,7 +209,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   /** Under a review: back to the assistant that did the work, with the list. A clean review says so instead. */
   function fixButton(reviewer, author, review) {
     if (!author || author === reviewer) return null;
-    if (/^\W*(it |this |everything )?(looks|seems) (right|good|fine)|no (real )?problems/i.test(review.trim())) {
+    const said = review.trim();
+    if (!said.includes("\n") && /^\W*(?:(?:it |this |everything )?(?:looks|seems) (?:right|good|fine)|no (?:real )?problems)\b/i
+      .test(said)) {
       return h("p", { class: "muted" }, "Nothing to fix. Watch your video to be sure.");
     }
     const ask = `Please fix the problems ${nameOf(reviewer)} found in your last change:\n\n${review.trim().slice(0, 4000)}` +
@@ -268,7 +277,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     button.addEventListener("click", async () => {
       button.disabled = true;
       try {
-        show(await api.agent.undo({ dir, index }));
+        show(await api.agent.undo({ dir, index, id: undo.id }));
       } catch (error) {
         note.textContent = error.message;
       } finally {
@@ -283,12 +292,13 @@ export function createChat(dir, { onEdit, onSave } = {}) {
    * message asking it to check the half-done work and finish it. The person still presses Send.
    */
   function carryOnButtons(stoppedEngine, changed = [], limited = true) {
-    const others = team().filter((agent) => agent.id !== stoppedEngine);
+    const others = usable().filter((agent) => agent.id !== stoppedEngine);
     if (!others.length) return null;
     const from = nameOf(stoppedEngine);
     return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
       class: "secondary small", type: "button",
       onclick: () => {
+        if (live) return;
         engine = agent.id;
         render();
         void api.agent.choose({ dir, engine }).catch(() => {});
@@ -322,6 +332,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     placeholder: "Describe a change\nEnter to send · Shift+Enter for a new line",
     "aria-label": "Message to the assistant",
   });
+  const defaultPlaceholder = input.placeholder;
   const hint = h("p", { class: "muted" }, "Move to a moment in the video, then tell the assistant what to change there.");
   const empty = h(
     "div",
@@ -356,13 +367,17 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     input.value = input.value.trim() ? `${input.value.trim()}\n\n${text}` : text;
     input.focus();
   };
+  let savedLooks = [];
   async function renderLooks() {
     const got = await api.looks.list(dir).catch(() => null);
     if (!got) return null;
+    const chosen = lookPick.value;
     lookPick.replaceChildren(...(got.looks.length
       ? got.looks.map((look) => h("option", { value: look.name }, look.name))
       : [h("option", { value: "" }, "No saved looks yet")]));
-    lookPick.disabled = lookUse.disabled = !got.looks.length;
+    lookPick.disabled = lookUse.disabled = !got.looks.length || Boolean(live);
+    if (got.looks.some((look) => look.name === chosen)) lookPick.value = chosen;
+    savedLooks = got.looks.map((look) => look.name.toLowerCase());
     return got;
   }
   lookUse.addEventListener("click", async () => {
@@ -391,6 +406,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       lookNote.textContent = "Name the look, then press Save this look.";
       return;
     }
+    if (savedLooks.includes(lookName.value.trim().toLowerCase()) &&
+      !confirm(`A look called “${lookName.value.trim()}” is already saved. Replace it with this video's look?`)) return;
     try {
       const saved = await api.looks.save({ dir, name: lookName.value });
       lookName.hidden = true;
@@ -399,6 +416,12 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       await renderLooks();
     } catch (error) {
       lookNote.textContent = error.message;
+    }
+  });
+  lookName.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.isComposing) {
+      event.preventDefault();
+      lookSave.click();
     }
   });
   void renderLooks();
@@ -466,10 +489,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const agent = current();
     if (!agent || live) return;
     const name = agent.label ?? agent.name;
-    if (!confirm(`Test ${name} with one small job? It changes one word in a scratch folder and runs one program. ` +
+    if (!confirm(`Test ${name} with one small job? It changes one word in a practice folder and runs one check. ` +
       "It takes a minute and uses a little of its allowance. Your videos are not touched.")) return;
     testButton.disabled = true;
     send.disabled = true;
+    testing = true;
     versionText.textContent = `Testing ${name}… this takes about a minute.`;
     try {
       const got = await api.agent.checkup(agent.id);
@@ -480,6 +504,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     } catch (error) {
       versionText.textContent = error.message;
     } finally {
+      testing = false;
       testButton.disabled = false;
       send.disabled = !isReady();
     }
@@ -499,8 +524,13 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   let queued = null;
   const queuedText = h("span", {});
   const queuedNote = h("div", { class: "composer-note queued", role: "status", hidden: true }, queuedText,
-    h("button", { class: "ghost small", type: "button", onclick: () => { queued = null; renderQueued(); } }, "Cancel"));
-  const short = (text) => (text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text);
+    h("button", { class: "ghost small", type: "button", onclick: () => {
+      if (queued && !queued.steer) input.value = input.value.trim() ? `${queued.text}\n\n${input.value.trim()}` : queued.text;
+      queued = null;
+      renderQueued();
+      input.focus();
+    } }, "Cancel"));
+  const short = (text, most = 60) => (text.length > most ? `${text.slice(0, most - 3).trimEnd()}…` : text);
   function renderQueued() {
     queuedNote.hidden = !queued;
     const who = nameOf(engine);
@@ -511,7 +541,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   }
   function wait(steer) {
     const text = input.value.trim();
-    if (!text || !live) return;
+    // One message waits at a time: a second Enter must not quietly replace the first.
+    if (!text || !live || queued) return;
     queued = { text, steer };
     input.value = "";
     if (steer) api.agent.stop().catch(() => {});
@@ -531,6 +562,10 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     modelPick.disabled = running;
     accessPick.disabled = running;
     modePick.disabled = running;
+    startOver.disabled = running;
+    for (const box of teamBox.querySelectorAll("input")) box.disabled = running;
+    for (const control of [lookPick, lookUse, lookSave, lookName]) control.disabled = running;
+    if (!running) void renderLooks();
     editActions.setRunning(running);
   };
 
@@ -646,7 +681,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   });
 
   async function submit(text, includeMoment = true, purpose = null) {
-    if (live) return;
+    if (live || testing) return;
+    input.placeholder = defaultPlaceholder;
+    // The round's buttons on an earlier reply would act on a change that is no longer the latest (M13-04).
+    roundActions?.remove();
+    roundActions = null;
     sending = { text, purpose, engine };
     const about = pointed();
     planActions?.remove();
@@ -672,7 +711,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     event.preventDefault();
     const text = input.value.trim();
     if (live) return void wait(false);
-    if (!text || !isReady()) return;
+    if (!text || !isReady() || testing) return;
     input.value = "";
     void submit(text);
   }
@@ -808,9 +847,16 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   });
 
   async function reset() {
+    if (live) return;
+    if (!confirm("Start a new conversation? Your video is not changed, but the Undo buttons on earlier replies go " +
+      "away (the changes stay in the editor's own history).")) return;
     await api.agent.reset(dir).catch(() => {});
+    replies.clear();
     log.replaceChildren(empty);
   }
+
+  const startOver = h("button", { class: "ghost small", type: "button",
+    title: "Start a new conversation. Your video is not changed.", onclick: reset }, "Start over");
 
   // The editor's own "Ask agent" buttons land here (M3-02, main/askAgent.js): the request goes in the message box,
   // and the person presses Send. Only a message from the editor's own frame on the local server is taken.
@@ -1002,6 +1048,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       input.dispatchEvent(new Event("input", { bubbles: true }));
     }
     if (spaced) input.setSelectionRange(start + text.length + 1, start + text.length + 1);
+    // Typing the name in fires "input", which would open the list again on the word just inserted.
+    closeMentions();
   }
 
   /** The keys the open list takes. True when it took the key, so the box does not also act on it. */
@@ -1133,16 +1181,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       { class: "chat-head" },
       h("strong", {}, "What would you like to change?"),
       h("span", { class: "spacer" }),
-      h(
-        "button",
-        {
-          class: "ghost small",
-          type: "button",
-          title: "Start a new conversation. Your video is not changed.",
-          onclick: reset,
-        },
-        "Start over",
-      ),
+      startOver,
     ),
     h("details", { class: "chat-settings" },
       h("summary", {}, "Assistant and clip settings"),
@@ -1199,11 +1238,14 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
     // A reply that failed, for whatever reason, offers the person's other assistants (M12-04).
     const failed = event.limited || (!event.ok && !event.stopped);
-    const round = roundButtons({ purpose: sending?.purpose, ok: event.ok && !event.plan, engine,
+    // The assistant that wrote this reply, even if the menu was changed while it worked.
+    const by = sending?.engine ?? engine;
+    const round = roundButtons({ purpose: sending?.purpose, ok: event.ok && !event.plan, engine: by,
       text: event.text ?? live.reply(), files: event.undo?.files, asked: sending?.text, author: reviewing });
     if (sending?.purpose !== "review") reviewing = null;
+    roundActions = failed || event.plan ? null : round;
     const settled = live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
-      event.plan ? planButtons() : failed ? carryOnButtons(engine, event.changed ?? event.undo?.files, event.limited) : round);
+      event.plan ? planButtons() : failed ? carryOnButtons(by, event.changed ?? event.undo?.files, event.limited) : round);
     if (Number.isInteger(event.index)) replies.set(event.index, settled);
     live = null;
     setRunning(false);
@@ -1257,6 +1299,14 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         replies.set(i, reply);
         if (message.checked) reply.append(checkedNote(message.checked));
         append(reply);
+        if (last && !waitingPlan) roundActions = reply.querySelector(".notice-actions");
+      }
+      // Reopened while an assistant is still working on this video: show it working, with Stop.
+      if (saved.running) {
+        sending = { text: "", purpose: null, engine: saved.engine };
+        live = liveMessage(nameOf(saved.engine));
+        append(live.el);
+        setRunning(true);
       }
       log.scrollTop = log.scrollHeight;
       render();
