@@ -78,7 +78,9 @@ function limitNote(name, { changed, resets }) {
   ].filter(Boolean).join(" ");
 }
 
-function agentMessage({ name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed }) {
+function agentMessage({
+  name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed, undoAction,
+}) {
   const steps = [name, ...(activities ?? [])].filter(Boolean);
   return h(
     "div",
@@ -98,6 +100,7 @@ function agentMessage({ name, text, activities, ok, stopped, error, plan, touche
     limited && actions,
     !ok && !stopped && !limited &&
       h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
+    undoAction,
   );
 }
 
@@ -149,6 +152,35 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     return agent?.label ?? agent?.name ?? "Assistant";
   };
   const isReady = () => checked && current()?.state === "ready";
+
+  /**
+   * "Undo this change" under a reply that changed files (M2-10). After undoing it says so, and offers to bring the
+   * change back. The main process does the work with HyperFrames' own history; the page only names the reply.
+   */
+  function undoControl(index, undo) {
+    if (!Number.isInteger(index) || !undo?.id) return null;
+    const note = h("span", { class: "muted", role: "status" });
+    const button = h("button", { class: "ghost small", type: "button" });
+    const show = (state) => {
+      button.textContent = state.undoneBy ? "Bring it back" : "Undo this change";
+      button.title = state.undoneBy
+        ? "Put back what the assistant changed."
+        : `Put these files back as they were before: ${state.files.slice(0, 6).join(", ")}`;
+      note.textContent = state.undoneBy ? "Undone. Your video is back as it was before this change." : "";
+    };
+    show(undo);
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        show(await api.agent.undo({ dir, index }));
+      } catch (error) {
+        note.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+    return h("div", { class: "msg-undo" }, button, note);
+  }
 
   /**
    * After a usage limit: one button per other assistant. It switches the chat to that assistant and prepares a
@@ -630,7 +662,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (eventDir !== dir || !live) return;
     if (event.type !== "done") return live.onEvent(event);
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
-    live.finish(event, event.plan ? planButtons() : event.limited ? carryOnButtons(engine, event.changed) : null);
+    live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
+      event.plan ? planButtons() : event.limited ? carryOnButtons(engine, event.changed) : null);
     live = null;
     setRunning(false);
     if (pinned) log.scrollTop = log.scrollHeight;
@@ -658,7 +691,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
           message.role === "user"
             ? userMessage(message)
             : // Replies saved before there was a choice of agent were all Claude Code's.
-              agentMessage({ ...message, name: nameOf(message.engine ?? "claude"),
+              agentMessage({ ...message, name: nameOf(message.engine ?? "claude"), undoAction: undoControl(i, message.undo),
                 actions: waitingPlan ? planButtons()
                   : message.limited && last ? carryOnButtons(message.engine ?? "claude", message.changed) : null }),
         );

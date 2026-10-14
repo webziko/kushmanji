@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("hfwin", {
   app: { info: call("app:info") },
   projects: {
     list: call("projects:list"),
+    saveCover: call("projects:saveCover"),
     create: call("projects:create"),
     fromFootage: call("projects:fromFootage"),
     addMedia: call("projects:addMedia"),
@@ -47,6 +48,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     chooseMode: call("agent:chooseMode"),
     stop: call("agent:stop"),
     reset: call("agent:reset"),
+    undo: call("agent:undo"),
   },
   /** Listen for a main-process event. Returns the function that stops listening. */
   on(channel, listener) {

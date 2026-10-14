@@ -102,7 +102,9 @@ Do not build them.
       Built. The "Make it" button's path has not been run end to end yet
 - [ ] M2-08 Install and refresh HyperFrames skills for the agent (project creation skips them for speed)
 - [ ] M2-09 While the agent works: queue the next message, or steer (stop and restart with it)
-- [ ] M2-10 Undo for each agent run
+- [~] M2-10 (Claude) Undo for each agent run. Built (2026-10-14): each turn is wrapped in `hyperframes history
+      begin`/`end`, and a reply that changed files has "Undo this change", then "Bring it back"
+      (`agents/turnHistory.js`). Unit-tested; the click-through in the real app is next
 - [x] M2-11 Write chat turns where `hyperframes catch-up` reads them: `.hyperframes/app-history.jsonl`, in
       upstream's own format (Claude, 2026-10-12)
 - [ ] M2-12 Plain messages for: usage limit reached, signed out mid-run, no internet
@@ -429,7 +431,7 @@ now comes first**: it changes what every later feature looks like. The review it
       words". Left for M14-06: "built on HyperFrames" in the header. Not yet looked at on the owner's PC
 - [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
       HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
-- [ ] M14-07 The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
+- [~] M14-07 (Claude) The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
       an idea", "Carry on with ..." with a picture of each video
 - [ ] M14-08 Try it on someone who has never seen it, and fix what they stumble on
 

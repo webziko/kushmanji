@@ -69,15 +69,18 @@ export class AgentRunner {
   #active = null;
   #emit;
   #prepare;
+  #history;
 
   /**
    * `emit({ dir, event })` forwards an agent event to the window. `prepare(dir, onStep)`, when given, runs
    * before each turn's agent starts: whatever the project needs first (the footage study). It reports what it
-   * is doing through `onStep(label, detail)`, and its failure never stops the chat.
+   * is doing through `onStep(label, detail)`, and its failure never stops the chat. `history`, when given, is
+   * `{ begin, end, undo }` (turnHistory.js): each turn becomes one entry the person can undo (M2-10).
    */
-  constructor({ emit, prepare }) {
+  constructor({ emit, prepare, history }) {
     this.#emit = emit;
     this.#prepare = prepare;
+    this.#history = history;
   }
 
   get busy() {
@@ -175,6 +178,32 @@ export class AgentRunner {
   }
 
   /**
+   * Undo what one assistant turn changed (M2-10), or bring it back when it was undone. `index` is the reply's place
+   * in the chat. The files go back as they were; the change is recorded so the next assistant knows.
+   */
+  async undo(dir, index) {
+    if (!this.#history) throw new Error("Undo is not available in this version of the app.");
+    if (this.#active?.dir === dir) throw new Error("The assistant is still working. Undo when it has finished.");
+    const message = readChat(dir).messages[index];
+    if (message?.role !== "agent" || !message.undo?.id) throw new Error("That change cannot be undone.");
+    const back = Boolean(message.undo.undoneBy);
+    const done = await this.#history.undo(dir, back ? message.undo.undoneBy : message.undo.id);
+    const chat = readChat(dir);
+    const saved = chat.messages[index];
+    if (saved?.undo?.id !== message.undo.id) throw new Error("The chat changed while undoing. Your files were put back.");
+    saved.undo = back ? { id: saved.undo.id, files: saved.undo.files } : { ...saved.undo, undoneBy: done.id };
+    writeChat(dir, chat);
+    const files = saved.undo.files.slice(0, 8).join(", ");
+    recordTurn(dir, {
+      engine: "person",
+      asked: back ? "Bring back a change" : "Undo a change",
+      did: `${back ? "Brought back" : "Undid"} what ${NAMES[saved.engine] ?? "an assistant"} changed: ${files}`,
+      startedAt: Date.now(),
+    });
+    return saved.undo;
+  }
+
+  /**
    * Start one chat turn. `pointing`, when the person has something selected in Studio, is
    * `{ name, kind, when, note }`: what the chat shows beside their message, and what the agent is told.
    * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
@@ -204,7 +233,7 @@ export class AgentRunner {
     writeChat(dir, chat);
 
     // What other agents did since this one last worked here, so it does not act on a stale picture.
-    const handover = handoverNote(dir, engine, NAMES);
+    const handover = handoverNote(dir, engine, { ...NAMES, person: "The person, by hand" });
     const preface = [handover, limits, pointing?.note, moment?.note].filter(Boolean).join("\n\n");
     const turn = {
       dir,
@@ -231,6 +260,12 @@ export class AgentRunner {
         }
       }
       if (turn.stopped) return this.#onEvent(turn, { type: "done", ok: false, stopped: true });
+      // Everything the assistant writes from here becomes one entry in HyperFrames' history, so it can be undone.
+      if (this.#history) {
+        const who = BRIDGES[engine].about.label ?? NAMES[engine];
+        turn.historyOpen = Boolean(await this.#history.begin(dir, who).catch(() => null));
+        if (turn.stopped) return this.#onEvent(turn, { type: "done", ok: false, stopped: true });
+      }
       turn.handle = BRIDGES[engine].run({
         dir,
         text: preface ? `${preface}\n\nThe person's request now:\n${message}` : message,
@@ -273,52 +308,69 @@ export class AgentRunner {
       // Each kind of step once, in the order first seen: a long run alternates between two of them all day.
       if (!turn.activities.includes(event.label)) turn.activities.push(event.label);
     } else if (event.type === "done") {
-      if (this.#active === turn) this.#active = null;
-      const chat = readChat(turn.dir);
-      // A resumed conversation the agent no longer has (cleared, or made on another machine) fails before it
-      // starts. Forget its id so the next message begins a new one instead of failing the same way forever.
-      if (!event.ok && !event.stopped && turn.resumed && !turn.sawSession) {
-        delete chat.sessions[turn.engine];
-        delete chat.told[turn.engine];
+      if (turn.ending) return;
+      turn.ending = true;
+      // The turn stays the active one until its history entry is closed, or the next turn's would swallow it.
+      if (turn.historyOpen) {
+        void this.#history.end(turn.dir).catch(() => null).then((entry) => this.#finish(turn, event, entry));
+        return;
       }
-      // Stopped by its plan's usage limit part-way through (M17-06): the page says so plainly, names the files it
-      // had already changed, and offers another assistant. Some assistants end such a turn "ok".
-      const limit = event.stopped ? null : usageLimit({ error: event.error, text: turn.text });
-      if (limit) {
-        event = { ...event, ok: false, limited: true, resets: limit.resets,
-          changed: filesChangedSince(turn.dir, turn.startedAt).slice(0, 50) };
-      }
-      // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
-      // and the names of any files the agent changed that are not the plan: it was told to change none.
-      const read = turn.mode === "build" || !event.ok ? { text: turn.text, plan: false } : readPlan(turn.text);
-      if (read.plan) {
-        turn.text = read.text;
-        event = { ...event, plan: true, text: read.text, touched: strayFiles(filesChangedSince(turn.dir, turn.startedAt)) };
-      }
-      chat.messages.push({
-        role: "agent",
-        engine: turn.engine,
-        text: turn.text,
-        activities: turn.activities,
-        ok: event.ok,
-        stopped: Boolean(event.stopped),
-        error: event.error ?? null,
-        ...(read.plan ? { plan: true, touched: event.touched } : {}),
-        ...(limit ? { limited: true, resets: limit.resets, changed: event.changed } : {}),
-        at: Date.now(),
-      });
-      writeChat(turn.dir, chat);
-      // A stopped or failed turn is recorded too: it may have changed files before it ended.
-      const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : limit
-        ? " (stopped by its usage limit before finishing; its work is unchecked)"
-        : ` (failed: ${event.error ?? "unknown"})`;
-      recordTurn(turn.dir, {
-        engine: turn.engine,
-        asked: turn.asked,
-        did: `${turn.text.trim()}${outcome}`.trim(),
-        startedAt: turn.startedAt,
-      });
+      return this.#finish(turn, event, null);
     }
+    this.#emit({ dir: turn.dir, event });
+  }
+
+  /** The end of a turn: saved, recorded for the other assistants, and sent to the page. */
+  #finish(turn, event, entry) {
+    if (this.#active === turn) this.#active = null;
+    const chat = readChat(turn.dir);
+    // A resumed conversation the agent no longer has (cleared, or made on another machine) fails before it
+    // starts. Forget its id so the next message begins a new one instead of failing the same way forever.
+    if (!event.ok && !event.stopped && turn.resumed && !turn.sawSession) {
+      delete chat.sessions[turn.engine];
+      delete chat.told[turn.engine];
+    }
+    // Stopped by its plan's usage limit part-way through (M17-06): the page says so plainly, names the files it
+    // had already changed, and offers another assistant. Some assistants end such a turn "ok".
+    const limit = event.stopped ? null : usageLimit({ error: event.error, text: turn.text });
+    if (limit) {
+      event = { ...event, ok: false, limited: true, resets: limit.resets,
+        changed: filesChangedSince(turn.dir, turn.startedAt).slice(0, 50) };
+    }
+    // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
+    // and the names of any files the agent changed that are not the plan: it was told to change none.
+    const read = turn.mode === "build" || !event.ok ? { text: turn.text, plan: false } : readPlan(turn.text);
+    if (read.plan) {
+      turn.text = read.text;
+      event = { ...event, plan: true, text: read.text, touched: strayFiles(filesChangedSince(turn.dir, turn.startedAt)) };
+    }
+    chat.messages.push({
+      role: "agent",
+      engine: turn.engine,
+      text: turn.text,
+      activities: turn.activities,
+      ok: event.ok,
+      stopped: Boolean(event.stopped),
+      error: event.error ?? null,
+      ...(read.plan ? { plan: true, touched: event.touched } : {}),
+      ...(limit ? { limited: true, resets: limit.resets, changed: event.changed } : {}),
+      // Only a turn that changed something can be undone.
+      ...(entry?.files.length ? { undo: { id: entry.id, files: entry.files.slice(0, 200) } } : {}),
+      at: Date.now(),
+    });
+    writeChat(turn.dir, chat);
+    const index = chat.messages.length - 1;
+    event = { ...event, index, undo: chat.messages[index].undo ?? null };
+    // A stopped or failed turn is recorded too: it may have changed files before it ended.
+    const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : limit
+      ? " (stopped by its usage limit before finishing; its work is unchecked)"
+      : ` (failed: ${event.error ?? "unknown"})`;
+    recordTurn(turn.dir, {
+      engine: turn.engine,
+      asked: turn.asked,
+      did: `${turn.text.trim()}${outcome}`.trim(),
+      startedAt: turn.startedAt,
+    });
     this.#emit({ dir: turn.dir, event });
   }
 

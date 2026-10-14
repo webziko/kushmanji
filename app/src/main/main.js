@@ -3,10 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
+import { turnHistory } from "./agents/turnHistory.js";
 import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
+import { captureBox, readCover, saveCover } from "./covers.js";
 import { LightCopies } from "./lightCopies.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
@@ -109,6 +111,7 @@ const agent = new AgentRunner({
       studyStep = null;
     }
   },
+  history: turnHistory,
 });
 
 // Saving a video: the file goes to the person's Downloads folder, and the taskbar button shows how far it is.
@@ -197,7 +200,15 @@ function registerIpc() {
     electron: process.versions.electron,
     projectsRoot: projectsRoot(),
   }));
-  handle("projects:list", () => listProjects());
+  // Each video with its picture for Home (covers.js), when it has one.
+  handle("projects:list", () => listProjects().map((project) => ({ ...project, cover: readCover(project.dir) })));
+  // The page names only the box of its own player to keep as the video's picture; it never names a file.
+  handle("projects:saveCover", async ({ dir, rect } = {}) => {
+    dir = requireProject(dir);
+    if (!win) return false;
+    const box = captureBox(rect, win.getContentBounds());
+    return box ? saveCover(dir, await win.webContents.capturePage(box)) : false;
+  });
   handle("projects:create", (name) => createProject(name));
   handle("projects:fromFootage", async () => {
     if (agent.busy) {
@@ -348,6 +359,10 @@ function registerIpc() {
   handle("agent:chooseAccess", ({ dir, level } = {}) => agent.chooseAccess(requireProject(dir), String(level)));
   handle("agent:stop", () => agent.stop());
   handle("agent:reset", (dir) => agent.reset(requireProject(dir)));
+  handle("agent:undo", ({ dir, index } = {}) => {
+    if (!Number.isInteger(index) || index < 0) throw new Error("That change cannot be undone.");
+    return agent.undo(requireProject(dir), index);
+  });
 }
 
 // The self-test keeps its own settings folder, so it cannot change the person's settings, and it can run while

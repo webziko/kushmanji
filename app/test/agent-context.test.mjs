@@ -10,7 +10,7 @@ import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
 const settled = () => new Promise((done) => setImmediate(done));
 
 // Exercise the real runner with in-memory files and local bridge stand-ins: no sign-in or paid AI turn.
-function runner({ state = {} } = {}) {
+function runner({ state = {}, history } = {}) {
   const files = new Map();
   const requests = [];
   const turns = [];
@@ -33,7 +33,8 @@ function runner({ state = {} } = {}) {
     usageLimit, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
     claude: bridge, codex: bridge, antigravity: bridge,
   });
-  return { agent: new Runner({ emit() {} }), requests, turns };
+  const events = [];
+  return { agent: new Runner({ emit: (sent) => events.push(sent.event), history }), requests, turns, events };
 }
 
 test("the runner saves a moment beside the request and tells the chosen assistant", async () => {
@@ -121,4 +122,53 @@ test("only the assistants the person has can be chosen, and at least one stays",
 test("with nothing ticked yet, every assistant is in the team", () => {
   const { agent } = runner();
   assert.ok(agent.history("video").agents.every((item) => item.inTeam));
+});
+
+// A stand-in for HyperFrames' history (turnHistory.js): what was begun, ended and undone.
+function fakeHistory({ files = ["index.html"] } = {}) {
+  const calls = [];
+  let undos = 0;
+  return {
+    calls,
+    begin: async (_dir, who) => { calls.push(["begin", who]); return "turn-1"; },
+    end: async () => { calls.push(["end"]); return { id: "turn-1", files }; },
+    undo: async (_dir, id) => { calls.push(["undo", id]); undos++; return { id: `undo-${undos}`, files }; },
+  };
+}
+const ended = () => new Promise((done) => setTimeout(done, 5));
+
+test("each assistant turn becomes one history entry, and its reply can undo it and bring it back", async () => {
+  const history = fakeHistory();
+  const { agent, requests, turns, events } = runner({ history });
+  agent.send({ dir: "video", text: "Make the title red." });
+  await settled();
+  assert.deepEqual(history.calls[0], ["begin", "Test assistant"]);
+  requests[0].onEvent({ type: "done", ok: true });
+  await ended();
+  const reply = agent.history("video").messages.at(-1);
+  assert.equal(reply.undo.id, "turn-1");
+  assert.equal(events.at(-1).index, 1);
+
+  const undone = await agent.undo("video", 1);
+  assert.equal(undone.undoneBy, "undo-1");
+  assert.deepEqual(history.calls.at(-1), ["undo", "turn-1"]);
+  assert.equal(turns.at(-1).engine, "person");
+  assert.match(turns.at(-1).did, /^Undid what Test assistant changed: index\.html/);
+
+  const back = await agent.undo("video", 1);
+  assert.deepEqual(history.calls.at(-1), ["undo", "undo-1"]);
+  assert.equal(back.undoneBy, undefined);
+  assert.match(turns.at(-1).did, /^Brought back/);
+});
+
+test("a turn that changed nothing has no undo, and nothing is undone while an assistant works", async () => {
+  const history = fakeHistory({ files: [] });
+  const { agent, requests } = runner({ history });
+  agent.send({ dir: "video", text: "What is in the first clip?" });
+  await settled();
+  await assert.rejects(agent.undo("video", 0), /still working/);
+  requests[0].onEvent({ type: "done", ok: true });
+  await ended();
+  assert.equal(agent.history("video").messages.at(-1).undo, undefined);
+  await assert.rejects(agent.undo("video", 1), /cannot be undone/);
 });

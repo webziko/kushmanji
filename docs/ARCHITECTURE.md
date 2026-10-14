@@ -66,6 +66,14 @@ renders with the CLI in its own browser and always reads the full files. The top
 to edit (5 of 19)" while it works. Without FFmpeg nothing is made and the originals play. Measured: a jump went
 from 0.28 to 0.04 seconds, and a dragged playhead from 1 or 2 pictures a second to 33 (`docs/FINDINGS.md`).
 
+**Undo for each assistant turn** (M2-10, `agents/turnHistory.js`). Just before an assistant starts, the runner
+calls `hyperframes history begin --who <assistant>`; when the turn ends, `history end`. Everything written in
+between is one entry in HyperFrames' own history (the same one Studio's history panel shows), and the reply is
+saved with that entry's id when it changed any file. "Undo this change" under the reply runs `history undo` on it;
+the undo is an entry too, so "Bring it back" undoes the undo. The turn stays the active one until `history end`
+returns, so the next request cannot begin inside it. The next assistant's handover says what the person undid.
+Without the history (an error from the CLI) the turn simply has no undo.
+
 The preview manager watches source and media with a short quiet period, ignores hidden journals, saved
 versions, dependencies and exports, and emits `preview:changed`. The player reloads at its last position and
 playback state. On folders Windows cannot watch it also refreshes after an assistant's turn ends. Timers,
@@ -157,6 +165,7 @@ and the caller in `renderer/`.
 | `agent.chooseMode({ dir, mode })` | How involved the person wants to be in this project: `build`, `review` or `codirect`. Kept with the project's chat |
 | `agent.chooseAccess({ dir, level })` | How much the agents may do in this project, from the next message. Only `project`, `tools` or `full` is accepted. Kept in the app's settings, not in the project |
 | `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message. Refused for an agent the person has not ticked |
+| `agent.undo({ dir, index })` | Undo what the reply at `index` changed, or bring it back when it was undone (M2-10). The main process runs `hyperframes history undo` on the entry it saved with that reply; the page names only the reply. Refused while a turn runs |
 | `agent.setTeam(engines)` | Which assistants the person has ("Your assistants", M15-01): known ids only, at least one. Kept in the app's settings; `status()` and `history()` mark each agent `inTeam` |
 | `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default, `"auto"` (also the value when nothing was chosen) sizes each request (`agents/sizing.js`). Otherwise only an id from that agent's `models()` is accepted |
 | event `preview:copies` | `{ dir, status: { state, done, total, failed } }`: the lighter copies for watching and editing (`lightCopies.js`) |
