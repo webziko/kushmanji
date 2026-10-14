@@ -89,7 +89,43 @@ export function createStudyBar(dir, { onAsk } = {}) {
   const controls = h("div", { class: "study-controls" },
     h("label", { class: "access muted" }, "Spoken language", language), again, reviewButton);
   const notes = h("ul", { class: "study-notes" });
-  const element = h("div", { class: "study", hidden: true }, line, controls, notes);
+  // The offer to fetch Whisper when the chosen language needs it (main/speechTool.js). The button is the yes.
+  const speechLine = h("p", { class: "study-speech", role: "status", hidden: true });
+  let speech = { state: "missing" };
+  let needsSpeech = false;
+  let languageName = "";
+  function renderSpeech() {
+    const getting = speech.state === "getting";
+    speechLine.hidden = !getting && !(needsSpeech && speech.state !== "ready");
+    if (speechLine.hidden) return;
+    if (getting) {
+      speechLine.textContent = `Getting the speech tool · ${speech.percent ?? 0}%. You can keep working.`;
+      return;
+    }
+    if (speech.state === "blocked") {
+      speechLine.replaceChildren(h("span", { class: "study-speech-problem" }, speech.error));
+      return;
+    }
+    const amount = speech.megabytes >= 1000
+      ? `${(speech.megabytes / 1000).toFixed(1)} GB` : `${Math.max(1, speech.megabytes ?? 0)} MB`;
+    const size = speech.megabytes
+      ? ` It is free, a ${amount} download, once. Then it listens to each clip, a minute or two each.`
+      : "";
+    // `false` must not reach replaceChildren: it would write "false" on the page.
+    speechLine.replaceChildren(...[
+      `To write down what is said in ${languageName}, the app needs a speech tool called Whisper.${size} `,
+      h("button", { class: "primary small", type: "button", onclick: () => {
+        speech = { ...speech, state: "getting", percent: 0 };
+        renderSpeech();
+        api.speech.get(dir).catch((error) => {
+          speech = { state: "failed", error: error.message };
+          renderSpeech();
+        });
+      } }, "Get it"),
+      speech.state === "failed" && speech.error && h("span", { class: "study-speech-problem" }, speech.error),
+    ].filter(Boolean));
+  }
+  const element = h("div", { class: "study", hidden: true }, line, controls, speechLine, notes);
 
   // `data-study` is what the smoke test reads: "running", "done", or absent when there is no footage.
   function render(status) {
@@ -112,6 +148,10 @@ export function createStudyBar(dir, { onAsk } = {}) {
       ...(status.languages ?? []).map((item) => h("option", { value: item.id }, item.name)),
     );
     language.value = status.language ?? "auto";
+    needsSpeech = status.needsSpeechTool === true;
+    const named = (status.languages ?? []).find((item) => item.id === status.language)?.name ?? "";
+    languageName = named.split(" · ").pop() || "this language";
+    renderSpeech();
 
     // What went wrong, said once however many clips it happened to, then one gentle line when a language was
     // assumed. That assumption is right for most people, so it is a hint, not a warning on every clip.
@@ -143,7 +183,15 @@ export function createStudyBar(dir, { onAsk } = {}) {
   const stopListening = api.on("study:event", ({ dir: studied, status }) => {
     if (studied === dir) render(status);
   });
+  const stopSpeech = api.on("speech:event", (status) => {
+    speech = status;
+    renderSpeech();
+  });
   api.study.status(dir).then(render).catch(() => {});
+  api.speech.status().then((status) => {
+    speech = status;
+    renderSpeech();
+  }).catch(() => {});
 
   return {
     element,
@@ -151,6 +199,7 @@ export function createStudyBar(dir, { onAsk } = {}) {
       destroyed = true;
       review.remove();
       stopListening();
+      stopSpeech();
       delete document.body.dataset.study;
     },
   };

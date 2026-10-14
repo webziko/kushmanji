@@ -582,6 +582,7 @@ async function studyStep({ result, inPage, shot, dir, outDir }) {
   // Either a transcript in Hindi, or a plain reason there is none. Never a silent blank, never Latin nonsense.
   if (!hindi?.transcript && !hindi?.notes?.some((note) => /Whisper/.test(note)))
     throw new Error("The Hindi clip has neither a transcript nor a reason for having none.");
+  if (!hindi?.transcript) await speechToolStep({ result, inPage, shot, dir, settled });
 
   // Back to "Automatic", so an agent asked about the English clip afterwards finds its words again.
   await inPage(
@@ -589,6 +590,33 @@ async function studyStep({ result, inPage, shot, dir, outDir }) {
   );
   await until(() => inPage("document.body.dataset.study === 'running'"), { timeoutMs: 10_000, everyMs: 100 });
   if (!(await until(settled, { timeoutMs: 600_000, everyMs: 500 }))) throw new Error("The study never finished after going back to Automatic.");
+}
+
+/**
+ * Hindi needs Whisper and this computer's self-test has none (its own settings folder holds no speech tool): the
+ * clips strip must offer it, with its size. With HFWIN_SMOKE_GET_SPEECH set, "Get it" is pressed for real (the
+ * program is 9 MB, fetched into the self-test's own folder; the 3.1 GB model only if HyperFrames does not have it
+ * yet), and the Hindi clip must then be written down in Hindi.
+ */
+async function speechToolStep({ result, inPage, shot, dir, settled }) {
+  const offer = await inPage("document.querySelector('.study-speech:not([hidden])')?.textContent ?? ''");
+  result.study.speechOffer = offer;
+  if (!/Whisper/.test(offer) || !/\d (GB|MB) download/.test(offer))
+    throw new Error("Hindi needs Whisper, and the app did not offer to get it with its size.");
+  if (/false|undefined|null/.test(offer)) throw new Error(`The speech tool's offer shows a stray word: ${offer}`);
+  if (!process.env.HFWIN_SMOKE_GET_SPEECH) return;
+  await inPage("document.querySelector('.study-speech button').click()");
+  const hindi = () => readIndex(dir)?.clips.find((found) => found.file === "assets/hindi-voice.wav");
+  if (!(await until(() => Boolean(hindi()?.transcript), { timeoutMs: 3_600_000, everyMs: 2000 }))) {
+    result.study.speechState = await inPage("document.querySelector('.study-speech')?.textContent ?? ''");
+    throw new Error("After getting the speech tool, the Hindi clip was never written down.");
+  }
+  await until(settled, { timeoutMs: 600_000, everyMs: 500 });
+  const clip = hindi();
+  const heard = fs.readFileSync(path.join(dir, clip.transcript.text), "utf8");
+  result.study.hindiWithWhisper = { engine: clip.transcript.engine, words: clip.transcript.wordCount, heard };
+  await shot("study-hindi-whisper");
+  if (!/[ऀ-ॿ]{2}/.test(heard) || !/रोटी/.test(heard)) throw new Error("Whisper did not write the Hindi clip in Hindi.");
 }
 
 /** A media file's length in seconds, or null. */

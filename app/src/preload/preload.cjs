@@ -10,7 +10,10 @@ const call =
     return reply.value;
   };
 
-const EVENTS = new Set(["app:open-project", "preview:exit", "preview:changed", "preview:copies", "agent:event", "study:event", "save:event"]);
+const EVENTS = new Set([
+  "app:open-project", "preview:exit", "preview:changed", "preview:copies", "agent:event", "study:event", "speech:event",
+  "save:event",
+]);
 
 contextBridge.exposeInMainWorld("hfwin", {
   app: { info: call("app:info") },
@@ -56,6 +59,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     run: call("study:run"),
     setLanguage: call("study:setLanguage"),
   },
+  speech: { status: call("speech:status"), get: call("speech:get") },
   agent: {
     status: call("agent:status"),
     history: call("agent:history"),

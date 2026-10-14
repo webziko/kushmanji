@@ -1595,6 +1595,23 @@ dialog[open]::backdrop {
   display: none;
 }
 
+/* The offer to fetch the speech tool (Whisper): a plain line with its one button, then its progress. */
+.study-speech {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.study-speech button {
+  margin-inline-start: 4px;
+}
+
+.study-speech-problem {
+  display: block;
+  margin-top: 4px;
+  color: var(--danger-ink);
+}
+
 .agent-pick {
   min-width: 0;
   max-width: 144px;

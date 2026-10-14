@@ -338,6 +338,18 @@ language left on "Automatic" and only Parakeet present, the transcript is marked
 because Parakeet writes confident nonsense for a language it does not speak. A language no installed engine
 speaks gets a note, never a wrong transcript.
 
+Getting Whisper (`speechTool.js`, M10-11). HyperFrames cannot set Whisper up on Windows (UP-01), so when the
+chosen language needs it and it is missing, the clips strip offers it ("Get it", with the download's size).
+That press is the person's yes: the app fetches whisper.cpp's own Windows build (pinned release, SHA-256
+checked) into `<userData>/tools/whisper`, and the `large-v3` model (3.1 GB) into HyperFrames' own model
+folder, `~/.cache/hyperframes/whisper/models` (also checked), unpacks with Windows' own `tar.exe`, and sets
+`HYPERFRAMES_WHISPER_PATH` for the CLI, the study and the assistants. At start the variable is set the same way
+when our copy, or a `whisper-cli.exe` on PATH, is found; one the person set is never replaced. When the download
+ends, only the clips with sound and no words are heard again (`study.run(dir, { missingWords: true })`); their
+pictures are kept. The model is `large-v3` because "small" and "large-v3-turbo" wrote nonsense for Kannada
+(`studyPlan.js`). It is slow on a processor: about a minute and a half per clip, so the first study of a long
+video in such a language takes a while, and a chat message waits for it.
+
 ## Footage intake and review
 
 `mediaImport.js` validates the entire selection before copying. It never moves source files or rewrites the

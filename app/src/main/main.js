@@ -30,6 +30,7 @@ import {
   rememberFolder,
 } from "./projects.js";
 import { runSmoke } from "./smoke.js";
+import { SpeechTool } from "./speechTool.js";
 import { FootageStudy } from "./study.js";
 import { readClipStudy } from "./studyRead.js";
 import { projectsRoot, readState, updateState } from "./state.js";
@@ -104,6 +105,8 @@ const study = new FootageStudy({
     studyStep?.(payload);
   },
 });
+/** Whisper, fetched only when the person asks (speechTool.js). Made once the settings folder is final. */
+let speech = null;
 const agent = new AgentRunner({
   emit: (payload) => win?.webContents.send("agent:event", payload),
   // An agent never starts from a study that is missing the clip the person just added.
@@ -362,6 +365,15 @@ function registerIpc() {
   handle("study:setLanguage", ({ dir, language } = {}) =>
     study.setLanguage(requireProject(dir), language == null ? null : String(language)),
   );
+  handle("speech:status", () => speech.status());
+  // The person's yes to the download. When it is done, the clips of their video that have no words yet are heard.
+  handle("speech:get", (dir) => {
+    const project = requireProject(dir);
+    void speech.get().then((status) => {
+      if (status.state === "ready") void study.run(project, { missingWords: true });
+    });
+    return speech.status();
+  });
 
   handle("agent:status", () => agent.status());
   handle("agent:history", (dir) => agent.history(requireProject(dir)));
@@ -450,6 +462,7 @@ if (!app.requestSingleInstanceLock()) {
     exporter.stop({ sync: true });
     study.close({ sync: true });
     lightCopies.stop({ sync: true });
+    speech?.stop();
     preview.stop({ sync: true });
   });
 
@@ -457,6 +470,11 @@ if (!app.requestSingleInstanceLock()) {
   // top-level await on it waits for itself and the app never starts.
   void app.whenReady().then(async () => {
     lockDownSession();
+    speech = new SpeechTool({
+      folder: path.join(app.getPath("userData"), "tools", "whisper"),
+      emit: (status) => win?.webContents.send("speech:event", status),
+    });
+    speech.useIfPresent();
     registerIpc();
     await createWindow();
 

@@ -50,6 +50,17 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
    them changes, the copies stop being used or start reloading the editor. Check with the playback measurement
    (`CONTRIBUTING.md`): `pictureShortSides` must read `[720]` once the copies are made.
 
+## Whisper, the speech tool (every few months)
+
+`speechTool.js` pins whisper.cpp's Windows build (`whisper-bin-x64.zip` of release `b5454`, the build behind
+v1.9.5) and the `large-v3` model, each with its size and SHA-256. Nothing breaks when upstream moves on;
+to take a newer build, read the size and `sha256:` digest from
+`https://api.github.com/repos/ggml-org/whisper.cpp/releases` (each asset lists its `digest`), change
+`WHISPER_PROGRAM`, then transcribe one Kannada or Hindi clip (`npx hyperframes transcribe <clip> --engine
+whisper --model large-v3 --language kn --json` with `HYPERFRAMES_WHISPER_PATH` set). The model's size and
+SHA-256 are in `https://huggingface.co/api/models/ggerganov/whisper.cpp/tree/main` (`lfs.size`, `lfs.oid`).
+If HyperFrames' `transcribe` ever builds or downloads Whisper on Windows itself (UP-01), this can go.
+
 ## The installer
 
 `.github/workflows/installer.yml` builds `Kushmanji-Setup-<version>.exe` for every push. When it fails after a

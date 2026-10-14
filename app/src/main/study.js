@@ -1,10 +1,12 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { whereAll } from "./agents/launcher.js";
 import { spawnCli } from "./cli.js";
 import { readJson, writeJson } from "./jsonFile.js";
 import { collect, killTree } from "./proc.js";
+import { whisperReady } from "./speechTool.js";
 import {
   chooseEngine,
   clock,
@@ -13,6 +15,7 @@ import {
   knownLanguage,
   LANGUAGES,
   mayHoldFootage,
+  parakeetSpeaks,
   phrasesFrom,
   sheetPlan,
   slugFor,
@@ -98,14 +101,18 @@ function summary(dir, job) {
     languageSure: clip.transcript?.languageSure ?? null,
     notes: clip.notes ?? [],
   }));
+  const language = index?.language ?? "auto";
   return {
     running: Boolean(job),
     done: job?.done ?? 0,
     total: job?.total ?? 0,
     current: job?.current ?? null,
     step: job?.step ?? null,
-    language: index?.language ?? "auto",
+    language,
     languages: LANGUAGES,
+    // The chosen language needs Whisper and it is not here: the page offers to get it (speechTool.js).
+    // HYPERFRAMES_WHISPER_PATH is set at start when any Whisper is found, so no search is needed here.
+    needsSpeechTool: language !== "auto" && !parakeetSpeaks(language) && !whisperReady(),
     clips,
   };
 }
@@ -172,14 +179,20 @@ export class FootageStudy {
     await this.run(dir);
   }
 
-  /** Study whatever is new or changed. Joins the study already running for this project. */
-  run(dir, { force = false } = {}) {
+  /**
+   * Study whatever is new or changed. Joins the study already running for this project. `force` studies every
+   * clip again; `missingWords` only the clips with sound and no words yet, as when the speech tool has just come.
+   */
+  run(dir, { force = false, missingWords = false } = {}) {
     if (this.#job?.dir === dir && !this.#job.cancelled) {
       // Asked again while running (more footage arrived): go round once more when this pass ends.
       this.#job.again = true;
+      this.#job.missingWords ||= missingWords;
       return this.#job.promise;
     }
-    const job = { dir, cancelled: false, again: false, child: null, done: 0, total: 0, current: null, step: null };
+    const job = {
+      dir, cancelled: false, again: false, missingWords, child: null, done: 0, total: 0, current: null, step: null,
+    };
     // After whatever was running (a project just closed is still winding down), never beside it.
     const before = this.#job?.promise ?? Promise.resolve();
     this.#job = job;
@@ -221,7 +234,10 @@ export class FootageStudy {
     if (footage.length === 0 && !old) return;
 
     const previous = new Map((old?.clips ?? []).map((clip) => [clip.file, clip]));
-    const stale = footage.filter((clip) => force || !isCurrent(previous.get(clip.file), clip));
+    const wordless = (entry) => job.missingWords && entry?.hasSound === true && !entry.transcript;
+    const stale = footage.filter((clip) =>
+      force || !isCurrent(previous.get(clip.file), clip) || wordless(previous.get(clip.file)));
+    job.missingWords = false;
     const kept = footage.filter((clip) => !stale.includes(clip)).map((clip) => previous.get(clip.file));
     const gone = (old?.clips ?? []).filter((clip) => !footage.some((found) => found.file === clip.file));
     // Studies made before the picture's own length was recorded get it added: one quick look per clip, with no
@@ -232,7 +248,7 @@ export class FootageStudy {
     const tools = {
       ffmpeg: findTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
       ffprobe: findTool("ffprobe", process.env.HYPERFRAMES_FFPROBE_PATH),
-      whisper: Boolean(findTool("whisper-cli", process.env.HYPERFRAMES_WHISPER_PATH)),
+      whisper: whisperReady({ program: findTool("whisper-cli", process.env.HYPERFRAMES_WHISPER_PATH) }),
       parakeet: stale.length > 0 ? await this.#hasParakeet(job) : false,
     };
     for (const clip of tools.ffprobe ? unmeasured : []) {
@@ -459,13 +475,33 @@ export class FootageStudy {
     const choice = chooseEngine({ language, parakeet: tools.parakeet, whisper: tools.whisper });
     if (!choice.engine) return { problem: choice.problem };
 
-    // `transcribe` writes transcript.json into the folder it is given, so each clip gets its own.
+    // `transcribe` writes transcript.json into the folder it is given, so each clip gets its own. Whisper on
+    // Windows reads its command line in the old ANSI code page: a folder named in Kannada (or "José") reaches it
+    // garbled. So it works in a temporary folder with a plain name, and a sound file it would be handed as it is
+    // (a 16 kHz mono .wav) goes there too; the words are then moved into the project.
+    const plainName = (file) => /^[\x20-\x7e]*$/.test(file);
+    const scratch = choice.engine === "whisper" && !(plainName(folder) && plainName(source))
+      ? fs.mkdtempSync(path.join(os.tmpdir(), "kushmanji-words-")) : null;
+    let heardFrom = source;
+    if (scratch && !plainName(source) && /\.wav$/i.test(source)) {
+      heardFrom = path.join(scratch, "sound.wav");
+      fs.copyFileSync(source, heardFrom);
+    }
     const ran = await this.#run(
       job,
-      spawnCli(["transcribe", source, "--dir", folder, "--json", ...choice.args]),
-      // Generous: a slow laptop on battery, a first run that loads the model.
-      Math.max(180_000, seconds * 6000),
+      spawnCli(["transcribe", heardFrom, "--dir", scratch ?? folder, "--json", ...choice.args]),
+      // Generous: a slow laptop on battery, a first run that loads the model. Whisper's large model took 99 s for
+      // a 15 s clip on an 8-core laptop (it always hears at least 30 s), so it gets HyperFrames' own allowance.
+      choice.engine === "whisper" ? Math.max(600_000, seconds * 15_000) : Math.max(180_000, seconds * 6000),
     );
+    if (scratch) {
+      try {
+        fs.copyFileSync(path.join(scratch, "transcript.json"), path.join(folder, "transcript.json"));
+      } catch {
+        // Nothing was written: reported just below like any other failure.
+      }
+      fs.rmSync(scratch, { recursive: true, force: true });
+    }
     let reply = null;
     try {
       reply = JSON.parse(ran.stdout.trim().split(/\r?\n/).pop());

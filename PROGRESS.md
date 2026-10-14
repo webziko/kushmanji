@@ -290,10 +290,22 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       study. English and the other 24 Parakeet languages work. **Not proven: any other language** (Hindi,
       Telugu, Japanese...). They need Whisper, which HyperFrames cannot get on Windows by itself (UP-01); the
       app says so in plain words instead of writing a wrong transcript. See M10-11 and M10-12
-- [ ] M10-11 (to do on the owner's PC: github.com releases and huggingface.co are both refused from the cloud
-      machine) Whisper on Windows, so the study covers every language: with the person's yes, fetch the official
-      whisper.cpp Windows build into the app's own folder and point HyperFrames at it
-      (`HYPERFRAMES_WHISPER_PATH`). Then prove Hindi and one more non-European language end to end
+- [x] M10-11 Whisper on Windows, so the study covers every language (Claude, 2026-10-14, on the owner's PC).
+      When the chosen spoken language needs Whisper, the clips strip offers it with its size; "Get it" fetches
+      whisper.cpp's own Windows build (pinned, SHA-256 checked) into `<userData>/tools/whisper` and the
+      `large-v3` model (3.1 GB, checked) into HyperFrames' model folder, sets `HYPERFRAMES_WHISPER_PATH`, and
+      hears again the clips that had no words (`speechTool.js`). Tried: "small" and "large-v3-turbo" wrote
+      nonsense for the owner's Kannada; "large-v3" wrote Kannada, and Hindi word for word (a Hindi voice, in
+      `npm run smoke:study` with `HFWIN_SMOKE_GET_SPEECH=1`, which presses "Get it" for real). Chinese was
+      detected by itself and half right. Kannada proven in the real app on the owner's clip 01; the owner has
+      not yet said whether the words are right. Slow on a processor: about 1.5 minutes per clip. Whisper
+      cannot read paths outside plain English letters (UP-03): the app works around the project folder, and
+      says plainly when the user folder is the problem. "Add subtitles" now asks for subtitles from the
+      study's words, in English
+- [ ] M10-18 With Whisper, the first study of a long video in Kannada or Hindi takes about 1.5 minutes per
+      clip, and a chat message waits for the whole study. Let a message go ahead once the pictures are done,
+      with the words following; or hear only the clips the video uses (the owner's vlog has three copies of
+      every clip: `clean`, `prepared`, `voice-clean`)
 - [ ] M10-12 Work out the spoken language instead of assuming it: with Whisper present, detect on the first
       half minute, then use Parakeet where it speaks that language. Today "Automatic" assumes English or
       another European language and says so
@@ -685,7 +697,16 @@ Windows bugs found in heygen-com/hyperframes itself. Each becomes a pull request
       few large videos in Studio, then look at that folder. A fix upstream: reference media by hash in place,
       or an option to keep media out of history
 
-Template: `- [ ] UP-03 What breaks · how to reproduce · upstream file · issue or PR link`
+- [ ] UP-03 (whisper.cpp, not HyperFrames) `whisper-cli.exe` of release b5454 stops at once (exit 0xC0000409)
+      when the model's path has a letter outside plain English: `whisper-cli -m "C:\...\speech-é\modèle.bin" -f
+      en.wav` prints the path as `speech-�\mod�le.bin` and dies. Its `main` reads the command line in the ANSI
+      code page and the loader opens it as UTF-8. Writing the output into an "é" folder worked; Kannada or Hindi
+      letters, outside the code page, would not. The app works around the project folder (a plain temporary
+      folder, `study.js`) but not the user folder, where HyperFrames keeps the model (`speechTool.js`,
+      `homeProblem`). A fix upstream: `wmain` / `GetCommandLineW` on Windows, in `examples/cli`. Also for
+      HyperFrames: a way to put the model elsewhere (an environment variable beside HYPERFRAMES_WHISPER_PATH)
+
+Template: `- [ ] UP-04 What breaks · how to reproduce · upstream file · issue or PR link`
 
 ## Questions for the owner
 

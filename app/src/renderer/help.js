@@ -96,7 +96,8 @@ export function createHelp() {
       h("p", { class: "help-walk-copy" }, WALK[step][1]),
       step === 1 && h("p", { class: "muted" }, "Sending a message uses your chosen assistant's allowance."),
       step === 2 && h("p", { class: "muted" },
-        "Saving a long video takes a while. Subtitles that the app writes by itself are not ready yet."),
+        "Saving a long video takes a while. For subtitles, the app writes down what is said in your clips; " +
+        "check the words before you use them."),
     ].filter(Boolean));
     footer.replaceChildren(
       h("button", { class: "ghost help-close", type: "button", onclick: close }, "Skip for now"),

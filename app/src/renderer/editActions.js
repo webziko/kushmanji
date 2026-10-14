@@ -11,9 +11,13 @@ const ACTIONS = [
   },
   {
     label: "Add subtitles",
-    about: "Subtitles that the app writes by itself are not ready yet. You can give the assistant the words " +
-      "and the times to show them. Check the words yourself, especially where the speech is hard to hear.",
-    request: "Add easy-to-read subtitles using these words and times: ",
+    about: "The app writes down what is said in your clips by itself (Review clips shows it). For a language " +
+      "other than English or another European one, choose it under Spoken language first. The assistant turns " +
+      "the words into subtitles, translated if you ask. Check them yourself, especially where the speech is " +
+      "hard to hear.",
+    request: "Add easy-to-read subtitles from what is said in the clips, timed by the words in the footage " +
+      "study (.hyperframes/study/index.json). Write them in English, translated where the speech is in " +
+      "another language. ",
   },
   {
     label: "Make it shorter",

@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-14, morning. The app is now called **Kushmanji**._
+_Updated 2026-10-14, evening. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -15,6 +15,10 @@ Two shortcuts are on your Desktop:
 
 ## Waiting on you
 
+- [ ] **Are the Kannada words right?** The app now writes down Kannada speech by itself (with Whisper). Your
+      clip 01 came out as "ಎಲ್ಲಾರಗಿ ನಮ್ಮಸ್ಕಾರಾ ನಾನು ನಿನಗೆ ವಿಷಾಯ ಹಿರ್ವಿಕು ... ಫುಲ್ ಬೋರ್". Nobody here can check Kannada.
+- [ ] **Does moving around in your vlog feel smooth now?** Measured on your PC: a jump shows its picture in
+      0.05 s on the watching screen and about 0.13 s in "Edit by hand".
 - [ ] **Watch the four finished videos** in `C:\hyperframewindows\reviews\READY`: the vlog (4 min 13 s) and
       three upright shorts. A note in that folder says what to listen for and gives title ideas. Nothing was
       posted anywhere.
@@ -53,6 +57,17 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 7. [~] **An editing guide every assistant follows** (the first version is in; it grows from what you send back)
 
 Then the list further down, starting with one-click export.
+
+## New in the evening of 14 October, on your PC
+
+- [x] **Smoothness measured on your real vlog.** Jumping to a moment: 0.05 s watching, 0.13 s in the editor;
+      dragging the playhead shows about 30 pictures a second. Making the copies "lighter" still was tried and
+      made no difference, so nothing more to gain there. The first minute or two in the editor of a new video
+      is still slow while HyperFrames prepares its timeline (written down as M16-10).
+- [x] **Speech in any language.** Choose the spoken language under "Assistant and clip settings"; for Kannada,
+      Hindi, Tamil and others the app offers "Get it" (the free Whisper speech tool), then writes down what is
+      said in every clip. It takes about a minute and a half per clip. "Add subtitles" now uses those words.
+- [x] **The tests run on the app's own Node**, because the Node on your PC has a bug with letters like "é".
 
 ## New in the afternoon of 14 October: a fuller look, and a review of everything
 
@@ -246,6 +261,8 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | One Google Cloud usage-reporting add-on switched off, because it was broken on Windows and blocked Gemini | `%USERPROFILE%\.gemini\config\plugins\googlecloudtools.datacloud_telemetry\hooks.json` | Change `"enabled": false` back to `true` |
 | HyperFrames' source code downloaded for reference (1.5 GB) | `C:\hyperframewindows\upstream` | Delete that folder |
 | Remote Control switched on for the Claude session | This session only | Toolbar switch |
+| Whisper's speech model, large-v3 (3.1 GB, from huggingface.co, checked), 14 October | `%USERPROFILE%\.cache\hyperframes\whisper\models` | Delete `ggml-large-v3.bin` |
+| The Whisper program (9 MB, whisper.cpp's own Windows build), fetched by the app's "Get it" | `%APPDATA%\Kushmanji\tools\whisper` | Delete that folder |
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.

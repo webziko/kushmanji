@@ -96,6 +96,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   smoke.js               the self-test's steps
   playbackProbe.js       the self-test's playback measurement on a real project
   study.js  studyPlan.js the footage study: transcripts and frame sheets written into the project
+  speechTool.js          Whisper for the languages Parakeet does not speak, fetched on the person's "Get it"
   studyRead.js           bounded read-only review of indexed study files
   agents/
     index.js             runs chat turns, keeps each project's conversation

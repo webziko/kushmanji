@@ -171,8 +171,14 @@ export function knownLanguage(code) {
   return tidy;
 }
 
-/** A multilingual model that is fast enough on an ordinary laptop. English-only models end in ".en". */
-const WHISPER_MODEL = "small";
+/**
+ * The multilingual model the app fetches with Whisper (speechTool.js). Tried on the owner's Kannada vlog and a
+ * Hindi sample (2026-10-14): "small" and "large-v3-turbo" wrote nonsense for Kannada (one syllable over and over,
+ * or Khmer letters); "large-v3" wrote real Kannada, and Hindi word for word. It is about 1.6 times slower than
+ * turbo (a 15 s clip took 99 s on an 8-core laptop). HyperFrames has a word-timing preset for it
+ * (`--dtw large.v3`), which a quantised model would not.
+ */
+export const WHISPER_MODEL = "large-v3";
 
 /**
  * Which speech engine transcribes a clip, given the language the person chose (null when they left it to the
