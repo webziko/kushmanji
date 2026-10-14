@@ -47,6 +47,17 @@ never put the copies in a video).
 - **M15-02** (`a0cca8b`): "Auto (saves your allowance)" is the model menu's choice when none was made
   (`agents/sizing.js`); small requests go to Sonnet, a Codex "mini" or a Gemini "flash". Not tried with a real
   assistant yet. If the owner finds Sonnet's small edits worse, the floor is one line in `SMALLER`.
+- **M15-01 "Your assistants"** (`cd989bb`): ticks in the chat's settings; the menu and "Carry on" offer only those.
+- **M14-06 branding**: three directions in `docs/brand/choices.png`, sent to the owner; waiting for a pick.
+- **M14-07 Home** (`3c26b73`), page by a Sonnet helper; pictures from `covers.js` (captured from the window).
+- **M2-10 undo** (`a88c46e`, `894810b`): **the CLI's `history` commands are refused while the preview server runs**
+  ("open in another app"), so turns are history windows on the server (`POST /api/projects/:id/history/window`,
+  `.../close`, `.../undo`). Its default window ends after 30 s without a write; we ask for its maximum, 10 min.
+- **M3-02** (`894810b`): Studio's "Ask agent" buttons only copy to the clipboard; `askAgent.js` wraps the
+  clipboard in Studio's page and sends recognised prompts to the chat box.
+- In this container `killTree` leaves preview servers running (it is written for Windows): 24 were found after
+  a day of self-tests and killed by hand. Not a Windows problem; worth knowing before measuring here again.
+- My commits swept in a helper's half-written files twice (`git add -A` while it worked): add files by name.
 - **M17-04 shorts** was skipped here on purpose: its worked example (`reviews/shisha-shorts`) and the channel's
   rules (`C:\Creators\happywithshisha`) are only on the owner's PC.
 
