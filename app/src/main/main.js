@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
 import { AgentRunner } from "./agents/index.js";
 import { catchStudioAsks } from "./askAgent.js";
+import { checkTurn } from "./agents/turnCheck.js";
 import { turnHistory } from "./agents/turnHistory.js";
 import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
@@ -114,6 +115,7 @@ const agent = new AgentRunner({
   },
   // Undo for each turn goes through the open project's preview server, which keeps its history.
   history: turnHistory(() => preview.current),
+  check: checkTurn,
 });
 
 // Saving a video: the file goes to the person's Downloads folder, and the taskbar button shows how far it is.

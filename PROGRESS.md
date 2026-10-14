@@ -273,9 +273,12 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       plan". The wait is an instruction, and the app checks afterwards and says so if anything but the plan was
       changed. Proven in the real app with Claude Code: a plan, the video untouched, then built after "Build
       it". Not yet run: "Co-direct it", and either mode with Codex or Gemini
-- [ ] M10-03 Check its own work, once. After an edit the agent looks at rendered frames and fixes what is wrong:
+- [~] M10-03 Check its own work, once. After an edit the agent looks at rendered frames and fixes what is wrong:
       one check and at most one round of fixes per request, then it reports, including anything still wrong.
-      Never an open-ended loop
+      Never an open-ended loop. The app's half is done (Claude, 2026-10-14): after every reply that changed the
+      video, HyperFrames' `lint` runs (about two seconds, no allowance) and the reply says "The app checked your
+      video: no mistakes found" or "found 3 mistakes", with "Ask to fix them" and the details behind "Show
+      them" (`agents/turnCheck.js`). Open: the assistant looking at still frames itself (Codex cannot, M17-07)
 - [ ] M10-04 A style kit per project, not per channel: colours, fonts, title and caption styles. Start from a
       preset, from a website, or from a description. Reusable across projects as a named kit
 - [ ] M10-05 The right agent for each job, chosen by the app: images to Codex; watching clips to Gemini (proven

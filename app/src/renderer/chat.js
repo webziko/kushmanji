@@ -128,7 +128,9 @@ function liveMessage(name) {
     /** `done.text`, when present, is the reply with the app's own marks taken out. */
     finish(done, actions) {
       cancelAnimationFrame(frame);
-      el.replaceWith(agentMessage({ name, activities, ...done, text: done.text ?? text, actions }));
+      const settled = agentMessage({ name, activities, ...done, text: done.text ?? text, actions });
+      el.replaceWith(settled);
+      return settled;
     },
   };
 }
@@ -152,6 +154,31 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     return agent?.label ?? agent?.name ?? "Assistant";
   };
   const isReady = () => checked && current()?.state === "ready";
+
+  /** Each settled reply by its place in the chat, so the app's check can be added to it when it arrives. */
+  const replies = new Map();
+
+  /**
+   * What the app's check found after a reply changed the video (M10-03, main/agents/turnCheck.js). Mistakes come
+   * with a button that puts a request to fix them in the message box.
+   */
+  function checkedNote({ errors, mistakes = [] }) {
+    if (!errors) return h("div", { class: "msg-check muted" }, "The app checked your video: no mistakes found.");
+    const listed = mistakes.map((mistake) => `- ${mistake.text}${mistake.where ? ` (${mistake.where})` : ""}`);
+    const more = errors > mistakes.length ? `\n- and ${errors - mistakes.length} more like these` : "";
+    const ask = `Please fix the mistakes the app's check found:\n${listed.join("\n")}${more}`;
+    return h("div", { class: "msg-check" },
+      h("div", { class: "msg-note error" },
+        `The app checked your video and found ${errors === 1 ? "one mistake" : `${errors} mistakes`}.`),
+      h("div", { class: "msg-actions" },
+        h("button", { class: "secondary small", type: "button", onclick: () => {
+          input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
+          input.focus();
+        } }, "Ask to fix them"),
+        // The check's own words are for the assistant; whoever is curious can read them.
+        h("details", { class: "msg-check-details" }, h("summary", {}, "Show them"),
+          ...mistakes.map((mistake) => h("p", {}, mistake.text)))));
+  }
 
   /**
    * "Undo this change" under a reply that changed files (M2-10). After undoing it says so, and offers to bring the
@@ -737,13 +764,22 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   });
 
   const stopListening = api.on("agent:event", ({ dir: eventDir, event }) => {
-    if (eventDir !== dir || !live) return;
+    if (eventDir !== dir) return;
+    // The app's own check of a finished reply arrives a moment after it (M10-03).
+    if (event.type === "checked") {
+      const reply = replies.get(event.index);
+      reply?.querySelector(".msg-check")?.remove();
+      reply?.append(checkedNote(event.checked));
+      return;
+    }
+    if (!live) return;
     if (event.type !== "done") return live.onEvent(event);
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
     // A reply that failed, for whatever reason, offers the person's other assistants (M12-04).
     const failed = event.limited || (!event.ok && !event.stopped);
-    live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
+    const settled = live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
       event.plan ? planButtons() : failed ? carryOnButtons(engine, event.changed ?? event.undo?.files, event.limited) : null);
+    if (Number.isInteger(event.index)) replies.set(event.index, settled);
     live = null;
     setRunning(false);
     if (pinned) log.scrollTop = log.scrollHeight;
@@ -776,16 +812,20 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         // A plan still waiting for its answer, when it is the last thing said, keeps its buttons.
         const waitingPlan = message.plan && i === saved.messages.length - 1 && !saved.running;
         const last = i === saved.messages.length - 1 && !saved.running;
-        append(
-          message.role === "user"
-            ? userMessage(message)
-            : // Replies saved before there was a choice of agent were all Claude Code's.
-              agentMessage({ ...message, name: nameOf(message.engine ?? "claude"), undoAction: undoControl(i, message.undo),
-                actions: waitingPlan ? planButtons()
-                  : (message.limited || (!message.ok && !message.stopped)) && last
-                    ? carryOnButtons(message.engine ?? "claude", message.changed ?? message.undo?.files, message.limited)
-                    : null }),
-        );
+        if (message.role === "user") {
+          append(userMessage(message));
+          continue;
+        }
+        // Replies saved before there was a choice of agent were all Claude Code's.
+        const reply = agentMessage({ ...message, name: nameOf(message.engine ?? "claude"),
+          undoAction: undoControl(i, message.undo),
+          actions: waitingPlan ? planButtons()
+            : (message.limited || (!message.ok && !message.stopped)) && last
+              ? carryOnButtons(message.engine ?? "claude", message.changed ?? message.undo?.files, message.limited)
+              : null });
+        replies.set(i, reply);
+        if (message.checked) reply.append(checkedNote(message.checked));
+        append(reply);
       }
       log.scrollTop = log.scrollHeight;
       render();

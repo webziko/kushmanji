@@ -55,6 +55,9 @@ never put the copies in a video).
   `.../close`, `.../undo`). Its default window ends after 30 s without a write; we ask for its maximum, 10 min.
 - **M3-02** (`894810b`): Studio's "Ask agent" buttons only copy to the clipboard; `askAgent.js` wraps the
   clipboard in Studio's page and sends recognised prompts to the chat box.
+- **M2-09 queue or steer, M12-04 carry on after any failure** (`5044f1a`), **M12-03 "Test it now"** (`2f7cd34`).
+  All tried in the real app with a stand-in `claude.exe` (fake HOME): it answers the check-up, edits files,
+  and can be slowed with `FAKE_SLEEP`; `FAKE_VERSION` makes it look newer than `about.tested`.
 - In this container `killTree` leaves preview servers running (it is written for Windows): 24 were found after
   a day of self-tests and killed by hand. Not a Windows problem; worth knowing before measuring here again.
 - My commits swept in a helper's half-written files twice (`git add -A` while it worked): add files by name.

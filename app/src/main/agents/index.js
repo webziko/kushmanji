@@ -73,17 +73,20 @@ export class AgentRunner {
   #emit;
   #prepare;
   #history;
+  #check;
 
   /**
    * `emit({ dir, event })` forwards an agent event to the window. `prepare(dir, onStep)`, when given, runs
    * before each turn's agent starts: whatever the project needs first (the footage study). It reports what it
    * is doing through `onStep(label, detail)`, and its failure never stops the chat. `history`, when given, is
-   * `{ begin, end, undo }` (turnHistory.js): each turn becomes one entry the person can undo (M2-10).
+   * `{ begin, end, undo }` (turnHistory.js): each turn becomes one entry the person can undo (M2-10). `check(dir)`,
+   * when given, looks the project over after a turn that changed it (turnCheck.js, M10-03).
    */
-  constructor({ emit, prepare, history }) {
+  constructor({ emit, prepare, history, check }) {
     this.#emit = emit;
     this.#prepare = prepare;
     this.#history = history;
+    this.#check = check;
   }
 
   get busy() {
@@ -411,6 +414,9 @@ export class AgentRunner {
     writeChat(turn.dir, chat);
     const index = chat.messages.length - 1;
     event = { ...event, index, undo: chat.messages[index].undo ?? null };
+    if (this.#check && (entry?.files.length || filesChangedSince(turn.dir, turn.startedAt).length)) {
+      this.#checkReply(turn.dir, index);
+    }
     // A stopped or failed turn is recorded too: it may have changed files before it ended.
     const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : limit
       ? " (stopped by its usage limit before finishing; its work is unchecked)"
@@ -422,6 +428,18 @@ export class AgentRunner {
       startedAt: turn.startedAt,
     });
     this.#emit({ dir: turn.dir, event });
+  }
+
+  /** Look the project over after a reply that changed it, and add what was found to that reply. */
+  #checkReply(dir, index) {
+    void Promise.resolve().then(() => this.#check(dir)).catch(() => null).then((checked) => {
+      if (!checked) return;
+      const chat = readChat(dir);
+      if (chat.messages[index]?.role !== "agent") return;
+      chat.messages[index].checked = checked;
+      writeChat(dir, chat);
+      this.#emit({ dir, event: { type: "checked", index, checked } });
+    });
   }
 
   stop({ sync = false } = {}) {

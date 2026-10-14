@@ -11,7 +11,7 @@ import { CHECK_REQUEST, judge, makeScratch, testedOk } from "../src/main/agents/
 const settled = () => new Promise((done) => setImmediate(done));
 
 // Exercise the real runner with in-memory files and local bridge stand-ins: no sign-in or paid AI turn.
-function runner({ state = {}, history, bridgeRun } = {}) {
+function runner({ state = {}, history, bridgeRun, check } = {}) {
   const files = new Map();
   const requests = [];
   const turns = [];
@@ -38,7 +38,7 @@ function runner({ state = {}, history, bridgeRun } = {}) {
     claude: bridge, codex: bridge, antigravity: bridge,
   });
   const events = [];
-  return { agent: new Runner({ emit: (sent) => events.push(sent.event), history }), requests, turns, events };
+  return { agent: new Runner({ emit: (sent) => events.push(sent.event), history, check }), requests, turns, events };
 }
 
 test("the runner saves a moment beside the request and tells the chosen assistant", async () => {
@@ -204,4 +204,21 @@ test("a check-up that cannot change the file says so plainly", async () => {
   assert.equal(got.ok, false);
   assert.match(got.said, /could not change a file/);
   await assert.rejects(agent.checkup("someone-else"), /not known/);
+});
+
+test("a reply that changed the video is checked once, and what was found is kept with it", async () => {
+  const checked = [];
+  const { agent, requests, events } = runner({ history: fakeHistory(), check: async (dir) => {
+    checked.push(dir);
+    return { errors: 1, warnings: 0, mistakes: [{ text: "A clip is missing.", where: "index.html, line 3" }] };
+  } });
+  agent.send({ dir: "video", text: "Make the title red." });
+  await settled();
+  requests[0].onEvent({ type: "done", ok: true });
+  await ended();
+  await ended();
+  assert.deepEqual(checked, ["video"]);
+  assert.equal(agent.history("video").messages.at(-1).checked.errors, 1);
+  assert.equal(events.at(-1).type, "checked");
+  assert.equal(events.at(-1).index, 1);
 });

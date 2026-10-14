@@ -77,6 +77,8 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **A new Home screen**: "Carry on" with a picture of the video you last worked on, then "From my clips" and
       "From an idea", and your videos as pictures (each picture is taken when you leave that video)
 - [x] **"Undo this change"** under every reply that changed your video, and "Bring it back" after
+- [x] **The app checks your video after every change** an assistant makes (free, two seconds) and says if it
+      found mistakes, with "Ask to fix them"
 - [x] **"Test it now"** when an assistant has updated past the version Kushmanji was tried with: one tiny job,
       and a plain answer such as "Claude works with Kushmanji"
 - [x] **Type while the assistant works**: "Send when done" or "Stop and send now"

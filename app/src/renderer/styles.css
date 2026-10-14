@@ -986,3 +986,8 @@ h2 {
 .composer-note.queued[hidden] { display: none; }
 /* "Test it now" beside the note about a newer assistant (M12-03). */
 .chat-version:not([hidden]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* The app's check under a reply (M10-03). */
+.msg-check { display: grid; gap: 4px; justify-items: start; margin-top: 6px; font-size: 12px; }
+.msg-check .msg-actions { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.msg-check-details summary { cursor: pointer; color: var(--text-2); padding: 4px 0; }
+.msg-check-details p { margin: 4px 0; color: var(--text-2); }

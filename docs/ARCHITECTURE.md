@@ -76,6 +76,12 @@ the undo is an entry too, so "Bring it back" undoes the undo (`POST .../history/
 returns, so the next request cannot begin inside it. The next assistant's handover says what the person undid.
 Without the history (an error from the CLI) the turn simply has no undo.
 
+**The app's check after a reply** (M10-03, `agents/turnCheck.js`). When a turn changed the project, the runner
+runs `hyperframes lint --json` on it (static, a second or two, no assistant involved), saves the counts and the
+first five mistakes with that reply, and sends a `checked` event; the chat adds "The app checked your video..."
+under the reply, with a button that puts a request to fix them in the message box. Notes (warnings) are only
+counted: some are expected.
+
 **The editor's "Ask agent" buttons** (M3-02, `main/askAgent.js`). Studio's buttons that hand something to an
 assistant only copy a prompt. When Studio's page loads directly inside the app's page, the main process wraps
 `Clipboard.prototype.writeText` there: a text that begins like one of Studio's prompts is posted to the app's page

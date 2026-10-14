@@ -44,7 +44,7 @@ for (let i = 0; i < clips; i++) {
   const id = `clip-${i + 1}`;
   // Two tracks taking turns, so each cross-fade's clips overlap without sharing a track.
   parts.push(`      <video id="${id}" class="clip" data-start="${at.toFixed(2)}" data-duration="${PICTURE}" ` +
-    `data-media-start="0" data-track-index="${1 + (i % 2)}" src="assets/clip-${String(i + 1).padStart(2, "0")}.mp4" ` +
+    `data-media-start="0" data-has-audio="true" data-track-index="${1 + (i % 2)}" src="assets/clip-${String(i + 1).padStart(2, "0")}.mp4" ` +
     "playsinline></video>");
   if (i > 0) fades.push(`tl.fromTo("#${id}", { opacity: 0 }, { opacity: 1, duration: ${FADE} }, ${at.toFixed(2)});`);
   if (i % 3 === 0) {
