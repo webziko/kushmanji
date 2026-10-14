@@ -1,4 +1,5 @@
 import { h } from "./dom.js";
+import { t } from "./words.js";
 
 const api = window.hfwin;
 
@@ -10,31 +11,32 @@ export function createSaveVideo(dir) {
   let state = "idle";
   const status = h("span", { class: "muted save-status", role: "status" });
   const show = h("button", {
-    class: "ghost save-show", type: "button", hidden: true, title: "Show the saved video in File Explorer",
+    class: "ghost save-show", type: "button", hidden: true, title: t("Show the saved video in File Explorer"),
     onclick: () => api.save.show().catch(() => {}),
-  }, "Show the file");
+  }, t("Show the file"));
   const button = h("button", {
     class: "secondary save-video", type: "button",
-    title: "Make a video file from your whole video and put it in your Downloads folder.",
+    title: t("Make a video file from your whole video and put it in your Downloads folder."),
     onclick: () => (state === "saving" ? api.save.stop().catch(() => {}) : start()),
-  }, "Save video");
+  }, t("Save video"));
 
   // `data-save` is what the smoke test reads.
   function render(next) {
     state = next?.state ?? "idle";
     document.body.dataset.save = state;
     button.disabled = state === "busy";
-    button.textContent = state === "saving" ? "Stop saving" : "Save video";
+    button.textContent = state === "saving" ? t("Stop saving") : t("Save video");
     show.hidden = state !== "saved";
     status.removeAttribute("title");
-    if (state === "saving") status.textContent = `Saving your video… ${next.percent}%`;
-    else if (state === "busy") status.textContent = "Another video is being saved.";
+    if (state === "saving") status.textContent = t("Saving your video… {percent}%", { percent: next.percent });
+    else if (state === "busy") status.textContent = t("Another video is being saved.");
     else if (state === "saved") {
-      status.textContent = `Saved in Downloads: ${next.name} (${next.megabytes} MB)`;
+      status.textContent = t("Saved in Downloads: {name} ({megabytes} MB)",
+        { name: next.name, megabytes: next.megabytes });
       // The bar is narrow; the whole name is there on hover.
       status.title = status.textContent;
     }
-    else if (state === "stopped") status.textContent = "Saving stopped. No file was kept.";
+    else if (state === "stopped") status.textContent = t("Saving stopped. No file was kept.");
     else if (state === "failed") {
       status.textContent = next.message;
       if (next.detail) status.title = next.detail;

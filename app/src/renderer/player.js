@@ -1,4 +1,5 @@
 import { h } from "./dom.js";
+import { t } from "./words.js";
 
 const api = window.hfwin;
 const clock = (seconds) => {
@@ -20,7 +21,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
   let resumePlaying = false;
   let sound = 1;
   let lastSound = 1;
-  const frame = h("iframe", { class: "studio", title: "Your video", tabindex: "-1", "aria-hidden": "true" });
+  const frame = h("iframe", { class: "studio", title: t("Your video"), tabindex: "-1", "aria-hidden": "true" });
   const note = h("p", { class: "player-note", role: "status" });
   const time = h("span", { class: "player-time" }, "0:00 / 0:00");
   const command = (action, value) => api.player.command({ dir, action, value });
@@ -36,34 +37,34 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     }
   };
   const toggle = () => control(state.playing ? "pause" : "play");
-  const play = h("button", { class: "primary player-play", type: "button", onclick: toggle }, "Play");
+  const play = h("button", { class: "primary player-play", type: "button", onclick: toggle }, t("Play"));
   const picture = h("button", {
-    class: "player-picture", type: "button", disabled: true, "aria-label": "Play video", onclick: toggle,
+    class: "player-picture", type: "button", disabled: true, "aria-label": t("Play video"), onclick: toggle,
   });
   const screen = h("div", { class: "player-screen" }, frame, picture);
   const seek = h("input", {
     class: "player-seek", type: "range", min: "0", max: "0", step: "0.01", value: "0",
-    "aria-label": "Playback position",
+    "aria-label": t("Playback position"),
   });
   const volume = h("input", {
     class: "player-volume", type: "range", min: "0", max: "1", step: "0.05", value: "1",
-    "aria-label": "Sound level",
+    "aria-label": t("Sound level"),
   });
   const setSound = () => {
     volume.value = String(sound);
-    mute.textContent = sound === 0 ? "Muted" : "Sound";
+    mute.textContent = sound === 0 ? t("Muted") : t("Sound");
     mute.setAttribute("aria-pressed", String(sound === 0));
-    mute.setAttribute("aria-label", sound === 0 ? "Restore sound" : "Mute sound");
+    mute.setAttribute("aria-label", sound === 0 ? t("Restore sound") : t("Mute sound"));
     void control("volume", sound);
   };
   const mute = h("button", {
-    class: "ghost player-mute", type: "button", "aria-label": "Mute sound", "aria-pressed": "false",
+    class: "ghost player-mute", type: "button", "aria-label": t("Mute sound"), "aria-pressed": "false",
     onclick: () => {
       if (sound > 0) { lastSound = sound; sound = 0; }
       else sound = lastSound;
       setSound();
     },
-  }, "Sound");
+  }, t("Sound"));
   volume.addEventListener("input", () => {
     sound = Number(volume.value);
     if (sound > 0) lastSound = sound;
@@ -83,24 +84,24 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
       try {
         if (document.fullscreenElement) await document.exitFullscreen();
         else await element.requestFullscreen();
-      } catch { note.textContent = "Full screen did not open. Try again."; }
+      } catch { note.textContent = t("Full screen did not open. Try again."); }
     },
-  }, "Full screen");
-  const controls = h("fieldset", { class: "player-controls", "aria-label": "Playback controls", disabled: true },
+  }, t("Full screen"));
+  const controls = h("fieldset", { class: "player-controls", "aria-label": t("Playback controls"), disabled: true },
     h("div", { class: "player-progress" }, seek, time),
     h("div", { class: "player-buttons" },
-      h("button", { class: "secondary player-back", type: "button", title: "Go back 10 seconds",
-        onclick: () => control("skip", -10) }, "Back 10s"),
+      h("button", { class: "secondary player-back", type: "button", title: t("Go back 10 seconds"),
+        onclick: () => control("skip", -10) }, t("Back 10s")),
       play,
-      h("button", { class: "secondary player-forward", type: "button", title: "Skip forward 10 seconds",
-        onclick: () => control("skip", 10) }, "Forward 10s"),
+      h("button", { class: "secondary player-forward", type: "button", title: t("Skip forward 10 seconds"),
+        onclick: () => control("skip", 10) }, t("Forward 10s")),
       h("span", { class: "spacer" }), mute, volume, full,
     ),
   );
-  const element = h("section", { class: "player", "aria-label": "Video player" },
-    h("div", { class: "player-heading" }, h("strong", {}, "Your video"),
-      h("span", { class: "muted" }, "Space to play · Arrow keys skip 10 seconds"),
-      h("button", { class: "secondary player-help", type: "button", onclick: onHelp }, "Help")),
+  const element = h("section", { class: "player", "aria-label": t("Video player") },
+    h("div", { class: "player-heading" }, h("strong", {}, t("Your video")),
+      h("span", { class: "muted" }, t("Space to play · Arrow keys skip 10 seconds")),
+      h("button", { class: "secondary player-help", type: "button", onclick: onHelp }, t("Help"))),
     screen, controls, note,
   );
 
@@ -116,14 +117,15 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
   function update(got) {
     state = got;
     onTime(got.time);
-    play.textContent = got.playing ? "Pause" : "Play";
-    picture.setAttribute("aria-label", got.playing ? "Pause video" : "Play video");
+    play.textContent = got.playing ? t("Pause") : t("Play");
+    picture.setAttribute("aria-label", got.playing ? t("Pause video") : t("Play video"));
     seek.max = String(got.duration);
     if (!scrubbing) {
       seek.value = String(got.time);
       time.textContent = `${clock(got.time)} / ${clock(got.duration)}`;
     }
-    seek.setAttribute("aria-valuetext", `${clock(got.time)} of ${clock(got.duration)}`);
+    seek.setAttribute("aria-valuetext",
+      t("{time} of {total}", { time: clock(got.time), total: clock(got.duration) }));
     fit();
   }
 
@@ -146,7 +148,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
         update(got);
         restoring = false;
       } else if (Date.now() >= deadline) {
-        onError("The video's picture did not finish loading. Try again.");
+        onError(t("The video's picture did not finish loading. Try again."));
         return;
       }
     } catch (error) {
@@ -166,7 +168,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     clearTimeout(seekTimer);
     scrubbing = false;
     generation++;
-    note.textContent = "Loading your video…";
+    note.textContent = t("Loading your video…");
     onLoading();
     const url = new URL(source);
     url.searchParams.set("_hfwin", String(generation));
@@ -197,7 +199,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     }
   };
   const fullscreen = () => {
-    full.textContent = document.fullscreenElement === element ? "Exit full screen" : "Full screen";
+    full.textContent = document.fullscreenElement === element ? t("Exit full screen") : t("Full screen");
   };
   document.addEventListener("keydown", keys);
   document.addEventListener("fullscreenchange", fullscreen);

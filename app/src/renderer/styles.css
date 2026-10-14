@@ -1661,6 +1661,12 @@ dialog[open]::backdrop {
   box-shadow: 0 0 0 3px var(--accent-wash);
 }
 
+/* The language menu on Home (M14-12). Its longest name, "ಕನ್ನಡ · Kannada", must show whole; the chat's menus
+   are narrower. */
+.language-pick {
+  max-width: 200px;
+}
+
 /* Messages. The person's sit on the right in a warm tint; the assistant's are soft cards on the left. */
 .msg {
   max-width: 92%;

@@ -1,19 +1,22 @@
 import { h } from "./dom.js";
+import { t } from "./words.js";
 
 // A first video from an idea, guided (M7-02). Three quick choices a person can tap, then a request with a shape that
 // works for short videos: a hook in the first seconds, the main moment, a turn, and a call to action. "Just make
 // it" sends the idea as it was typed.
+// Each choice is [what the person reads, what the request says]. The request goes to the assistant in English, so
+// only the first of the two is put through t().
 const QUESTIONS = [
-  { id: "length", label: "How long?", choices: [
-    ["15 seconds", "about 15 seconds long"], ["30 seconds", "about 30 seconds long"],
-    ["1 minute", "about one minute long"], ["Longer", "a few minutes long"]] },
-  { id: "shape", label: "Which shape?", choices: [
-    ["Wide (YouTube)", "wide, 1920 × 1080, for YouTube"],
-    ["Upright (Shorts, Reels)", "upright, 1080 × 1920, for YouTube Shorts, Instagram Reels and TikTok"],
-    ["Square", "square, 1080 × 1080"]] },
-  { id: "feel", label: "What should it feel like?", choices: [
-    ["Cheerful", "cheerful and bright"], ["Calm", "calm and gentle"], ["Bold", "bold and energetic"],
-    ["Like a story", "like a short story"]] },
+  { id: "length", label: t("How long?"), choices: [
+    [t("15 seconds"), "about 15 seconds long"], [t("30 seconds"), "about 30 seconds long"],
+    [t("1 minute"), "about one minute long"], [t("Longer"), "a few minutes long"]] },
+  { id: "shape", label: t("Which shape?"), choices: [
+    [t("Wide (YouTube)"), "wide, 1920 × 1080, for YouTube"],
+    [t("Upright (Shorts, Reels)"), "upright, 1080 × 1920, for YouTube Shorts, Instagram Reels and TikTok"],
+    [t("Square"), "square, 1080 × 1080"]] },
+  { id: "feel", label: t("What should it feel like?"), choices: [
+    [t("Cheerful"), "cheerful and bright"], [t("Calm"), "calm and gentle"], [t("Bold"), "bold and energetic"],
+    [t("Like a story"), "like a short story"]] },
 ];
 const STARTING = { length: 1, shape: 1, feel: 0 };
 
@@ -46,10 +49,10 @@ export function askGuided(idea) {
       return h("fieldset", { class: "guided-row" }, h("legend", {}, question.label), ...buttons);
     });
     let answer = null;
-    const make = h("button", { class: "primary", type: "button" }, "Make it");
-    const skip = h("button", { class: "ghost", type: "button" }, "Just make it");
+    const make = h("button", { class: "primary", type: "button" }, t("Make it"));
+    const skip = h("button", { class: "ghost", type: "button" }, t("Just make it"));
     const dialog = h("dialog", { class: "help-dialog guided-dialog", "aria-labelledby": "guided-title" },
-      h("h2", { id: "guided-title" }, "A few quick choices"),
+      h("h2", { id: "guided-title" }, t("A few quick choices")),
       h("p", { class: "muted" }, idea),
       ...rows,
       h("div", { class: "notice-actions" }, skip, make));

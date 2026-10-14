@@ -7,21 +7,22 @@ import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
 import { createShortsCard } from "./shorts.js";
+import { t } from "./words.js";
 
 const api = window.hfwin;
 
 // What each assistant is good for, under "Your assistants" (M15-01). Plain, and true of every plan.
 const GOOD_FOR = {
-  claude: "careful editing and planning a whole video",
-  codex: "editing, and it can make pictures",
-  antigravity: "editing, and watching many clips without using much",
+  claude: t("careful editing and planning a whole video"),
+  codex: t("editing, and it can make pictures"),
+  antigravity: t("editing, and watching many clips without using much"),
 };
 
 // Said beside an assistant's name in the menu when it cannot be used yet.
 const STATE_NOTES = {
-  "not-installed": "not on this computer yet",
-  "not-signed-in": "sign in first",
-  broken: "will not start",
+  "not-installed": t("not on this computer yet"),
+  "not-signed-in": t("sign in first"),
+  broken: t("will not start"),
 };
 
 /** "ChatGPT (Codex)": the plain name first, the maker's own product name beside it so it can be recognised. */
@@ -41,15 +42,28 @@ function formatted(text) {
   return nodes;
 }
 
+// The kinds of thing the main process names a selection with (main/selection.js), in the person's language.
+const KIND_NAMES = {
+  "video clip": t("video clip"), sound: t("sound"), picture: t("picture"), graphic: t("graphic"),
+  scene: t("scene"), text: t("text"), item: t("item"),
+};
+
 /** "the video clip “City Centre”, 0:26 to 0:41": what the person had selected, in their words. */
-const pointingText = ({ name, kind, when }) => `the ${kind} “${name}”${when ? `, ${when}` : ""}`;
+function pointingText({ name, kind, when }) {
+  const span = /^(\d+:\d\d) to (\d+:\d\d)$/.exec(when ?? "");
+  const where = span ? t("{start} to {end}", { start: span[1], end: span[2] }) : when;
+  const what = KIND_NAMES[kind] ?? kind;
+  return where ? t("the {kind} “{name}”, {when}", { kind: what, name, when: where })
+    : t("the {kind} “{name}”", { kind: what, name });
+}
 
 function userMessage({ text, pointing, moment }) {
   return h(
     "div",
     { class: "msg user" },
-    moment && h("div", { class: "msg-pointing" }, `At ${moment.when}`),
-    pointing && h("div", { class: "msg-pointing" }, `Pointing at ${pointingText(pointing)}`),
+    moment && h("div", { class: "msg-pointing" }, t("At {when}", { when: moment.when })),
+    pointing && h("div", { class: "msg-pointing" },
+      t("Pointing at {thing}", { thing: pointingText(pointing) })),
     text,
   );
 }
@@ -64,29 +78,36 @@ function resetsText(resets) {
   if (date && !Number.isNaN(date.getTime()))
     return date.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
   // "2 days" reads as an answer to "when?" only with "in".
-  return /^\d+\s*(?:second|minute|hour|day|week)s?\b/i.test(resets ?? "") ? `in ${resets}` : resets ?? "";
+  return /^\d+\s*(?:second|minute|hour|day|week)s?\b/i.test(resets ?? "")
+    ? t("in {time}", { time: resets }) : resets ?? "";
 }
 
 /** The plain account of a turn its assistant's usage limit cut short (M17-06). */
 function limitNote(name, { changed, resets }) {
   const files = changed ?? [];
+  const listed = files.slice(0, 6).join(", ");
   return [
-    `${name} ran out of its allowance before it finished.`,
-    files.length
-      ? `It had already changed: ${files.slice(0, 6).join(", ")}${files.length > 6 ? ` and ${files.length - 6} more` : ""}. ` +
-        "Nobody has checked those changes yet."
-      : "It had not changed anything yet.",
-    resets ? `${name} says it can work again: ${resetsText(resets)}.` : "",
+    t("{name} ran out of its allowance before it finished.", { name }),
+    files.length > 6
+      ? t("It had already changed: {files} and {count} more.", { files: listed, count: files.length - 6 })
+      : files.length ? t("It had already changed: {files}.", { files: listed })
+        : t("It had not changed anything yet."),
+    files.length && t("Nobody has checked those changes yet."),
+    resets && t("{name} says it can work again: {time}.", { name, time: resetsText(resets) }),
   ].filter(Boolean).join(" ");
 }
 
 /** "Used a little of Claude's allowance", with the counts for whoever is curious (M15-05, agents/usage.js). */
 function usageNote(name, usage) {
   if (!usage?.level) return null;
+  const used = usage.level === "little" ? t("Used a little of {name}'s allowance", { name })
+    : usage.level === "a lot" ? t("Used a lot of {name}'s allowance", { name })
+      : t("Used some of {name}'s allowance", { name });
   return h("div", { class: "msg-usage muted",
-    title: `About ${usage.tokens.toLocaleString()} word pieces (tokens): ${usage.fresh.toLocaleString()} read new, ` +
-      `${usage.cached.toLocaleString()} read again, ${usage.written.toLocaleString()} written.` },
-  `Used ${usage.level === "little" ? "a little" : usage.level} of ${name}'s allowance`);
+    title: t("About {tokens} word pieces (tokens): {fresh} read new, {cached} read again, {written} written.", {
+      tokens: usage.tokens.toLocaleString(), fresh: usage.fresh.toLocaleString(),
+      cached: usage.cached.toLocaleString(), written: usage.written.toLocaleString(),
+    }) }, used);
 }
 
 function agentMessage({
@@ -103,16 +124,17 @@ function agentMessage({
       h(
         "div",
         { class: "msg-note error" },
-        `The assistant changed your video before you said yes. Files it changed: ${touched.slice(0, 6).join(", ")}.`,
+        t("The assistant changed your video before you said yes. Files it changed: {files}.",
+          { files: touched.slice(0, 6).join(", ") }),
       ),
     plan && actions,
-    stopped && h("div", { class: "msg-note" }, "Stopped."),
+    stopped && h("div", { class: "msg-note" }, t("Stopped.")),
     limited && h("div", { class: "msg-note error" }, limitNote(name, { changed, resets })),
     limited && actions,
     // The review round's buttons (M13-04) and anything else a settled reply offers.
     !plan && !limited && actions,
     !ok && !stopped && !limited &&
-      h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
+      h("div", { class: "msg-note error" }, error || t("The assistant could not finish this change.")),
     undoAction,
     usageNote(name, usage),
   );
@@ -120,7 +142,7 @@ function agentMessage({
 
 /** The agent's reply while it is still being written. `finish` swaps it for the settled message. */
 function liveMessage(name) {
-  const steps = h("div", { class: "msg-steps live" }, `${name} · Thinking…`);
+  const steps = h("div", { class: "msg-steps live" }, `${name} · ${t("Thinking…")}`);
   const body = h("div", { class: "msg-text" });
   const el = h("div", { class: "msg agent" }, steps, body);
   const activities = [];
@@ -169,7 +191,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   const usable = () => team().filter((agent) => !checked || agent.state === "ready");
   const nameOf = (id) => {
     const agent = agents.find((item) => item.id === id);
-    return agent?.label ?? agent?.name ?? "Assistant";
+    return agent?.label ?? agent?.name ?? t("Assistant");
   };
   const isReady = () => checked && current()?.state === "ready";
 
@@ -204,7 +226,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         void api.agent.choose({ dir, engine }).catch(() => {});
         void submit(ask, false, "review");
       },
-    }, `Ask ${agent.label ?? agent.name} to check it`)));
+    }, t("Ask {name} to check it", { name: agent.label ?? agent.name }))));
   }
 
   /** Under a review: back to the assistant that did the work, with the list. A clean review says so instead. */
@@ -213,7 +235,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const said = review.trim();
     if (!said.includes("\n") && /^\W*(?:(?:it |this |everything )?(?:looks|seems) (?:right|good|fine)|no (?:real )?problems)\b/i
       .test(said)) {
-      return h("p", { class: "muted" }, "Nothing to fix. Watch your video to be sure.");
+      return h("p", { class: "muted" }, t("Nothing to fix. Watch your video to be sure."));
     }
     const ask = `Please fix the problems ${nameOf(reviewer)} found in your last change:\n\n${review.trim().slice(0, 4000)}` +
       "\n\nThen check your work once and stop.";
@@ -226,7 +248,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         void api.agent.choose({ dir, engine }).catch(() => {});
         void submit(ask, false, "fix");
       },
-    }, `Ask ${nameOf(author)} to fix these`));
+    }, t("Ask {name} to fix these", { name: nameOf(author) })));
   }
 
   /** The buttons that come after a settled reply in the review round, or null. */
@@ -242,20 +264,21 @@ export function createChat(dir, { onEdit, onSave } = {}) {
    * with a button that puts a request to fix them in the message box.
    */
   function checkedNote({ errors, mistakes = [] }) {
-    if (!errors) return h("div", { class: "msg-check muted" }, "The app checked your video: no mistakes found.");
+    if (!errors) return h("div", { class: "msg-check muted" }, t("The app checked your video: no mistakes found."));
     const listed = mistakes.map((mistake) => `- ${mistake.text}${mistake.where ? ` (${mistake.where})` : ""}`);
     const more = errors > mistakes.length ? `\n- and ${errors - mistakes.length} more like these` : "";
     const ask = `Please fix the mistakes the app's check found:\n${listed.join("\n")}${more}`;
     return h("div", { class: "msg-check" },
-      h("div", { class: "msg-note error" },
-        `The app checked your video and found ${errors === 1 ? "one mistake" : `${errors} mistakes`}.`),
+      h("div", { class: "msg-note error" }, errors === 1
+        ? t("The app checked your video and found one mistake.")
+        : t("The app checked your video and found {count} mistakes.", { count: errors })),
       h("div", { class: "msg-actions" },
         h("button", { class: "secondary small", type: "button", onclick: () => {
           input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
           input.focus();
-        } }, "Ask to fix them"),
+        } }, t("Ask to fix them")),
         // The check's own words are for the assistant; whoever is curious can read them.
-        h("details", { class: "msg-check-details" }, h("summary", {}, "Show them"),
+        h("details", { class: "msg-check-details" }, h("summary", {}, t("Show them")),
           ...mistakes.map((mistake) => h("p", {}, mistake.text)))));
   }
 
@@ -268,11 +291,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const note = h("span", { class: "muted", role: "status" });
     const button = h("button", { class: "ghost small", type: "button" });
     const show = (state) => {
-      button.textContent = state.undoneBy ? "Bring it back" : "Undo this change";
+      button.textContent = state.undoneBy ? t("Bring it back") : t("Undo this change");
       button.title = state.undoneBy
-        ? "Put back what the assistant changed."
-        : `Put these files back as they were before: ${state.files.slice(0, 6).join(", ")}`;
-      note.textContent = state.undoneBy ? "Undone. Your video is back as it was before this change." : "";
+        ? t("Put back what the assistant changed.")
+        : t("Put these files back as they were before: {files}", { files: state.files.slice(0, 6).join(", ") });
+      note.textContent = state.undoneBy ? t("Undone. Your video is back as it was before this change.") : "";
     };
     show(undo);
     button.addEventListener("click", async () => {
@@ -310,7 +333,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
         input.focus();
       },
-    }, `Carry on with ${agent.label ?? agent.name}`)));
+    }, t("Carry on with {name}", { name: agent.label ?? agent.name }))));
   }
 
   const log = h("div", { class: "chat-log", role: "log" });
@@ -330,15 +353,16 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     id: "chat-request",
     class: "field",
     rows: "3",
-    placeholder: "Describe a change\nEnter to send · Shift+Enter for a new line",
-    "aria-label": "Message to the assistant",
+    placeholder: t("Describe a change\nEnter to send · Shift+Enter for a new line"),
+    "aria-label": t("Message to the assistant"),
   });
   const defaultPlaceholder = input.placeholder;
-  const hint = h("p", { class: "muted" }, "Move to a moment in the video, then tell the assistant what to change there.");
+  const hint = h("p", { class: "muted" },
+    t("Move to a moment in the video, then tell the assistant what to change there."));
   const empty = h(
     "div",
     { class: "chat-empty" },
-    h("p", {}, "Tell the assistant what you would like to change. Your video updates as it works."),
+    h("p", {}, t("Tell the assistant what you would like to change. Your video updates as it works.")),
     hint,
   );
   const editActions = createEditActions({ onEdit, onSave, onDraft: (text) => {
@@ -346,23 +370,23 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
   } });
-  const send = h("button", { class: "primary", type: "submit", disabled: true }, "Send");
+  const send = h("button", { class: "primary", type: "submit", disabled: true }, t("Send"));
   const stop = h(
     "button",
     { class: "secondary", type: "button", hidden: true, onclick: () => api.agent.stop().catch(() => {}) },
-    "Stop",
+    t("Stop"),
   );
   const picker = h("select", {
     class: "agent-pick",
-    "aria-label": "Assistant",
-    title: "Who changes your video for you. A change starts with your next message.",
+    "aria-label": t("Assistant"),
+    title: t("Who changes your video for you. A change starts with your next message."),
   });
   // A saved look (M10-04, main/kits.js): use one in this video, or keep this video's look under a name.
-  const lookPick = h("select", { class: "agent-pick look-pick", "aria-label": "Saved looks" });
-  const lookUse = h("button", { class: "secondary small", type: "button" }, "Use");
+  const lookPick = h("select", { class: "agent-pick look-pick", "aria-label": t("Saved looks") });
+  const lookUse = h("button", { class: "secondary small", type: "button" }, t("Use"));
   const lookName = h("input", { class: "field look-name", type: "text", maxlength: "60", hidden: true,
-    placeholder: "A name, for example your channel", "aria-label": "Name for this look" });
-  const lookSave = h("button", { class: "ghost small", type: "button" }, "Save this look");
+    placeholder: t("A name, for example your channel"), "aria-label": t("Name for this look") });
+  const lookSave = h("button", { class: "ghost small", type: "button" }, t("Save this look"));
   const lookNote = h("p", { class: "muted look-note", role: "status" });
   const lookDraft = (text) => {
     input.value = input.value.trim() ? `${input.value.trim()}\n\n${text}` : text;
@@ -375,7 +399,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const chosen = lookPick.value;
     lookPick.replaceChildren(...(got.looks.length
       ? got.looks.map((look) => h("option", { value: look.name }, look.name))
-      : [h("option", { value: "" }, "No saved looks yet")]));
+      : [h("option", { value: "" }, t("No saved looks yet"))]));
     lookPick.disabled = lookUse.disabled = !got.looks.length || Boolean(live);
     if (got.looks.some((look) => look.name === chosen)) lookPick.value = chosen;
     savedLooks = got.looks.map((look) => look.name.toLowerCase());
@@ -386,7 +410,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (!name) return;
     try {
       await api.looks.use({ dir, name });
-      lookNote.textContent = `This video now has the look “${name}”. Send the message below to apply it.`;
+      lookNote.textContent = t("This video now has the look “{name}”. Send the message below to apply it.",
+        { name });
       lookDraft("Make this video match the look in STYLE.md: colours, fonts, titles, captions and the ending card.");
     } catch (error) {
       lookNote.textContent = error.message;
@@ -395,8 +420,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   lookSave.addEventListener("click", async () => {
     const got = await renderLooks();
     if (!got?.written) {
-      lookNote.textContent = "First the assistant writes this video's look down. Send the message below, then press " +
-        "Save this look again.";
+      lookNote.textContent = t("First the assistant writes this video's look down. Send the message below, then " +
+        "press Save this look again.");
       lookDraft("Write down this video's look in STYLE.md: colours (hex), fonts, title style, caption style, the " +
         "ending card and any music bed, exactly enough that another video can match it. Change nothing else.");
       return;
@@ -404,16 +429,17 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (lookName.hidden || !lookName.value.trim()) {
       lookName.hidden = false;
       lookName.focus();
-      lookNote.textContent = "Name the look, then press Save this look.";
+      lookNote.textContent = t("Name the look, then press Save this look.");
       return;
     }
     if (savedLooks.includes(lookName.value.trim().toLowerCase()) &&
-      !confirm(`A look called “${lookName.value.trim()}” is already saved. Replace it with this video's look?`)) return;
+      !confirm(t("A look called “{name}” is already saved. Replace it with this video's look?",
+        { name: lookName.value.trim() }))) return;
     try {
       const saved = await api.looks.save({ dir, name: lookName.value });
       lookName.hidden = true;
       lookName.value = "";
-      lookNote.textContent = `Saved as “${saved.name}”. Any of your videos can use it now.`;
+      lookNote.textContent = t("Saved as “{name}”. Any of your videos can use it now.", { name: saved.name });
       await renderLooks();
     } catch (error) {
       lookNote.textContent = error.message;
@@ -431,8 +457,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   const teamNote = h("p", { class: "msg-note error", role: "status" });
   const modelPick = h("select", {
     class: "agent-pick",
-    "aria-label": "How careful",
-    title: "How careful the assistant is. Not sure? Leave it on Auto. A change starts with your next message.",
+    "aria-label": t("How careful"),
+    title: t("How careful the assistant is. Not sure? Leave it on Auto. A change starts with your next message."),
     hidden: true,
   });
   const notice = h("div", { class: "chat-notice", hidden: true });
@@ -445,22 +471,22 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   const shortsCard = createShortsCard(dir);
   const accessPick = h("select", {
     class: "agent-pick access-pick",
-    title: "What the assistant may do. A change starts with your next message.",
+    title: t("What the assistant may do. A change starts with your next message."),
   });
   // The chosen level in a sentence, always on screen: nobody should have to open a menu to learn what is allowed.
   const accessAbout = h("p", { class: "access-about muted" });
   const modePick = h("select", {
     class: "agent-pick mode-pick",
-    title: "When the assistant asks you before it builds. A change starts with your next message.",
+    title: t("When the assistant asks you before it builds. A change starts with your next message."),
   });
   const modeAbout = h("p", { class: "access-about muted" });
   // What is selected in Studio, said back to the person before they send, with a way to leave it out.
   const pointingName = h("span", {});
   const momentChip = h("div", { class: "pointing chat-moment", hidden: true,
-    title: "The assistant receives this video moment when you send your message." });
+    title: t("The assistant receives this video moment when you send your message.") });
   function renderMoment() {
     momentChip.hidden = editor || moment === null;
-    momentChip.textContent = moment === null ? "" : `At ${moment.when}`;
+    momentChip.textContent = moment === null ? "" : t("At {when}", { when: moment.when });
   }
   const pointingChip = h(
     "div",
@@ -471,8 +497,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       {
         class: "ghost small",
         type: "button",
-        title: "Do not tell the assistant about this",
-        "aria-label": "Do not point at this",
+        title: t("Do not tell the assistant about this"),
+        "aria-label": t("Do not point at this"),
         onclick: () => {
           dismissed = pointing?.key ?? null;
           renderPointing();
@@ -485,18 +511,18 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   // Agents update themselves often. This says so when the installed one is newer than the app was tried with.
   // A newer assistant than the app was tried with can be tested once here (M12-03, main/agents/checkup.js).
   const versionText = h("span", {});
-  const testButton = h("button", { class: "secondary small", type: "button" }, "Test it now");
+  const testButton = h("button", { class: "secondary small", type: "button" }, t("Test it now"));
   const versionNote = h("div", { class: "chat-version muted", hidden: true }, versionText, testButton);
   testButton.addEventListener("click", async () => {
     const agent = current();
     if (!agent || live) return;
     const name = agent.label ?? agent.name;
-    if (!confirm(`Test ${name} with one small job? It changes one word in a practice folder and runs one check. ` +
-      "It takes a minute and uses a little of its allowance. Your videos are not touched.")) return;
+    if (!confirm(t("Test {name} with one small job? It changes one word in a practice folder and runs one check. " +
+      "It takes a minute and uses a little of its allowance. Your videos are not touched.", { name }))) return;
     testButton.disabled = true;
     send.disabled = true;
     testing = true;
-    versionText.textContent = `Testing ${name}… this takes about a minute.`;
+    versionText.textContent = t("Testing {name}… this takes about a minute.", { name });
     try {
       const got = await api.agent.checkup(agent.id);
       agent.untested = !got.ok;
@@ -531,14 +557,14 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       queued = null;
       renderQueued();
       input.focus();
-    } }, "Cancel"));
+    } }, t("Cancel")));
   const short = (text, most = 60) => (text.length > most ? `${text.slice(0, most - 3).trimEnd()}…` : text);
   function renderQueued() {
     queuedNote.hidden = !queued;
     const who = nameOf(engine);
     queuedText.textContent = !queued ? ""
-      : queued.steer ? `Stopping ${who}, then sending “${short(queued.text)}”.`
-        : `“${short(queued.text)}” waits and goes as soon as ${who} has finished.`;
+      : queued.steer ? t("Stopping {name}, then sending “{message}”.", { name: who, message: short(queued.text) })
+        : t("“{message}” waits and goes as soon as {name} has finished.", { message: short(queued.text), name: who });
     later.hidden = now.hidden = !live || Boolean(queued) || !input.value.trim();
   }
   function wait(steer) {
@@ -550,9 +576,10 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (steer) api.agent.stop().catch(() => {});
     renderQueued();
   }
-  const later = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(false) }, "Send when done");
+  const later = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(false) },
+    t("Send when done"));
   const now = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(true) },
-    "Stop and send now");
+    t("Stop and send now"));
   input.addEventListener("input", renderQueued);
 
   const setRunning = (running) => {
@@ -578,7 +605,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   function renderPointing() {
     const shown = pointed();
     pointingChip.hidden = !shown;
-    pointingName.textContent = shown ? `Pointing at ${pointingText(shown)}` : "";
+    pointingName.textContent = shown ? t("Pointing at {thing}", { thing: pointingText(shown) }) : "";
     if (shown) document.body.dataset.pointing = shown.name;
     else delete document.body.dataset.pointing;
   }
@@ -620,18 +647,18 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       "div",
       { class: "notice-actions plan-actions" },
       h("button", { class: "primary small", type: "button",
-        onclick: () => void submit("Yes. Build the plan you just showed me.", false) }, "Build it"),
+        onclick: () => void submit("Yes. Build the plan you just showed me.", false) }, t("Build it")),
       h(
         "button",
         {
           class: "secondary small",
           type: "button",
           onclick: () => {
-            input.placeholder = "Say what to change in the plan";
+            input.placeholder = t("Say what to change in the plan");
             input.focus();
           },
         },
-        "Change the plan",
+        t("Change the plan"),
       ),
     );
     return planActions;
@@ -665,19 +692,20 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     accessPick.value = access ?? "";
     accessConfirm.hidden = false;
     accessConfirm.replaceChildren(
-      h("p", {}, h("strong", {}, "Let the assistant do anything on this computer?")),
+      h("p", {}, h("strong", {}, t("Let the assistant do anything on this computer?"))),
       h(
         "p",
         {},
-        "The assistant will be able to open any program and change or delete any file on this computer, " +
-          "without asking you first. Only do this for a video you made yourself or one you trust.",
+        t("The assistant will be able to open any program and change or delete any file on this computer, " +
+          "without asking you first. Only do this for a video you made yourself or one you trust."),
       ),
       h(
         "div",
         { class: "notice-actions" },
         h("button", { class: "secondary small", type: "button", onclick: () => setAccess("full") },
-          "Yes, allow anything"),
-        h("button", { class: "ghost small", type: "button", onclick: () => (accessConfirm.hidden = true) }, "Cancel"),
+          t("Yes, allow anything")),
+        h("button", { class: "ghost small", type: "button", onclick: () => (accessConfirm.hidden = true) },
+          t("Cancel")),
       ),
     );
   });
@@ -729,12 +757,12 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const who = menuName(agent);
     const text =
       agent.state === "not-installed"
-        ? `${who} is not on this computer yet. To add it, open PowerShell (search for it in the Start menu), ` +
-          "paste each line below and press Enter after each one. The last line signs you in:"
+        ? t("{name} is not on this computer yet. To add it, open PowerShell (search for it in the Start menu), " +
+          "paste each line below and press Enter after each one. The last line signs you in:", { name: who })
         : agent.state === "not-signed-in"
-          ? `${who} needs you to sign in first. Open PowerShell (search for it in the Start menu), ` +
-            "paste the line below and press Enter:"
-          : `${who} is on this computer, but it will not start.`;
+          ? t("{name} needs you to sign in first. Open PowerShell (search for it in the Start menu), " +
+            "paste the line below and press Enter:", { name: who })
+          : t("{name} is on this computer, but it will not start.", { name: who });
     notice.hidden = false;
     notice.replaceChildren(
       h("p", {}, text),
@@ -747,11 +775,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
           h(
             "button",
             { class: "ghost small", type: "button", onclick: () => navigator.clipboard.writeText(command) },
-            "Copy",
+            t("Copy"),
           ),
         ),
       ),
-      h("button", { class: "secondary small", type: "button", onclick: checkAgents }, "Check again"),
+      h("button", { class: "secondary small", type: "button", onclick: checkAgents }, t("Check again")),
     );
   }
 
@@ -776,17 +804,19 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     modelPick.hidden = models.length === 0;
     modelPick.replaceChildren(
       // "Auto": the app sends small changes to a smaller model (main/agents/sizing.js).
-      h("option", { value: "auto" }, "Auto (saves your allowance)"),
-      h("option", { value: "" }, "Default"),
+      h("option", { value: "auto" }, t("Auto (saves your allowance)")),
+      h("option", { value: "" }, t("Default")),
       ...models.map((model) => h("option", { value: model.id }, model.name)),
     );
     modelPick.value = agent?.model ?? "";
     versionNote.hidden = !agent?.untested;
     testButton.hidden = !agent?.untested;
     versionText.textContent = agent?.untested
-      ? `Your copy of ${agent.product ?? agent.name} (version ${agent.version}) is newer than the one this app was ` +
-        `tested with (${agent.tested}). It should still work. ` +
-        (agent.checkup?.version === agent.version ? `Last test: ${agent.checkup.said} ` : "")
+      ? [
+        t("Your copy of {name} (version {version}) is newer than the one this app was tested with ({tested}). " +
+          "It should still work.", { name: agent.product ?? agent.name, version: agent.version, tested: agent.tested }),
+        agent.checkup?.version === agent.version && t("Last test: {said}", { said: agent.checkup.said }),
+      ].filter(Boolean).join(" ")
       : "";
     if (!checked || !agent || agent.state === "ready") notice.hidden = true;
     else showFix(agent);
@@ -801,14 +831,14 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   /** "Your assistants": one box per assistant. At least one stays ticked. */
   function renderTeam() {
     teamBox.replaceChildren(
-      h("legend", {}, "Your assistants: tick the ones you have"),
+      h("legend", {}, t("Your assistants: tick the ones you have")),
       ...agents.map((agent) => {
         const box = h("input", { type: "checkbox", checked: agent.inTeam !== false });
         box.addEventListener("change", async () => {
           const ticked = agents.filter((item) => (item === agent ? box.checked : item.inTeam !== false));
           if (!ticked.length) {
             box.checked = true;
-            teamNote.textContent = "Keep at least one assistant ticked.";
+            teamNote.textContent = t("Keep at least one assistant ticked.");
             return;
           }
           teamNote.textContent = "";
@@ -850,15 +880,15 @@ export function createChat(dir, { onEdit, onSave } = {}) {
 
   async function reset() {
     if (live) return;
-    if (!confirm("Start a new conversation? Your video is not changed, but the Undo buttons on earlier replies go " +
-      "away (the changes stay in the editor's own history).")) return;
+    if (!confirm(t("Start a new conversation? Your video is not changed, but the Undo buttons on earlier replies go " +
+      "away (the changes stay in the editor's own history)."))) return;
     await api.agent.reset(dir).catch(() => {});
     replies.clear();
     log.replaceChildren(empty);
   }
 
   const startOver = h("button", { class: "ghost small", type: "button",
-    title: "Start a new conversation. Your video is not changed.", onclick: reset }, "Start over");
+    title: t("Start a new conversation. Your video is not changed."), onclick: reset }, t("Start over"));
 
   // The editor's own "Ask agent" buttons land here (M3-02, main/askAgent.js): the request goes in the message box,
   // and the person presses Send. Only a message from the editor's own frame on the local server is taken.
@@ -870,7 +900,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (source !== "kushmanji-studio" || type !== "ask-agent" || typeof text !== "string" || !text.trim()) return;
     input.value = input.value.trim() ? `${input.value.trim()}\n\n${text.trim()}` : text.trim();
     askNote.hidden = false;
-    askNote.textContent = "The editor's request is in your message. Add anything you want, then press Send.";
+    askNote.textContent = t("The editor's request is in your message. Add anything you want, then press Send.");
     input.focus();
   };
   window.addEventListener("message", fromEditor);
@@ -879,10 +909,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   // the video is at. Choosing one writes a plain `@name` into the text. Nothing else is attached: the
   // assistant reads the file itself. The names come from the main process (main/mentions.js), asked for again
   // each time a new "@" is typed.
-  const MENTION_GROUPS = [["video", "Clips"], ["audio", "Sounds"], ["image", "Pictures"], ["scene", "Scenes"]];
+  const MENTION_GROUPS = [["video", t("Clips")], ["audio", t("Sounds")], ["image", t("Pictures")],
+    ["scene", t("Scenes")]];
   const MENTION_ROWS = 40;
   const mentionList = h("div", { class: "mention-list", id: "chat-mentions", role: "listbox", hidden: true,
-    "aria-label": "Things you can mention" });
+    "aria-label": t("Things you can mention") });
   /** What the list can offer: the files the main process last named. */
   let mentionable = [];
   let mentionsLoaded = false;
@@ -915,9 +946,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   function mentionChoices(query, at) {
     const wanted = query.toLowerCase();
     const choices = [];
-    if (at && ["this moment", "moment", "now", at.when].some((word) => word.startsWith(wanted))) {
-      choices.push({ group: "In the video", id: "moment", label: "This moment", detail: `At ${at.when}`,
-        insert: `@${at.when}` });
+    // The words a person can type to find the moment: the English ones, and the same words in their language.
+    if (at && ["this moment", "moment", "now", t("This moment").toLowerCase(), at.when]
+      .some((word) => word.startsWith(wanted))) {
+      choices.push({ group: t("In the video"), id: "moment", label: t("This moment"),
+        detail: t("At {when}", { when: at.when }), insert: `@${at.when}` });
     }
     for (const [kind, title] of MENTION_GROUPS) {
       const ranked = mentionable
@@ -984,8 +1017,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         }, h("span", { class: "mention-name" }, choice.label),
         choice.detail && h("span", { class: "mention-detail" }, choice.detail)));
       });
-      const note = !mention.choices.length ? "Nothing to mention yet. Drop clips onto this chat to add them."
-        : mention.choices.length > shown.length ? "Keep typing to see the others." : "";
+      const note = !mention.choices.length ? t("Nothing to mention yet. Drop clips onto this chat to add them.")
+        : mention.choices.length > shown.length ? t("Keep typing to see the others.") : "";
       mentionList.replaceChildren(
         ...groups.map((group) => h("div", { class: "mention-group", role: "group", "aria-label": group.title },
           h("div", { class: "mention-title", "aria-hidden": "true" }, group.title), ...group.rows)),
@@ -1095,7 +1128,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   // original stays where it was, and the message box gets an "@" for each. The preload reads which path each
   // dropped file really has (files.pathOf); the main process checks every one again before it copies anything.
   const dropHint = h("div", { class: "drop-hint", hidden: true, "aria-hidden": "true" },
-    h("p", {}, "Drop clips to add them to this video"));
+    h("p", {}, t("Drop clips to add them to this video")));
   const say = (text, problem = false) => {
     dropNote.hidden = !text;
     dropNote.textContent = text;
@@ -1130,14 +1163,12 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (overChat === 0) hideHint();
   };
 
-  const clipCount = (n) => `${n} ${n === 1 ? "clip" : "clips"}`;
-
   async function addDropped(paths, dropped) {
-    if (live) return say("The assistant is still working. Wait for it to finish before adding clips.", true);
+    if (live) return say(t("The assistant is still working. Wait for it to finish before adding clips."), true);
     if (!paths.length || paths.length < dropped) {
-      return say("Only files from File Explorer can be added here, so nothing was added.", true);
+      return say(t("Only files from File Explorer can be added here, so nothing was added."), true);
     }
-    say("Adding clips…");
+    say(t("Adding clips…"));
     try {
       const added = await api.projects.addDropped({ dir, paths });
       await refreshMentionable();
@@ -1149,7 +1180,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       input.dispatchEvent(new Event("input"));
       input.focus();
       input.setSelectionRange(input.value.length, input.value.length);
-      say(`Added ${clipCount(added.count)} to this video.`);
+      say(added.count === 1 ? t("Added 1 clip to this video.")
+        : t("Added {count} clips to this video.", { count: added.count }));
     } catch (error) {
       say(error.message, true);
     }
@@ -1162,7 +1194,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     dropNote,
     queuedNote,
     pointingChip,
-    h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, "Your message"), momentChip),
+    h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, t("Your message")), momentChip),
     h("div", { class: "composer-field" }, mentionList, input),
     h(
       "div",
@@ -1181,20 +1213,20 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     h(
       "div",
       { class: "chat-head" },
-      h("strong", {}, "What would you like to change?"),
+      h("strong", {}, t("What would you like to change?")),
       h("span", { class: "spacer" }),
       startOver,
     ),
     h("details", { class: "chat-settings" },
-      h("summary", {}, "Assistant and clip settings"),
+      h("summary", {}, t("Assistant and clip settings")),
       teamBox,
-      h("div", { class: "chat-head" }, h("label", {}, "Assistant", picker), modelPick),
-      h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Ask me first", modePick)),
+      h("div", { class: "chat-head" }, h("label", {}, t("Assistant"), picker), modelPick),
+      h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, t("Ask me first"), modePick)),
       modeAbout,
       h("div", { class: "chat-setting-row" },
-        h("label", { class: "access muted" }, "What may the assistant do", accessPick)),
+        h("label", { class: "access muted" }, t("What may the assistant do"), accessPick)),
       h("div", { class: "chat-setting-row look-row" },
-        h("label", { class: "access muted" }, "Look", lookPick), lookUse, lookSave, lookName),
+        h("label", { class: "access muted" }, t("Look"), lookPick), lookUse, lookSave, lookName),
       lookNote,
       versionNote,
       studyBar.element,
@@ -1328,8 +1360,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     setEditor(shown) {
       editor = shown;
       hint.textContent = shown
-        ? "Click something in the picture or on the timeline, then tell the assistant what to change."
-        : "Move to a moment in the video, then tell the assistant what to change there.";
+        ? t("Click something in the picture or on the timeline, then tell the assistant what to change.")
+        : t("Move to a moment in the video, then tell the assistant what to change there.");
       if (!shown) pointing = null;
       renderPointing();
       renderMoment();

@@ -3,10 +3,11 @@
 // makes each short as its own video (main/shorts.js) and asks the assistant to build them one by one
 // (main/shortsMaker.js). The card says how far that has got.
 import { h } from "./dom.js";
+import { t } from "./words.js";
 
 const api = window.hfwin;
 
-const seconds = (value) => `${Math.round(Number(value) || 0)} s`;
+const seconds = (value) => t("{count} s", { count: Math.round(Number(value) || 0) });
 const when = (at) => new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "long" });
 
 export function createShortsCard(dir) {
@@ -18,7 +19,7 @@ export function createShortsCard(dir) {
     h("button", { class: `${kind} small`, type: "button", onclick }, label);
 
   async function make() {
-    element.replaceChildren(h("p", {}, "Making the videos for your shorts…"));
+    element.replaceChildren(h("p", {}, t("Making the videos for your shorts…")));
     try {
       show(await api.shorts.make(dir), null);
     } catch (error) {
@@ -30,29 +31,37 @@ export function createShortsCard(dir) {
     if (destroyed) return;
     const lines = [];
     if (status?.state === "making") {
-      lines.push(h("p", {}, `Making your shorts · short ${status.number} of ${status.total}: “${status.title}”. ` +
-        (status.waiting ? "It starts as soon as the assistant is free."
-          : "The assistant builds them one by one, a few minutes each. Each one appears in My videos.")));
-      lines.push(button("Stop after this one", () => api.shorts.stop().catch(() => {}), "secondary"));
+      lines.push(h("p", {}, [
+        t("Making your shorts · short {number} of {total}: “{title}”.",
+          { number: status.number, total: status.total, title: status.title }),
+        status.waiting ? t("It starts as soon as the assistant is free.")
+          : t("The assistant builds them one by one, a few minutes each. Each one appears in My videos."),
+      ].join(" ")));
+      lines.push(button(t("Stop after this one"), () => api.shorts.stop().catch(() => {}), "secondary"));
     } else if (status?.state === "done") {
       lines.push(h("p", {},
-        `Your ${status.total} shorts are made. Open them from My videos to watch and save each one.`));
+        t("Your {count} shorts are made. Open them from My videos to watch and save each one.",
+          { count: status.total })));
     } else if (status?.state === "stopped") {
-      lines.push(h("p", { class: "shorts-problem" }, status.error ?? "Making the shorts stopped."));
+      lines.push(h("p", { class: "shorts-problem" }, status.error ?? t("Making the shorts stopped.")));
     } else if (plan?.error) {
-      lines.push(h("p", { class: "shorts-problem" }, `The plan for shorts cannot be used yet: ${plan.error} ` +
-        "Ask the assistant to fix SHORTS.md."));
+      lines.push(h("p", { class: "shorts-problem" }, [
+        t("The plan for shorts cannot be used yet: {problem}", { problem: plan.error }),
+        t("Ask the assistant to fix SHORTS.md."),
+      ].join(" ")));
     } else if (plan?.made) {
-      lines.push(h("p", {}, `These ${plan.shorts.length} shorts were made on ${when(plan.made.at)}. ` +
-        "Open them from My videos."));
-      lines.push(button("Make them again", make, "secondary"));
+      lines.push(h("p", {}, [
+        t("These {count} shorts were made on {date}.", { count: plan.shorts.length, date: when(plan.made.at) }),
+        t("Open them from My videos."),
+      ].join(" ")));
+      lines.push(button(t("Make them again"), make, "secondary"));
     } else if (plan?.shorts?.length) {
       const list = plan.shorts.map((short) => `“${short.title}” (${seconds(short.seconds)})`).join(", ");
-      const count = plan.shorts.length === 1 ? "1 short" : `${plan.shorts.length} shorts`;
-      lines.push(h("p", {}, `${count} planned: ${list}.`));
-      lines.push(h("p", { class: "muted" }, "Each becomes its own video next to this one, in this video's look " +
-        "(STYLE.md). The assistant builds them one by one, a few minutes each, using its allowance."));
-      lines.push(button("Make them", make));
+      lines.push(h("p", {}, plan.shorts.length === 1 ? t("1 short planned: {list}.", { list })
+        : t("{count} shorts planned: {list}.", { count: plan.shorts.length, list })));
+      lines.push(h("p", { class: "muted" }, t("Each becomes its own video next to this one, in this video's look " +
+        "(STYLE.md). The assistant builds them one by one, a few minutes each, using its allowance.")));
+      lines.push(button(t("Make them"), make));
     }
     element.replaceChildren(...lines);
     element.hidden = lines.length === 0;

@@ -8,6 +8,7 @@ import { createAbout } from "./about.js";
 import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
+import { LANGUAGES, language, setLanguage, t } from "./words.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
@@ -21,17 +22,19 @@ function since(ms) {
   if (!ms) return "";
   const minutes = Math.floor((Date.now() - ms) / 60_000);
   // Also covers a file stamped a moment ahead of this computer's clock.
-  if (minutes < 1) return "just now";
-  const ago = (count, unit) => `${count} ${unit}${count === 1 ? "" : "s"} ago`;
-  if (minutes < 60) return ago(minutes, "minute");
+  if (minutes < 1) return t("just now");
+  // One phrase per size, so a language can say "1 minute" and "5 minutes" its own way. Days, weeks and months are
+  // never 1 here ("yesterday" comes first, and a week is 14 days or more), so they only have the plural.
+  if (minutes < 60) return minutes === 1 ? t("1 minute ago") : t("{count} minutes ago", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return ago(hours, "hour");
+  if (hours < 24) return hours === 1 ? t("1 hour ago") : t("{count} hours ago", { count: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "yesterday";
-  if (days < 14) return ago(days, "day");
-  if (days < 60) return ago(Math.floor(days / 7), "week");
-  if (days < 365) return ago(Math.floor(days / 30), "month");
-  return ago(Math.floor(days / 365), "year");
+  if (days === 1) return t("yesterday");
+  if (days < 14) return t("{count} days ago", { count: days });
+  if (days < 60) return t("{count} weeks ago", { count: Math.floor(days / 7) });
+  if (days < 365) return t("{count} months ago", { count: Math.floor(days / 30) });
+  const years = Math.floor(days / 365);
+  return years === 1 ? t("1 year ago") : t("{count} years ago", { count: years });
 }
 
 let info = null;
@@ -74,11 +77,11 @@ function carryOnCard(project) {
       "div",
       { class: "carry-text" },
       h("p", { class: "carry-name" }, project.name),
-      when && h("p", { class: "carry-when" }, `Changed ${when}`),
+      when && h("p", { class: "carry-when" }, t("Changed {when}", { when })),
       h("button", {
-        class: "primary carry-go", type: "button", "aria-label": `Carry on with ${project.name}`,
+        class: "primary carry-go", type: "button", "aria-label": t("Carry on with {name}", { name: project.name }),
         onclick: () => openProject(project.dir),
-      }, "Carry on"),
+      }, t("Carry on")),
     ),
   );
 }
@@ -91,24 +94,24 @@ function projectCard(project) {
       "button",
       {
         class: "ghost small",
-        title: "Show this video's folder in File Explorer",
-        "aria-label": `Show the folder of ${project.name}`,
+        title: t("Show this video's folder in File Explorer"),
+        "aria-label": t("Show the folder of {name}", { name: project.name }),
         onclick: () => api.projects.reveal(project.dir).catch((error) => showError(error.message)),
       },
-      "Show folder",
+      t("Show folder"),
     ),
     project.external &&
       h(
         "button",
         {
           class: "ghost small",
-          title: "Take this video off the list. Its files are not deleted.",
+          title: t("Take this video off the list. Its files are not deleted."),
           onclick: async () => {
             await api.projects.forget(project.dir);
             await refreshProjects();
           },
         },
-        "Remove from list",
+        t("Remove from list"),
       ),
   );
   return h(
@@ -122,7 +125,7 @@ function projectCard(project) {
       h(
         "span",
         { class: "card-meta" },
-        [since(project.modifiedAt), project.external && "opened from a folder"].filter(Boolean).join(" · "),
+        [since(project.modifiedAt), project.external && t("opened from a folder")].filter(Boolean).join(" · "),
       ),
     ),
     actions,
@@ -223,28 +226,28 @@ async function showHealth(box, { again = false } = {}) {
   const health = await api.health.check({ again }).catch(() => null);
   if (!health?.checked || !box.isConnected) return;
   if (!health.items.length) {
-    box.replaceChildren(h("p", { class: "muted" }, "Kushmanji has everything it needs on this computer."));
+    box.replaceChildren(h("p", { class: "muted" }, t("Kushmanji has everything it needs on this computer.")));
     box.hidden = false;
     return;
   }
   const rows = health.items.map((item) => {
     const row = h("li", {}, h("p", {}, item.said));
     if (item.fix) {
-      const copy = h("button", { class: "ghost small", type: "button" }, "Copy");
+      const copy = h("button", { class: "ghost small", type: "button" }, t("Copy"));
       copy.addEventListener("click", () =>
-        navigator.clipboard.writeText(item.fix).then(() => { copy.textContent = "Copied"; }).catch(() => {}));
+        navigator.clipboard.writeText(item.fix).then(() => { copy.textContent = t("Copied"); }).catch(() => {}));
       row.append(h("div", { class: "health-fix" }, h("code", {}, item.fix), copy),
-        h("p", { class: "muted" }, "Open PowerShell (search for it in the Start menu), paste this, press Enter, then " +
-          "close and open Kushmanji again."));
+        h("p", { class: "muted" }, t("Open PowerShell (search for it in the Start menu), paste this, press Enter, " +
+          "then close and open Kushmanji again.")));
     }
     if (item.get) {
-      const get = h("button", { class: "secondary small", type: "button" }, "Get it now (about 100 MB)");
+      const get = h("button", { class: "secondary small", type: "button" }, t("Get it now (about 100 MB)"));
       get.addEventListener("click", async () => {
         get.disabled = true;
-        get.textContent = "Getting it…";
+        get.textContent = t("Getting it…");
         const done = await api.health.getBrowser().catch(() => false);
         if (done) return void showHealth(box, { again: true });
-        get.textContent = "That did not work. Check the internet connection and try again.";
+        get.textContent = t("That did not work. Check the internet connection and try again.");
         get.disabled = false;
       });
       row.append(get);
@@ -252,13 +255,13 @@ async function showHealth(box, { again = false } = {}) {
     return row;
   });
   box.replaceChildren(
-    h("h2", {}, health.ready ? "Good to know" : "Before you start"),
+    h("h2", {}, health.ready ? t("Good to know") : t("Before you start")),
     h("ul", { class: "health-list" }, ...rows),
     h("button", { class: "ghost small", type: "button", onclick: (event) => {
       event.currentTarget.disabled = true;
-      event.currentTarget.textContent = "Checking…";
+      event.currentTarget.textContent = t("Checking…");
       void showHealth(box, { again: true });
-    } }, "Check again"));
+    } }, t("Check again")));
   box.hidden = false;
 }
 
@@ -269,18 +272,38 @@ async function showHealth(box, { again = false } = {}) {
 async function showSpace(line) {
   const status = await api.storage.status().catch(() => null);
   if (!status?.historyBytes || !line.isConnected) return;
-  const free = h("button", { class: "ghost small", type: "button" }, `Free up ${status.freeable}`);
+  const free = h("button", { class: "ghost small", type: "button" },
+    t("Free up {amount}", { amount: status.freeable }));
   free.addEventListener("click", async () => {
-    if (!confirm(`Free up to ${status.freeable}? This removes the undo copies of videos you have deleted and ` +
-      "old picture caches. Videos you still have keep theirs.")) return;
+    if (!confirm(t("Free up to {amount}? This removes the undo copies of videos you have deleted and old picture " +
+      "caches. Videos you still have keep theirs.", { amount: status.freeable }))) return;
     free.disabled = true;
     const done = await api.storage.free().catch(() => null);
-    line.textContent = done?.freedBytes > 0 ? `Freed ${done.freed}.` : "Nothing could be freed just now.";
+    line.textContent = done?.freedBytes > 0
+      ? t("Freed {amount}.", { amount: done.freed }) : t("Nothing could be freed just now.");
   });
   line.replaceChildren(
-    `Undo copies of your videos take ${status.history} on this computer.`,
-    ...(status.freeableBytes > 0 ? [` Up to ${status.freeable} can be freed (deleted videos, old caches). `, free] : []),
+    t("Undo copies of your videos take {amount} on this computer.", { amount: status.history }),
+    ...(status.freeableBytes > 0
+      ? [" ", t("Up to {amount} can be freed (deleted videos, old caches).", { amount: status.freeable }), " ", free]
+      : []),
   );
+}
+
+/**
+ * The language of the app's own words (M14-12). Only here: choosing one draws every screen again, which is safe
+ * when nothing is open and nothing is being made. The names are each language's own, so a person who cannot read
+ * the current language can still find theirs.
+ */
+function languageMenu() {
+  const pick = h("select", { class: "agent-pick language-pick", "aria-label": t("Language"), title: t("Language") },
+    ...LANGUAGES.map((item) => h("option", { value: item.id }, item.name)));
+  pick.value = language();
+  pick.addEventListener("change", () => {
+    // False when the choice could not be kept: the menu goes back to the language still in force.
+    if (!setLanguage(pick.value)) pick.value = language();
+  });
+  return pick;
 }
 
 function showHome() {
@@ -296,39 +319,39 @@ function showHome() {
     class: "field",
     type: "text",
     maxlength: "600",
-    placeholder: "A 15 second intro for my bakery",
-    "aria-label": "Describe the video you want",
+    placeholder: t("A 15 second intro for my bakery"),
+    "aria-label": t("Describe the video you want"),
   });
   // Primary or secondary is decided once the list of videos is known (showProjects).
-  home.make = h("button", { class: "primary", type: "submit" }, "Make it");
+  home.make = h("button", { class: "primary", type: "submit" }, t("Make it"));
   home.blank = h(
     "button",
     { class: "secondary", type: "button", onclick: () => createProject("Untitled video") },
-    "Blank video",
+    t("Blank video"),
   );
   home.footage = h("button", {
     class: "primary", type: "button", onclick: startFromFootage,
-    title: "Copy a folder of clips into a new video. Your own files are not changed.",
-  }, "Choose clips");
+    title: t("Copy a folder of clips into a new video. Your own files are not changed."),
+  }, t("Choose clips"));
   home.errorText = h("span", {});
   home.error = h(
     "div",
     { class: "banner", role: "alert", hidden: true },
     home.errorText,
-    h("button", { class: "ghost small", onclick: () => showError("") }, "Close"),
+    h("button", { class: "ghost small", onclick: () => showError("") }, t("Close")),
   );
   home.carry = h("section", { class: "carry-slot", hidden: true });
   home.grid = h("ul", { class: "grid" });
   home.empty = h(
     "p",
     { class: "empty", hidden: true },
-    "No videos yet. Describe one above, or open the folder of a video you already have.",
+    t("No videos yet. Describe one above, or open the folder of a video you already have."),
   );
   // Held back for a moment, so the page does not jump when the videos arrive and the Carry on card appears.
   home.main = h(
     "main",
     { class: "home", "data-loading": true },
-    h("h1", {}, "What do you want to make?"),
+    h("h1", {}, t("What do you want to make?")),
     home.carry,
     h(
       "div",
@@ -336,38 +359,39 @@ function showHome() {
       h(
         "section",
         { class: "start" },
-        h("h2", { class: "start-title" }, "From my clips"),
+        h("h2", { class: "start-title" }, t("From my clips")),
         h(
           "p",
           { class: "start-about" },
-          "Pick the clips from your phone or camera. The assistant puts them together.",
+          t("Pick the clips from your phone or camera. The assistant puts them together."),
         ),
         h("div", { class: "start-action" }, home.footage),
       ),
       h(
         "section",
         { class: "start" },
-        h("h2", { class: "start-title" }, "From an idea"),
-        h("p", { class: "start-about" }, "Say what you want. The assistant makes it."),
+        h("h2", { class: "start-title" }, t("From an idea")),
+        h("p", { class: "start-about" }, t("Say what you want. The assistant makes it.")),
         h("form", { class: "start-action", onsubmit: makeFromPrompt }, home.prompt, home.make),
       ),
     ),
     h(
       "div",
       { class: "start-more" },
-      h("span", { class: "muted" }, "Or"),
+      h("span", { class: "muted" }, t("Or")),
       home.blank,
       h("button", {
         class: "secondary", type: "button", onclick: pickFolder,
-        title: "Open a video that is already in a folder on your computer.",
-      }, "Open a folder"),
+        title: t("Open a video that is already in a folder on your computer."),
+      }, t("Open a folder")),
     ),
     home.error,
     home.health = h("section", { class: "health", hidden: true, role: "status" }),
-    h("h2", { class: "my-videos" }, "My videos"),
+    h("h2", { class: "my-videos" }, t("My videos")),
     home.grid,
     home.empty,
-    h("p", { class: "muted foot" }, info ? `New videos are kept in this folder: ${info.projectsRoot}` : ""),
+    h("p", { class: "muted foot" },
+      info ? t("New videos are kept in this folder: {folder}", { folder: info.projectsRoot }) : ""),
     home.space = h("p", { class: "muted foot space", role: "status" }),
   );
 
@@ -377,9 +401,10 @@ function showHome() {
       { class: "topbar" },
       h("img", { class: "brand-wordmark", src: "brand/wordmark.svg", alt: "Kushmanji" }),
       // "Unofficial" stays in sight (AGENTS.md); the credit to HyperFrames and the versions are in About.
-      h("button", { class: "tag", type: "button", title: "About Kushmanji", "aria-label": "About Kushmanji (unofficial)",
-        onclick: () => about.show() }, "unofficial"),
+      h("button", { class: "tag", type: "button", title: t("About Kushmanji"),
+        "aria-label": t("About Kushmanji (unofficial)"), onclick: () => about.show() }, t("unofficial")),
       h("span", { class: "spacer" }),
+      languageMenu(),
       help.button,
     ),
     home.main,
@@ -455,14 +480,15 @@ async function openProject(dir, { request } = {}) {
 
   const frame = h("iframe", {
     class: "studio",
+    // Not translated: it is the editor's own name, and the self-test and the chat find the frame by it.
     title: "HyperFrames Studio",
     allow: "clipboard-read; clipboard-write; fullscreen",
     hidden: true,
   });
-  const status = h("p", { class: "overlay-text" }, "Opening your video…");
+  const status = h("p", { class: "overlay-text" }, t("Opening your video…"));
   // A "Make it" idea that never reached the assistant because the editor failed to start is not lost on retry.
   const retry = h("button", { class: "primary", hidden: true,
-    onclick: () => openProject(dir, { request: initialRequest ?? undefined }) }, "Try again");
+    onclick: () => openProject(dir, { request: initialRequest ?? undefined }) }, t("Try again"));
   const overlay = h("div", { class: "overlay" }, h("div", { class: "spinner", "aria-hidden": "true" }), status, retry);
   let initialRequest = request;
   let viewGeneration = 0;
@@ -471,7 +497,7 @@ async function openProject(dir, { request } = {}) {
     setStudio("starting");
     overlay.hidden = false;
     overlay.classList.remove("failed");
-    status.textContent = project.editing ? "Opening the editor…" : "Loading your video…";
+    status.textContent = project.editing ? t("Opening the editor…") : t("Loading your video…");
     retry.hidden = true;
     edit.disabled = true;
   };
@@ -498,7 +524,7 @@ async function openProject(dir, { request } = {}) {
       viewGeneration++;
       document.body.dataset.screen = project.editing ? "edit" : "watch";
       project.chat.setEditor(project.editing);
-      edit.textContent = project.editing ? "Watch video" : "Edit by hand";
+      edit.textContent = project.editing ? t("Watch video") : t("Edit by hand");
       edit.setAttribute("aria-pressed", String(project.editing));
       frame.hidden = !project.editing;
       player.element.hidden = Boolean(project.editing);
@@ -511,7 +537,7 @@ async function openProject(dir, { request } = {}) {
         player.open(project.started);
       }
     },
-  }, "Edit by hand");
+  }, t("Edit by hand"));
   project.fail = (state, message) => {
     setStudio(state, message);
     overlay.hidden = false;
@@ -534,7 +560,7 @@ async function openProject(dir, { request } = {}) {
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
     if (open === project && project.editing && current === viewGeneration)
-      project.fail("failed", "The editor opened, but the video's picture did not finish loading. Try again.");
+      project.fail("failed", t("The editor opened, but the video's picture did not finish loading. Try again."));
   });
   const mediaStatus = h("span", { class: "muted", role: "status" });
   // The app makes lighter copies of big clips for smooth watching and editing (main/lightCopies.js).
@@ -543,35 +569,38 @@ async function openProject(dir, { request } = {}) {
   const unwatchSmooth = api.on("preview:copies", ({ dir: changed, status }) => {
     if (changed !== dir || open !== project) return;
     clearTimeout(smoothTimer);
-    if (status.state === "making") smooth.textContent = `Making clips smooth to edit (${status.done} of ${status.total})`;
-    else if (status.state === "ready" && status.total > 0) {
-      smooth.textContent = "Clips are smooth to edit";
+    if (status.state === "making") {
+      smooth.textContent = t("Making clips smooth to edit ({done} of {total})",
+        { done: status.done, total: status.total });
+    } else if (status.state === "ready" && status.total > 0) {
+      smooth.textContent = t("Clips are smooth to edit");
       smoothTimer = setTimeout(() => { smooth.textContent = ""; }, 6000);
     } else smooth.textContent = "";
   });
   const destroy = project.destroy;
   project.destroy = () => { unwatchSmooth(); clearTimeout(smoothTimer); destroy(); };
   const addMedia = h("button", {
-    class: "ghost", title: "Copy clips into this video. Your own files are not changed.",
+    class: "ghost", title: t("Copy clips into this video. Your own files are not changed."),
     onclick: async () => {
       addMedia.disabled = true;
       try {
         const imported = await api.projects.addMedia(dir);
         if (imported && open === project) {
-          mediaStatus.textContent = imported.count === 1 ? "1 file added" : `${imported.count} files added`;
+          mediaStatus.textContent = imported.count === 1
+            ? t("1 file added") : t("{count} files added", { count: imported.count });
           project.chat.draft("Look at the clips I just added (they are in the assets folder). Check the sound " +
             "and whether any picture is sideways before you change anything.");
         }
       } catch (error) { mediaStatus.textContent = error.message; }
       finally { addMedia.disabled = false; }
     },
-  }, "Add clips");
+  }, t("Add clips"));
 
   app.replaceChildren(
     h(
       "header",
       { class: "topbar" },
-      h("button", { class: "ghost", onclick: goHome, title: "Back to your videos" }, "← My videos"),
+      h("button", { class: "ghost", onclick: goHome, title: t("Back to your videos") }, "← ", t("My videos")),
       h("span", { class: "project-name", title: dir }, project.name),
       mediaStatus,
       smooth,
@@ -585,10 +614,10 @@ async function openProject(dir, { request } = {}) {
         "button",
         {
           class: "ghost",
-          title: "Show this video's folder in File Explorer",
+          title: t("Show this video's folder in File Explorer"),
           onclick: () => api.projects.reveal(dir).catch(() => {}),
         },
-        "Show folder",
+        t("Show folder"),
       ),
       help.button,
     ),
@@ -610,7 +639,7 @@ async function openProject(dir, { request } = {}) {
 // Registered before the first await, so an event sent while the page is still starting is not missed.
 api.on("app:open-project", ({ dir }) => void openProject(dir));
 api.on("preview:exit", ({ dir }) => {
-  if (open?.dir === dir) open.fail("stopped", "The editor stopped unexpectedly. Press Try again.");
+  if (open?.dir === dir) open.fail("stopped", t("The editor stopped unexpectedly. Press Try again."));
 });
 
 info = await api.app.info().catch(() => null);
