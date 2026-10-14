@@ -476,6 +476,9 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       pause. Probably not visible. Open only so that someone watches a plain cut with the owner before closing
       it; if it does show, it is upstream's media sync (`packages/core/src/runtime/media.ts`) and goes under
       "Upstream" with these numbers
+- [ ] M16-07 "Still laggy" (owner, 2026-10-14, not sure where). Measure jumping to a moment and the editor's
+      own controls on the real vlog, then fix; likely lighter copies for watching and editing only. Plan in
+      `docs/HANDOFF.md`, top entry
 - [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,

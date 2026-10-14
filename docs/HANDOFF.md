@@ -5,6 +5,51 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## For Claude's next sitting (written 2026-10-14, morning, at the owner's request)
+
+The owner starts a fresh chat and wants about 18 hours of continuous work while their usage lasts. Their words:
+"continue with the project", "do use sub agents for smaller work so we can save usage", "you can use sonnet",
+"dont stop", "only if you want to ask something you stop and make it mobile i can see".
+
+**How to work this time**
+- Keep the main chat lean: it is what uses the owner's limit. Give self-contained smaller jobs (research,
+  reading upstream code, writing tests, docs, reviewing a diff) to subagents on Sonnet (`model: "sonnet"`), and
+  give them exact files and a short brief.
+- Video jobs through the app's chat go to Codex (`npm run smoke:codex` with `HFWIN_SMOKE_JUST_ASK`), not to
+  Claude Code: nested Claude runs share the owner's Claude limit and were cut off twice. Take still frames
+  yourself afterwards; Codex cannot.
+- Do not stop between tasks. Stop only for a decision that is the owner's, and then ask one short question
+  that reads well on a phone, with two or three choices.
+- Per finished task: check, tests, self-test, one commit with the task id, push. Keep PROGRESS, CHECKLIST and
+  this file true as you go, not only at the end. Send screenshots of visible results with SendUserFile.
+
+**The order**
+1. **"Laggy" (new task M16-07).** The owner still feels lag in the preview and is not sure where. Measured so
+   far: playing inside a clip is smooth (M16-05). Not measured: jumping to a moment (dragging the bar, clicking
+   the timeline), and the editor's own controls with 19 clips and their filmstrips. Extend
+   `app/src/main/playbackProbe.js` with seek times (from the seek to the first new picture) and long tasks in
+   the editor's page, on the real vlog. Likely cause if seeking is slow: 16 Mbps 1080p clips with a keyframe
+   every second. Likely fix: lighter copies for watching and editing only (720p, a keyframe every half
+   second), the full files still used by "Save video". First look in `upstream/packages/core` and the CLI for
+   a way to give the preview a different file than the render (`media.autoProxy` only re-encodes codecs a
+   browser cannot play). Measure before and after; tell the owner in numbers and plain words.
+2. **M14-05 plain wording**, with M14-11 and one Help line for the editor's arrow keys. The word list goes in
+   `docs/UX.md`. Smoke and unit tests match some of these strings: change them together.
+3. **M17-04 and M17-09: "Make shorts from this video"** as something the app does, with one shared look for a
+   channel's titles and ending cards. The three shorts of 2026-10-14 and their requests are the worked example
+   (`reviews/shisha-shorts/*/REQUEST.txt`, `MOMENTS.md`).
+4. **M17-06**: when an assistant is cut off by its usage limit, say plainly what was and was not finished,
+   and offer to carry on with another assistant (with M12-04).
+5. **M14-06 branding**: prepare three directions for Kushmanji's own logo and colours, then ask the owner to
+   pick (one phone-sized picture, three choices).
+6. Then M14-07 (Home), M15-01 (your team), M15-02 (model size), and the list at the end of `docs/PARITY.md`.
+
+**Answered by the owner on 2026-10-14:** push when work is finished (yes); Blender MCP: not now (asked, advised
+against for cute vlogs: big install, slow renders, runs any code; maybe later for a one-off 3D channel logo).
+The owner's channel rules are in `C:\Creators\happywithshisha` (read only).
+
+---
+
 ## 2026-10-14 · Claude · Save video, arrow keys, the vlog's fourth version and three shorts (through the night)
 
 The owner, before sleeping: push; the arrow key pauses in "Edit by hand"; the video is nice; shorts and reels,
