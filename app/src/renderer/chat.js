@@ -304,7 +304,32 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   );
   const accessConfirm = h("div", { class: "chat-notice access-confirm", hidden: true });
   // Agents update themselves often. This says so when the installed one is newer than the app was tried with.
-  const versionNote = h("p", { class: "chat-version muted", hidden: true });
+  // A newer assistant than the app was tried with can be tested once here (M12-03, main/agents/checkup.js).
+  const versionText = h("span", {});
+  const testButton = h("button", { class: "secondary small", type: "button" }, "Test it now");
+  const versionNote = h("div", { class: "chat-version muted", hidden: true }, versionText, testButton);
+  testButton.addEventListener("click", async () => {
+    const agent = current();
+    if (!agent || live) return;
+    const name = agent.label ?? agent.name;
+    if (!confirm(`Test ${name} with one small job? It changes one word in a scratch folder and runs one program. ` +
+      "It takes a minute and uses a little of its allowance. Your videos are not touched.")) return;
+    testButton.disabled = true;
+    send.disabled = true;
+    versionText.textContent = `Testing ${name}… this takes about a minute.`;
+    try {
+      const got = await api.agent.checkup(agent.id);
+      agent.untested = !got.ok;
+      agent.checkup = got;
+      versionText.textContent = got.said;
+      testButton.hidden = got.ok;
+    } catch (error) {
+      versionText.textContent = error.message;
+    } finally {
+      testButton.disabled = false;
+      send.disabled = !isReady();
+    }
+  });
 
   /** Follow new text only if the person is already at the bottom; never yank them away from what they scrolled to. */
   const append = (node) => {
@@ -561,9 +586,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     );
     modelPick.value = agent?.model ?? "";
     versionNote.hidden = !agent?.untested;
-    versionNote.textContent = agent?.untested
+    testButton.hidden = !agent?.untested;
+    versionText.textContent = agent?.untested
       ? `Your copy of ${agent.product ?? agent.name} (version ${agent.version}) is newer than the one this app was ` +
-        `tested with (${agent.tested}). It should still work. If it does not, that may be why.`
+        `tested with (${agent.tested}). It should still work. ` +
+        (agent.checkup?.version === agent.version ? `Last test: ${agent.checkup.said} ` : "")
       : "";
     if (!checked || !agent || agent.state === "ready") notice.hidden = true;
     else showFix(agent);

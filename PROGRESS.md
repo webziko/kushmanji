@@ -358,9 +358,12 @@ stopped running commands (M2-22). The owner asked for a bigger answer than fixin
 - [ ] M12-02 A check-up for each agent that proves the three things a turn needs: it starts, it is signed in,
       and it can run a command. Free where the agent allows it (`codex sandbox` runs a command with no AI
       usage); otherwise one tiny real turn, which the person agrees to
-- [ ] M12-03 "Test this agent" when the installed version is newer than the one this app was tried with: one
+- [x] M12-03 "Test this agent" when the installed version is newer than the one this app was tried with: one
       small real turn in a scratch folder (change a file, run a command), the result said in plain words and
-      remembered for that version, so it is asked once
+      remembered for that version, so it is asked once (Claude, 2026-10-14). "Test it now" beside the note about
+      a newer version; it asks first, runs at "Only this video" on the smaller model, and says e.g. "Claude works
+      with Kushmanji: it changed a file and ran a program." A version that passed is not asked about again
+      (`agents/checkup.js`). Tried in the real app with a stand-in Claude posing as 2.2.0
 - [x] M12-04 When the chosen agent is down, one tap carries on with another. Shared memory already carries the story
       (Claude, 2026-10-14): any failed reply, not only a usage limit, offers "Carry on with ..." for the person's
       other assistants (with M17-06 and M15-01)

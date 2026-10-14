@@ -1,8 +1,11 @@
+import fs from "node:fs";
 import path from "node:path";
+import { cliVersion } from "../cli.js";
 import { readJson, writeJson } from "../jsonFile.js";
 import { readState, updateState } from "../state.js";
 import { accessFor, accessNote, LEVELS, withAccess } from "./access.js";
 import * as antigravity from "./antigravity.js";
+import { CHECK_REQUEST, judge, makeScratch, testedOk } from "./checkup.js";
 import * as claude from "./claude.js";
 import * as codex from "./codex.js";
 import { filesChangedSince, handoverNote, recordTurn } from "./journal.js";
@@ -102,7 +105,9 @@ export class AgentRunner {
           id,
           ...bridge.about,
           ...state,
-          untested: isNewer(state.version, bridge.about.tested),
+          // Newer than the version this app was tried with, and not yet tested here (checkup.js).
+          untested: isNewer(state.version, bridge.about.tested) && !testedOk(readState().checkups, id, state.version),
+          checkup: readState().checkups?.[id] ?? null,
           inTeam: team.includes(id),
           models,
           // Nothing chosen yet means "Auto" (sizing.js). A model the agent no longer offers falls back to the
@@ -175,6 +180,51 @@ export class AgentRunner {
     if (this.#active?.dir === dir) this.stop();
     const { engine, mode } = readChat(dir);
     writeChat(dir, { ...emptyChat(), engine, mode });
+  }
+
+  /**
+   * "Test this assistant" (M12-03): one small real job in a scratch folder, change a file and run a program. It uses
+   * a little of the assistant's allowance, so the page asks first. The answer is kept for the installed version.
+   */
+  async checkup(engine) {
+    if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
+    if (this.#active) throw new Error("An assistant is still working. Test this one when it has finished.");
+    const bridge = BRIDGES[engine];
+    const name = bridge.about.label ?? NAMES[engine];
+    const state = await bridge.status().catch(() => ({ state: "broken" }));
+    if (state.state !== "ready") return { ok: false, said: `${name} can be tested once it is installed and signed in.` };
+    let model = chosenModel(readState().models, engine);
+    if (model === AUTO) {
+      model = sizeModel({ engine, models: await bridge.models().catch(() => []), text: "Change one word." }).model;
+    }
+    const dir = makeScratch(cliVersion);
+    const turn = { dir, checkup: true, stopped: false, handle: null };
+    this.#active = turn;
+    let result;
+    try {
+      let text = "";
+      const activities = [];
+      const done = await new Promise((resolve) => {
+        turn.handle = bridge.run({ dir, text: CHECK_REQUEST, sessionId: null, model, access: "project",
+          onEvent: (event) => {
+            if (event.type === "activity") activities.push(event.label);
+            else if (event.type === "text") text += event.text;
+            else if (event.type === "done") resolve(event);
+          } });
+      });
+      let changedFile = false;
+      try {
+        changedFile = /\bAFTER\b/.test(fs.readFileSync(path.join(dir, "check.txt"), "utf8"));
+      } catch { /* the file is gone: not changed as asked */ }
+      result = judge(name, { ...done, limited: Boolean(usageLimit({ error: done.error, text })), changedFile,
+        ranCommand: activities.includes("Running a program") });
+    } finally {
+      if (this.#active === turn) this.#active = null;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+    updateState({ checkups: { ...readState().checkups,
+      [engine]: { version: state.version ?? null, ok: result.ok, said: result.said, at: new Date().toISOString() } } });
+    return { ...result, version: state.version ?? null };
   }
 
   /**

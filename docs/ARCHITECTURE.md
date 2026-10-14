@@ -178,6 +178,7 @@ and the caller in `renderer/`.
 | `agent.chooseAccess({ dir, level })` | How much the agents may do in this project, from the next message. Only `project`, `tools` or `full` is accepted. Kept in the app's settings, not in the project |
 | `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message. Refused for an agent the person has not ticked |
 | `agent.undo({ dir, index })` | Undo what the reply at `index` changed, or bring it back when it was undone (M2-10). The main process runs `hyperframes history undo` on the entry it saved with that reply; the page names only the reply. Refused while a turn runs |
+| `agent.checkup(engine)` | "Test it now" (M12-03): one small real turn in a new scratch folder at "Only this video", then `{ ok, said, version }`; kept in the app's settings per version, and `status()` no longer marks a version that passed as `untested` |
 | `agent.setTeam(engines)` | Which assistants the person has ("Your assistants", M15-01): known ids only, at least one. Kept in the app's settings; `status()` and `history()` mark each agent `inTeam` |
 | `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default, `"auto"` (also the value when nothing was chosen) sizes each request (`agents/sizing.js`). Otherwise only an id from that agent's `models()` is accepted |
 | event `preview:copies` | `{ dir, status: { state, done, total, failed } }`: the lighter copies for watching and editing (`lightCopies.js`) |

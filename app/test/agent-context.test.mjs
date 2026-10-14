@@ -5,17 +5,20 @@ import vm from "node:vm";
 import { test } from "node:test";
 import { usageLimit } from "../src/main/agents/limits.js";
 import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
+import { CHECK_REQUEST, judge, makeScratch, testedOk } from "../src/main/agents/checkup.js";
 
 // The assistant starts once its model is chosen, a moment after the message is saved.
 const settled = () => new Promise((done) => setImmediate(done));
 
 // Exercise the real runner with in-memory files and local bridge stand-ins: no sign-in or paid AI turn.
-function runner({ state = {}, history } = {}) {
+function runner({ state = {}, history, bridgeRun } = {}) {
   const files = new Map();
   const requests = [];
   const turns = [];
   const bridge = { about: { name: "Test assistant" }, models: async () => [{ id: "sonnet", name: "Sonnet" }],
+    status: async () => ({ state: "ready", version: "9.9.9" }),
     run: (request) => {
+    if (bridgeRun) return bridgeRun(request);
     requests.push(request);
     return { stop() {} };
   } };
@@ -31,6 +34,7 @@ function runner({ state = {}, history } = {}) {
     DEFAULT_MODE: "build", knownMode: (value) => value, modeNote: () => "", MODES: [],
     handoverNote: () => "", recordTurn: (_dir, turn) => turns.push(turn),
     usageLimit, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
+    fs, cliVersion: "0.8.149", CHECK_REQUEST, judge, makeScratch, testedOk,
     claude: bridge, codex: bridge, antigravity: bridge,
   });
   const events = [];
@@ -171,4 +175,33 @@ test("a turn that changed nothing has no undo, and nothing is undone while an as
   await ended();
   assert.equal(agent.history("video").messages.at(-1).undo, undefined);
   await assert.rejects(agent.undo("video", 1), /cannot be undone/);
+});
+
+test("the check-up gives the assistant one small job in a scratch folder and keeps the answer for its version", async () => {
+  const state = {};
+  const saved = [];
+  const { agent } = runner({ state, bridgeRun: (request) => {
+    assert.equal(request.text, CHECK_REQUEST);
+    assert.equal(request.access, "project");
+    fs.writeFileSync(path.join(request.dir, "check.txt"), "AFTER\n");
+    request.onEvent({ type: "activity", label: "Running a program" });
+    setTimeout(() => request.onEvent({ type: "done", ok: true }), 1);
+    saved.push(request.dir);
+    return { stop() {} };
+  } });
+  const got = await agent.checkup("claude");
+  assert.equal(got.ok, true);
+  assert.match(got.said, /works with Kushmanji/);
+  assert.equal(fs.existsSync(saved[0]), false, "the scratch folder is removed");
+});
+
+test("a check-up that cannot change the file says so plainly", async () => {
+  const { agent } = runner({ bridgeRun: (request) => {
+    setTimeout(() => request.onEvent({ type: "done", ok: true }), 1);
+    return { stop() {} };
+  } });
+  const got = await agent.checkup("codex");
+  assert.equal(got.ok, false);
+  assert.match(got.said, /could not change a file/);
+  await assert.rejects(agent.checkup("someone-else"), /not known/);
 });
