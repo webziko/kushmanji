@@ -6,6 +6,7 @@
 import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
+import { createShortsCard } from "./shorts.js";
 
 const api = window.hfwin;
 
@@ -441,6 +442,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       "Tell me what needs fixing before you change anything.";
     input.focus();
   } });
+  const shortsCard = createShortsCard(dir);
   const accessPick = h("select", {
     class: "agent-pick access-pick",
     title: "What the assistant may do. A change starts with your next message.",
@@ -1198,6 +1200,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       studyBar.element,
     ),
     editActions.element,
+    shortsCard.element,
     log,
     notice,
     accessConfirm,
@@ -1350,6 +1353,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       clearInterval(watchPointing);
       studyBar.destroy();
       editActions.destroy();
+      shortsCard.destroy();
       delete document.body.dataset.agent;
       delete document.body.dataset.access;
       delete document.body.dataset.mode;

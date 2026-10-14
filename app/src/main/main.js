@@ -30,6 +30,8 @@ import {
   projectAt,
   rememberFolder,
 } from "./projects.js";
+import { makeShorts, readShortsPlan } from "./shorts.js";
+import { madeRecord, recordMade, ShortsMaker } from "./shortsMaker.js";
 import { runSmoke } from "./smoke.js";
 import { SpeechTool } from "./speechTool.js";
 import { FootageStudy } from "./study.js";
@@ -109,7 +111,10 @@ const study = new FootageStudy({
 /** Whisper, fetched only when the person asks (speechTool.js). Made once the settings folder is final. */
 let speech = null;
 const agent = new AgentRunner({
-  emit: (payload) => win?.webContents.send("agent:event", payload),
+  emit: (payload) => {
+    win?.webContents.send("agent:event", payload);
+    shortsMaker.agentEvent(payload);
+  },
   // An agent never starts from a study that is missing the clip the person just added.
   prepare: async (dir, onStep) => {
     studyStep = ({ dir: studied, status }) => {
@@ -125,6 +130,13 @@ const agent = new AgentRunner({
   // Undo for each turn goes through the open project's preview server, which keeps its history.
   history: turnHistory(() => preview.current),
   check: checkTurn,
+});
+
+// "Make shorts" (M17-04): the videos are made by shorts.js, then the assistant builds them one by one.
+const shortsMaker = new ShortsMaker({
+  send: (request) => agent.send(request),
+  choose: (dir, engine) => agent.choose(dir, engine),
+  emit: (payload) => win?.webContents.send("shorts:event", payload),
 });
 
 // Saving a video: the file goes to the person's Downloads folder, and the taskbar button shows how far it is.
@@ -367,6 +379,30 @@ function registerIpc() {
   handle("study:setLanguage", ({ dir, language } = {}) =>
     study.setLanguage(requireProject(dir), language == null ? null : String(language)),
   );
+  // The plan the assistant wrote into SHORTS.md, in short: titles and lengths. A plan that cannot be used is
+  // refused with a plain reason, which the chat shows so the person can ask for it to be fixed.
+  handle("shorts:plan", (dir) => {
+    const plan = readShortsPlan(requireProject(dir));
+    return plan && {
+      shorts: plan.shorts.map(({ title, seconds, pieces }) => ({ title, seconds, pieces: pieces.length })),
+      made: madeRecord(dir),
+    };
+  });
+  handle("shorts:status", (dir) => shortsMaker.status(requireProject(dir)));
+  handle("shorts:make", (dir) => {
+    const source = requireProject(dir);
+    if (shortsMaker.busy) throw new Error("Shorts are already being made. Wait until they are done.");
+    const plan = readShortsPlan(source);
+    if (!plan) throw new Error("There is no plan for shorts yet. Press Make shorts first.");
+    const made = makeShorts(source, plan);
+    recordMade(source, made);
+    // On Home after their source, which stays first: the person is still working on it.
+    for (const short of [...made].reverse()) rememberFolder(short);
+    rememberFolder(source);
+    const shorts = made.map((short, i) => ({ dir: short, title: plan.shorts[i].title }));
+    return shortsMaker.start(source, shorts, { engine: agent.history(source).engine });
+  });
+  handle("shorts:stop", () => shortsMaker.stop());
   handle("speech:status", () => speech.status());
   // The person's yes to the download. When it is done, the clips of their video that have no words yet are heard.
   handle("speech:get", (dir) => {

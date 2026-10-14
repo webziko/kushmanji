@@ -52,6 +52,22 @@ const ACTIONS = [
     request: "Add a voiceover that says: ",
   },
   {
+    // Step one of M17-04: the assistant only plans. The app then makes each short as its own video from the plan
+    // (main/shorts.js) and asks for them one by one; the chat shows "Make them" once SHORTS.md is there.
+    label: "Make shorts",
+    about: "The assistant picks the best moments for two or three upright shorts (for YouTube Shorts and " +
+      "Instagram Reels) and writes them down for you to check. Then the app makes each short as its own " +
+      "video, all in this video's look. Each short uses your assistant's allowance, like any other request.",
+    request: "Pick the best two or three moments of this video for upright shorts of 15 to 40 seconds each. " +
+      "Each short tells one small story and starts on its strongest line. Use the footage study " +
+      "(.hyperframes/study/index.json) for the clips, the times inside each clip's own file, and the words. " +
+      "Write the plan into SHORTS.md as one json block in this shape: {\"shorts\": [{\"title\": \"four words or " +
+      "fewer\", \"pieces\": [{\"clip\": \"assets/...mp4\", \"from\": 8.0, \"to\": 14.0, \"words\": \"what is " +
+      "said\"}]}]}. If this video has no STYLE.md yet, write its look there first (colours, fonts, titles, " +
+      "subtitles, the name card and the ending card), so that every short shares it. Do not make the shorts " +
+      "yourself. ",
+  },
+  {
     label: "Save video",
     about: "Makes one video file from your whole video and puts it in your Downloads folder. It takes a while: " +
       "a four-minute video can take most of an hour. You can keep watching while it works. The assistant " +

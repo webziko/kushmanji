@@ -12,7 +12,7 @@ const call =
 
 const EVENTS = new Set([
   "app:open-project", "preview:exit", "preview:changed", "preview:copies", "agent:event", "study:event", "speech:event",
-  "save:event",
+  "save:event", "shorts:event",
 ]);
 
 contextBridge.exposeInMainWorld("hfwin", {
@@ -60,6 +60,12 @@ contextBridge.exposeInMainWorld("hfwin", {
     setLanguage: call("study:setLanguage"),
   },
   speech: { status: call("speech:status"), get: call("speech:get") },
+  shorts: {
+    plan: call("shorts:plan"),
+    status: call("shorts:status"),
+    make: call("shorts:make"),
+    stop: call("shorts:stop"),
+  },
   agent: {
     status: call("agent:status"),
     history: call("agent:history"),

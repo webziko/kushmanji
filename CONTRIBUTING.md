@@ -97,6 +97,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   playbackProbe.js       the self-test's playback measurement on a real project
   study.js  studyPlan.js the footage study: transcripts and frame sheets written into the project
   speechTool.js          Whisper for the languages Parakeet does not speak, fetched on the person's "Get it"
+  shorts.js  shortsMaker.js  "Make shorts": the plan in SHORTS.md, one video per short, then built one by one
   studyRead.js           bounded read-only review of indexed study files
   agents/
     index.js             runs chat turns, keeps each project's conversation

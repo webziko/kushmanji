@@ -207,6 +207,11 @@ and the caller in `renderer/`.
 | `save.start(dir)` | Make the project's video file with the CLI's own `render`, in the person's Downloads folder, named after the project and the time. Its sound is then brought to about -14 LUFS (`loudness.js`; the picture is copied). One at a time; refused while an assistant works. Returns the status below |
 | `save.stop()` / `save.status(dir)` / `save.show()` | Stop saving (no half-made file is kept) / `{ state: idle, saving, busy, saved, stopped or failed, percent?, name?, megabytes?, message? }` / show the file this app last finished in File Explorer |
 | event `save:event` | `{ dir, status }`: saving started, moved on or ended. The taskbar button shows the same count |
+| `speech.status()` / `speech.get(dir)` | Whisper (M10-11, `speechTool.js`): `{ state: missing, getting, ready, failed or blocked, percent?, megabytes?, error? }`; `get` is the person's "Get it", then the clips of `dir` without words are heard again |
+| event `speech:event` | The same status, while Whisper is fetched |
+| `shorts.plan(dir)` | "Make shorts" (M17-04): the assistant's `SHORTS.md` read and checked (`shorts.js`): `{ shorts: [{ title, seconds, pieces }], made }` or `null`; a plan that cannot be used is refused with a plain reason. `made` is `{ at, dirs }` when this very plan was made already (`.hyperframes/shorts-made.json`) |
+| `shorts.make(dir)` / `shorts.stop()` / `shorts.status(dir)` | Make one video per short beside the source and ask the source's assistant to build them one by one (`shortsMaker.js`); stop after the one being built; `{ state: idle, making, done or stopped, number?, total, title?, waiting?, made, error? }` |
+| event `shorts:event` | `{ dir, status }` for the source video, as the shorts move on |
 | event `app:open-project` | `{ dir }`: open this project (command line, second launch, smoke test) |
 | event `preview:exit` | `{ dir, code }`: the server died by itself |
 | event `preview:changed` | `{ dir }`: visible project source or media changed; refresh the simple player |
@@ -349,6 +354,22 @@ ends, only the clips with sound and no words are heard again (`study.run(dir, { 
 pictures are kept. The model is `large-v3` because "small" and "large-v3-turbo" wrote nonsense for Kannada
 (`studyPlan.js`). It is slow on a processor: about a minute and a half per clip, so the first study of a long
 video in such a language takes a while, and a chat message waits for it.
+
+## Shorts from a video (M17-04)
+
+Two steps, so the person sees the choice before anything is made. One: the "Make shorts" button prepares an
+ordinary request; the assistant picks the moments and writes `SHORTS.md` (one json block: per short a title and
+pieces, each a clip, a start and end inside that clip's own file, and the words), and writes `STYLE.md` first if
+the video has none. Two: the chat's card reads the plan (`shorts.js`, checked: 1 to 5 shorts of 5 to 90 seconds,
+clips that are real videos inside the project) and offers "Make them". The app then makes one project per short
+beside the source (`<source>-short-1-<title>`): an empty upright 1080 by 1920 `index.html`, the source's
+`STYLE.md` and its other instruction files, the clips the short uses and every non-video asset (fonts, music,
+scripts) as hard links, so no space is used and the study sees the same files, the study entries of those
+files, and `SHORT.md` naming the pieces. Then `shortsMaker.js` asks the source's assistant to build them one by
+one, each in its own chat, with one fixed request (`SHORT_REQUEST`) that says "follow STYLE.md exactly". That is
+how they come out as one series: the look is never described in the request, only in the shared file (M17-09).
+A short that fails stops the run; the ones made are kept. The source is never changed, except for
+`.hyperframes/shorts-made.json`, which stops the card offering the same plan twice.
 
 ## Footage intake and review
 
