@@ -12,6 +12,7 @@ import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
+import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
@@ -313,6 +314,15 @@ function registerIpc() {
     return true;
   });
   handle("preview:log", () => preview.log);
+  // Saved looks (M10-04): kept in the app's settings folder, copied into a video as its STYLE.md.
+  const looks = () => path.join(app.getPath("userData"), "looks");
+  handle("looks:list", (dir) => ({ looks: listKits(looks()), written: hasStyle(requireProject(dir)) }));
+  handle("looks:save", ({ dir, name } = {}) => saveKit(looks(), requireProject(dir), String(name ?? "")));
+  handle("looks:use", ({ dir, name } = {}) => {
+    dir = requireProject(dir);
+    if (agent.busy) throw new Error("The assistant is still working. Change the look when it has finished.");
+    return useKit(looks(), dir, String(name ?? ""));
+  });
   handle("storage:status", () => storageStatus());
   handle("storage:free", () => freeUpSpace());
   handle("player:command", ({ dir, action, value } = {}) => {

@@ -1072,3 +1072,9 @@ h2 {
 .chip:hover { background: var(--hover); }
 .chip[aria-pressed="true"] { background: var(--accent-wash); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .chip:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+
+/* Saved looks (M10-04). */
+.look-row { flex-wrap: wrap; gap: 6px; }
+.look-row .look-name { flex: 1 1 160px; min-width: 0; }
+.look-note { margin: 0; padding: 0 12px 8px; font-size: 12px; }
+.look-note:empty { display: none; }

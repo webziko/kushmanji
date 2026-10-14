@@ -335,6 +335,64 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     "aria-label": "Assistant",
     title: "Who changes your video for you. A change starts with your next message.",
   });
+  // A saved look (M10-04, main/kits.js): use one in this video, or keep this video's look under a name.
+  const lookPick = h("select", { class: "agent-pick look-pick", "aria-label": "Saved looks" });
+  const lookUse = h("button", { class: "secondary small", type: "button" }, "Use");
+  const lookName = h("input", { class: "field look-name", type: "text", maxlength: "60", hidden: true,
+    placeholder: "A name, for example your channel", "aria-label": "Name for this look" });
+  const lookSave = h("button", { class: "ghost small", type: "button" }, "Save this look");
+  const lookNote = h("p", { class: "muted look-note", role: "status" });
+  const lookDraft = (text) => {
+    input.value = input.value.trim() ? `${input.value.trim()}\n\n${text}` : text;
+    input.focus();
+  };
+  async function renderLooks() {
+    const got = await api.looks.list(dir).catch(() => null);
+    if (!got) return null;
+    lookPick.replaceChildren(...(got.looks.length
+      ? got.looks.map((look) => h("option", { value: look.name }, look.name))
+      : [h("option", { value: "" }, "No saved looks yet")]));
+    lookPick.disabled = lookUse.disabled = !got.looks.length;
+    return got;
+  }
+  lookUse.addEventListener("click", async () => {
+    const name = lookPick.value;
+    if (!name) return;
+    try {
+      await api.looks.use({ dir, name });
+      lookNote.textContent = `This video now has the look “${name}”. Send the message below to apply it.`;
+      lookDraft("Make this video match the look in STYLE.md: colours, fonts, titles, captions and the ending card.");
+    } catch (error) {
+      lookNote.textContent = error.message;
+    }
+  });
+  lookSave.addEventListener("click", async () => {
+    const got = await renderLooks();
+    if (!got?.written) {
+      lookNote.textContent = "First the assistant writes this video's look down. Send the message below, then press " +
+        "Save this look again.";
+      lookDraft("Write down this video's look in STYLE.md: colours (hex), fonts, title style, caption style, the " +
+        "ending card and any music bed, exactly enough that another video can match it. Change nothing else.");
+      return;
+    }
+    if (lookName.hidden || !lookName.value.trim()) {
+      lookName.hidden = false;
+      lookName.focus();
+      lookNote.textContent = "Name the look, then press Save this look.";
+      return;
+    }
+    try {
+      const saved = await api.looks.save({ dir, name: lookName.value });
+      lookName.hidden = true;
+      lookName.value = "";
+      lookNote.textContent = `Saved as “${saved.name}”. Any of your videos can use it now.`;
+      await renderLooks();
+    } catch (error) {
+      lookNote.textContent = error.message;
+    }
+  });
+  void renderLooks();
+
   const teamBox = h("fieldset", { class: "chat-team" });
   const teamNote = h("p", { class: "msg-note error", role: "status" });
   const modelPick = h("select", {
@@ -1084,6 +1142,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       modeAbout,
       h("div", { class: "chat-setting-row" },
         h("label", { class: "access muted" }, "What may the assistant do", accessPick)),
+      h("div", { class: "chat-setting-row look-row" },
+        h("label", { class: "access muted" }, "Look", lookPick), lookUse, lookSave, lookName),
+      lookNote,
       versionNote,
       studyBar.element,
     ),

@@ -286,8 +286,12 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       video, HyperFrames' `lint` runs (about two seconds, no allowance) and the reply says "The app checked your
       video: no mistakes found" or "found 3 mistakes", with "Ask to fix them" and the details behind "Show
       them" (`agents/turnCheck.js`). Open: the assistant looking at still frames itself (Codex cannot, M17-07)
-- [ ] M10-04 A style kit per project, not per channel: colours, fonts, title and caption styles. Start from a
-      preset, from a website, or from a description. Reusable across projects as a named kit
+- [~] M10-04 A style kit per project, not per channel: colours, fonts, title and caption styles. Start from a
+      preset, from a website, or from a description. Reusable across projects as a named kit. Built (Claude,
+      2026-10-14): a video's look lives in its `STYLE.md`, which every assistant is told to follow and keep true;
+      "Look" in the chat's settings saves it under a name (the app's settings folder, `looks/`) and uses a saved
+      one in another video, keeping the old one as `STYLE.before.md` (`main/kits.js`). If no look is written
+      yet, the button prepares the request to write it. Open: presets, and a look from a website
 - [ ] M10-05 The right agent for each job, chosen by the app: images to Codex; watching clips to Gemini (proven
       on a 6-second test clip: it read on-screen words and when they appeared. On 2026-10-13 it also listened
       to the owner's 20 real clips, 15 seconds each, and wrote down Kannada-English speech with times, better
@@ -582,7 +586,7 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       (at most +9 or -6 dB, with a limiter), copying the picture; a video with no sound, or a computer with no
       FFmpeg, keeps the file as made. `main/loudness.js`. Tried on one of the owner's shorts from outside the
       app (-18.9 to -14.2); inside the app the self-test's video has no sound, so that path is the one tried
-- [ ] M17-09 One kit for a channel's shorts: the three ending cards and the top titles came out a little
+- [~] M17-09 (Claude; the means are in M10-04, the owner's own kit is not made yet) One kit for a channel's shorts: the three ending cards and the top titles came out a little
       different each time, because each short was a separate request. Goes with M17-04 and M10-04
 - [x] M17-03 Arrow keys in "Edit by hand" (Claude, 2026-10-14): while the video plays they skip ten seconds and
       it keeps playing, as on the watching screen; while it is paused, with a modifier, in the chat box, or on
