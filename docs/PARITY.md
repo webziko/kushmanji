@@ -108,14 +108,14 @@ Closing all of Part 1 is one task: M11, try each of these on Windows and write d
 - [x] Claude Code and Codex. **Kushmanji adds Antigravity (Gemini)**
 - [x] Click something, then tell: the chat says what you are pointing at [M3-01]
 - [x] The agent plans first and waits for your yes, in three ways of working [M10-02]
-- [ ] The editor's own "Ask agent about this element" button goes to the chat [M3-02]
+- [x] The editor's own "Ask agent about this element" button goes to the chat [M3-02]
 - [ ] Draw on the frame to point at something [M3-05]
 - [ ] A comment pinned to a spot and a moment [M3-05]
 - [ ] Draw across the timeline to talk about a stretch of the video [M3-05]
 - [ ] Collect up to 10 picks and send them as one request [M3-04]
-- [ ] `@` in the message for files, media and moments; drag media into the chat [M3-03]
-- [ ] Send the next message while the agent works: queue it, or steer [M2-09]
-- [ ] Undo button on each agent run [M2-10]
+- [x] `@` in the message for files, media and moments; drag media into the chat [M3-03]
+- [x] Send the next message while the agent works: queue it, or steer [M2-09]
+- [x] Undo button on each agent run [M2-10]
 - [ ] The agent's work shown as a track on the timeline [M11-20]
 - [ ] Agents use the editor's own tools: look at a frame, select, change one element, add a keyframe [M10-06]
 - [x] You choose how much an agent may do (the official app: full access or automatic limits) [M10-08]
@@ -127,7 +127,7 @@ Closing all of Part 1 is one task: M11, try each of these on Windows and write d
 - [x] Start from a folder of footage; add footage later; the originals are never touched [M10-13]
 - [~] Describe a video on Home and get a project. Built, the button's path not run end to end [M2-07, M10-07]
 - [ ] "Get inspired" library of example moments [M7-01]
-- [ ] Guided first video: hook, proof, turn, call to action [M7-02]
+- [x] Guided first video: hook, proof, turn, call to action [M7-02]
 - [~] Ready workflows from one input: product video from a website, explainer from text, captions on a
       talking-head clip, overlays on an interview, short motion graphic, music video [M10-07]
 
@@ -148,8 +148,8 @@ Closing all of Part 1 is one task: M11, try each of these on Windows and write d
 
 ### The app itself
 
-- [ ] One-click export to Downloads, then "Open video" and "Show in folder" [M4-02]
-- [ ] Installer, Start Menu entry and an icon [M5-01, M5-02]
+- [x] One-click export to Downloads, then "Open video" and "Show in folder" [M4-02]
+- [~] Installer, Start Menu entry and an icon [M5-01, M5-02]: built by GitHub for every push; not yet installed on the owner's PC
 - [ ] Updates by itself [M5-05]
 - [ ] First run for someone who has never used a terminal: agents found and fixed with one click [M10-09, M2-04]
 - [ ] Remember the window, reopen the last project, rename and delete projects, real thumbnails [M1-08 to M1-13]
@@ -165,15 +165,15 @@ Closing all of Part 1 is one task: M11, try each of these on Windows and write d
 - [x] Shared memory: each agent is told what the others did
 - [x] Three access levels with a check that keeps FFmpeg inside the project
 - [x] Gemini can watch and listen to a clip: it wrote down Kannada-English speech with times on 20 real clips
-- [ ] **Three agents as a team on one video** [M13]: a task board inside the project (who does what, what is
+- [~] **Three agents as a team on one video** [M13]: a task board inside the project (who does what, what is
       waiting on whom), a section for each agent's suggestions and doubts, independent jobs side by side
       (subtitles, pictures) but one agent at a time changing the video, and one review with one round of fixes
 - [ ] The right agent for each job, chosen by the app [M10-05]
-- [ ] **Agents that keep working when they update** [M12]: a real check-up for each agent, known problems
+- [~] **Agents that keep working when they update** [M12]: a real check-up for each agent, known problems
       repaired automatically, a one-tap "test this agent" after an update, and switching to another agent when
       one is down
-- [ ] The agent checks its own work once and reports [M10-03]
-- [ ] A style kit for each project [M10-04]
+- [~] The agent checks its own work once and reports [M10-03]: the app checks for mistakes after every change
+- [x] A style kit for each project [M10-04]: saved looks
 - [ ] Image ideas offered as a short list to accept or reject [M10-10]
 
 ## The order: one by one
