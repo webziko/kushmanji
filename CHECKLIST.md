@@ -71,6 +71,9 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **Plain words everywhere.** "My videos", "Add clips", "What may the assistant do: Only this video / Also
       cut my clips / Anything on this computer", "Ask me first: Just do it / Show me the plan first / Decide
       with me". Help now explains the arrow keys in "Edit by hand"
+- [x] **When an assistant runs out of its allowance mid-job**, the chat now says so plainly, lists the files it
+      had already changed, says when it can work again, and offers "Carry on with ChatGPT" or "Carry on with
+      Gemini", which prepares the message for you
 - [x] **"Auto (saves your allowance)"** in the model menu: small changes go to a cheaper model, big jobs to the
       best one. A model you pick yourself is always used
 

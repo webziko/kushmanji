@@ -50,7 +50,28 @@ function userMessage({ text, pointing, moment }) {
  * `plan` marks a reply that is a plan waiting for a yes; `touched` lists files the agent changed all the same.
  * `actions`, given for the newest such reply only, is the row of buttons that answers it.
  */
-function agentMessage({ name, text, activities, ok, stopped, error, plan, touched, actions }) {
+/** When an assistant says it can work again: a time it gave as a date, or its own words ("3pm", "2 days"). */
+function resetsText(resets) {
+  const date = /^\d{4}-\d\d-\d\dT/.test(resets ?? "") ? new Date(resets) : null;
+  if (date && !Number.isNaN(date.getTime()))
+    return date.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
+  return resets ?? "";
+}
+
+/** The plain account of a turn its assistant's usage limit cut short (M17-06). */
+function limitNote(name, { changed, resets }) {
+  const files = changed ?? [];
+  return [
+    `${name} ran out of its allowance before it finished.`,
+    files.length
+      ? `It had already changed: ${files.slice(0, 6).join(", ")}${files.length > 6 ? ` and ${files.length - 6} more` : ""}. ` +
+        "Nobody has checked those changes yet."
+      : "It had not changed anything yet.",
+    resets ? `${name} says it can work again: ${resetsText(resets)}.` : "",
+  ].filter(Boolean).join(" ");
+}
+
+function agentMessage({ name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed }) {
   const steps = [name, ...(activities ?? [])].filter(Boolean);
   return h(
     "div",
@@ -66,7 +87,10 @@ function agentMessage({ name, text, activities, ok, stopped, error, plan, touche
       ),
     plan && actions,
     stopped && h("div", { class: "msg-note" }, "Stopped."),
-    !ok && !stopped && h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
+    limited && h("div", { class: "msg-note error" }, limitNote(name, { changed, resets })),
+    limited && actions,
+    !ok && !stopped && !limited &&
+      h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
   );
 }
 
@@ -116,6 +140,29 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     return agent?.label ?? agent?.name ?? "Assistant";
   };
   const isReady = () => checked && current()?.state === "ready";
+
+  /**
+   * After a usage limit: one button per other assistant. It switches the chat to that assistant and prepares a
+   * message asking it to check the half-done work and finish it. The person still presses Send.
+   */
+  function carryOnButtons(stoppedEngine, changed = []) {
+    const others = agents.filter((agent) => agent.id !== stoppedEngine);
+    if (!others.length) return null;
+    const from = nameOf(stoppedEngine);
+    return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => {
+        engine = agent.id;
+        render();
+        void api.agent.choose({ dir, engine }).catch(() => {});
+        const files = changed.length ? `, after changing ${changed.slice(0, 6).join(", ")}` : "";
+        const ask = `Please carry on with my last request. ${from} ran out of its allowance part-way through${files}. ` +
+          "First look at what it changed and check it, then finish the job and check your work.";
+        input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
+        input.focus();
+      },
+    }, `Carry on with ${agent.label ?? agent.name}`)));
+  }
 
   const log = h("div", { class: "chat-log", role: "log" });
   /** How much the agents may do in this project: every level the app offers, and the one in force. */
@@ -536,7 +583,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (eventDir !== dir || !live) return;
     if (event.type !== "done") return live.onEvent(event);
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
-    live.finish(event, event.plan ? planButtons() : null);
+    live.finish(event, event.plan ? planButtons() : event.limited ? carryOnButtons(engine, event.changed) : null);
     live = null;
     setRunning(false);
     if (pinned) log.scrollTop = log.scrollHeight;
@@ -559,11 +606,14 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       for (const [i, message] of saved.messages.entries()) {
         // A plan still waiting for its answer, when it is the last thing said, keeps its buttons.
         const waitingPlan = message.plan && i === saved.messages.length - 1 && !saved.running;
+        const last = i === saved.messages.length - 1 && !saved.running;
         append(
           message.role === "user"
             ? userMessage(message)
             : // Replies saved before there was a choice of agent were all Claude Code's.
-              agentMessage({ ...message, name: nameOf(message.engine ?? "claude"), actions: waitingPlan ? planButtons() : null }),
+              agentMessage({ ...message, name: nameOf(message.engine ?? "claude"),
+                actions: waitingPlan ? planButtons()
+                  : message.limited && last ? carryOnButtons(message.engine ?? "claude", message.changed) : null }),
         );
       }
       log.scrollTop = log.scrollHeight;

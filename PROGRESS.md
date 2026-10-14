@@ -546,13 +546,17 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
 - [x] M17-05 "Save the video" done by the app, not by the person: done as M4-02 (Claude, 2026-10-14). An
       assistant is the wrong tool for it: a four-minute video takes most of an hour to make here, far longer
       than an assistant's command may run
-- [~] M17-06 (Claude) When an assistant is stopped by its usage limit in the middle of a job, the work is left half
+- [x] M17-06 (Claude, 2026-10-14) When an assistant is stopped by its usage limit in the middle of a job, the work is left half
       done and unchecked, and the chat only shows the limit message. Seen twice on 2026-10-14 (the vlog's
       fourth version stopped before its own check; a short never started). Say plainly what was and was not
       finished, and offer to carry on with another assistant (with M12-04). Main process done (2026-10-14):
       `agents/limits.js` recognises the three assistants' limit messages, and the saved turn carries
-      `limited`, `resets` and the files changed; the shared record says the work is unchecked. The chat's card
-      and the "carry on with" button are next
+      `limited`, `resets` and the files changed; the shared record says the work is unchecked. The chat says
+      "Claude ran out of its allowance before it finished. It had already changed: index.html. Nobody has
+      checked those changes yet. Claude says it can work again: 3pm", with "Carry on with ChatGPT" and "Carry
+      on with Gemini": each switches the chat and prepares a message asking that assistant to check the half
+      done work and finish it (the person presses Send). Tried in the real app with a stand-in Claude that
+      prints the limit message; not yet with a real limit
 - [ ] M17-07 Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
       ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
       good short that way, with two faults a look would have caught (lips not matching the words, a strip
