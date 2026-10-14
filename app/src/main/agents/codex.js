@@ -11,6 +11,9 @@ import { mediaToolsEnv } from "./mediaTools.js";
 
 export const about = {
   name: "Codex",
+  // What the person reads in menus and messages (docs/UX.md, "The words"); see claude.js.
+  label: "ChatGPT",
+  product: "Codex",
   install: ["npm install -g @openai/codex"],
   signIn: ["codex login"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
@@ -76,11 +79,12 @@ function innerCommand(command) {
 function activityFor(item) {
   if (item.type === "command_execution") {
     const command = innerCommand(item.command);
-    return { type: "activity", label: READS.test(command) ? "Reading files" : "Running a command", detail: command };
+    const label = READS.test(command) ? "Looking at your files" : "Running a program";
+    return { type: "activity", label, detail: command };
   }
   if (item.type === "file_change") {
     const first = item.changes?.[0]?.path;
-    return { type: "activity", label: "Editing files", detail: first ? path.basename(first) : "" };
+    return { type: "activity", label: "Changing your files", detail: first ? path.basename(first) : "" };
   }
   if (item.type === "web_search") return { type: "activity", label: "Looking on the web", detail: item.query ?? "" };
   if (item.type === "todo_list") return { type: "activity", label: "Planning", detail: "" };
@@ -97,9 +101,12 @@ function explain(message) {
     // Already a plain sentence.
   }
   if (/model\b.*\b(not supported|not found|does not exist)/i.test(text)) {
-    return `${text}\nCodex is older than the model chosen in its settings. Update it in PowerShell: npm install -g @openai/codex@latest`;
+    return (
+      "ChatGPT's tool (Codex) is older than the version chosen in its settings. To update it, open PowerShell, " +
+      `paste this line and press Enter: npm install -g @openai/codex@latest\n${text}`
+    );
   }
-  return text || "Codex could not finish this change.";
+  return text || "ChatGPT could not finish this change.";
 }
 
 // Codex's Windows sandbox failing to start, as it reports it on a command that never ran. Seen with 0.162.1:
@@ -113,8 +120,8 @@ const SANDBOX_FALLBACK = ["-c", 'windows.sandbox="unelevated"'];
 /** True once the default sandbox has failed in this run of the app. Later turns then skip straight to the other. */
 let plainSandbox = false;
 const SANDBOX_HELP =
-  "Codex could not run any command: neither of its two safety sandboxes would start. Close the Codex desktop " +
-  "app if it is open and send your message again, or pick another agent in the menu above.";
+  "ChatGPT could not run any program, because neither of its two safety boxes would start. If the Codex app is " +
+  "open, close it and send your message again. Or pick another assistant in the menu above.";
 
 const findCodex = () => resolveTool("codex");
 
@@ -144,7 +151,7 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
 
   const tool = findCodex();
   if (!tool) {
-    queueMicrotask(() => done({ ok: false, error: "Codex is not installed." }));
+    queueMicrotask(() => done({ ok: false, error: "ChatGPT is not on this computer yet." }));
     return { stop() {} };
   }
 
@@ -184,7 +191,7 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
             // turn again with the sandbox that still works, and use that one until the app is closed.
             abandoned = true;
             plainSandbox = true;
-            onEvent({ type: "activity", label: "Starting Codex again, another way", detail: "" });
+            onEvent({ type: "activity", label: "Starting again, another way", detail: "" });
             killTree(mine.pid);
             return attempt(true);
           }
@@ -213,12 +220,13 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
 
     let errors = "";
     mine.stderr.on("data", (chunk) => (errors = (errors + chunk).slice(-2000)));
-    mine.on("error", (error) => abandoned || done({ ok: false, error: `Codex could not start: ${error.message}` }));
+    mine.on("error", (error) =>
+      abandoned || done({ ok: false, error: `ChatGPT could not start: ${error.message}` }));
     mine.on("close", (code) => {
       if (abandoned) return;
       if (stopped) return done({ ok: false, stopped: true });
       const reason = failure || lastLine(errors);
-      done({ ok: false, error: reason ? explain(reason) : `Codex stopped unexpectedly (exit code ${code}).` });
+      done({ ok: false, error: reason ? explain(reason) : `ChatGPT stopped unexpectedly (code ${code}).` });
     });
   };
   attempt(plainSandbox);

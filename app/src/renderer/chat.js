@@ -9,11 +9,16 @@ import { createEditActions } from "./editActions.js";
 
 const api = window.hfwin;
 
+// Said beside an assistant's name in the menu when it cannot be used yet.
 const STATE_NOTES = {
-  "not-installed": "not installed",
-  "not-signed-in": "not signed in",
+  "not-installed": "not on this computer yet",
+  "not-signed-in": "sign in first",
   broken: "will not start",
 };
+
+/** "ChatGPT (Codex)": the plain name first, the maker's own product name beside it so it can be recognised. */
+const menuName = (agent) =>
+  agent.label && agent.product && agent.label !== agent.product ? `${agent.label} (${agent.product})` : agent.name;
 
 /** Inline `code` and **bold**, built as nodes so the agent's text is never parsed as HTML. */
 function formatted(text) {
@@ -54,10 +59,14 @@ function agentMessage({ name, text, activities, ok, stopped, error, plan, touche
     text && h("div", { class: "msg-text" }, formatted(text)),
     plan &&
       touched?.length > 0 &&
-      h("div", { class: "msg-note error" }, `Before you said yes, the agent already changed: ${touched.slice(0, 6).join(", ")}.`),
+      h(
+        "div",
+        { class: "msg-note error" },
+        `The assistant changed your video before you said yes. Files it changed: ${touched.slice(0, 6).join(", ")}.`,
+      ),
     plan && actions,
     stopped && h("div", { class: "msg-note" }, "Stopped."),
-    !ok && !stopped && h("div", { class: "msg-note error" }, error || "The agent could not finish this change."),
+    !ok && !stopped && h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
   );
 }
 
@@ -102,7 +111,10 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   let moment = null;
 
   const current = () => agents.find((agent) => agent.id === engine);
-  const nameOf = (id) => agents.find((agent) => agent.id === id)?.name ?? "Agent";
+  const nameOf = (id) => {
+    const agent = agents.find((item) => item.id === id);
+    return agent?.label ?? agent?.name ?? "Assistant";
+  };
   const isReady = () => checked && current()?.state === "ready";
 
   const log = h("div", { class: "chat-log", role: "log" });
@@ -145,30 +157,31 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   );
   const picker = h("select", {
     class: "agent-pick",
-    "aria-label": "Agent",
-    title: "The agent that edits your video. A change applies from your next message.",
+    "aria-label": "Assistant",
+    title: "Who changes your video for you. A change starts with your next message.",
   });
   const modelPick = h("select", {
     class: "agent-pick",
-    "aria-label": "Model",
-    title: "The model this agent uses. A change applies from your next message.",
+    "aria-label": "How careful",
+    title: "How careful the assistant is. Not sure? Leave it on Auto. A change starts with your next message.",
     hidden: true,
   });
   const notice = h("div", { class: "chat-notice", hidden: true });
   const studyBar = createStudyBar(dir, { onAsk: (file) => {
     if (!input.value.trim()) input.value =
-      `Review ${file}. Check its picture, speech, sound and orientation. Tell me what needs fixing before editing.`;
+      `Look at ${file}. Tell me what is in it: the picture, what is said, the sound, and whether it is sideways. ` +
+      "Tell me what needs fixing before you change anything.";
     input.focus();
   } });
   const accessPick = h("select", {
     class: "agent-pick access-pick",
-    title: "How much the agent may do on this computer. A change applies from your next message.",
+    title: "What the assistant may do. A change starts with your next message.",
   });
   // The chosen level in a sentence, always on screen: nobody should have to open a menu to learn what is allowed.
   const accessAbout = h("p", { class: "access-about muted" });
   const modePick = h("select", {
     class: "agent-pick mode-pick",
-    title: "How involved you want to be. A change applies from your next message.",
+    title: "When the assistant asks you before it builds. A change starts with your next message.",
   });
   const modeAbout = h("p", { class: "access-about muted" });
   // What is selected in Studio, said back to the person before they send, with a way to leave it out.
@@ -188,7 +201,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       {
         class: "ghost small",
         type: "button",
-        title: "Do not tell the agent about this selection",
+        title: "Do not tell the assistant about this",
         "aria-label": "Do not point at this",
         onclick: () => {
           dismissed = pointing?.key ?? null;
@@ -316,17 +329,18 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     accessPick.value = access ?? "";
     accessConfirm.hidden = false;
     accessConfirm.replaceChildren(
-      h("p", {}, h("strong", {}, "Turn on full access for this project?")),
+      h("p", {}, h("strong", {}, "Let the assistant do anything on this computer?")),
       h(
         "p",
         {},
-        "The agent will be able to run any program and change or delete any file on this computer, without " +
-          "asking first. Only do this for a project you made yourself or trust.",
+        "The assistant will be able to open any program and change or delete any file on this computer, " +
+          "without asking you first. Only do this for a video you made yourself or one you trust.",
       ),
       h(
         "div",
         { class: "notice-actions" },
-        h("button", { class: "secondary small", type: "button", onclick: () => setAccess("full") }, "Turn on full access"),
+        h("button", { class: "secondary small", type: "button", onclick: () => setAccess("full") },
+          "Yes, allow anything"),
         h("button", { class: "ghost small", type: "button", onclick: () => (accessConfirm.hidden = true) }, "Cancel"),
       ),
     );
@@ -362,7 +376,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     void submit(text);
   }
 
-  /** The card that says why the chosen agent cannot be used yet, with the commands that fix it. */
+  /** The card that says why the chosen assistant cannot be used yet, with the lines that fix it. */
   function showFix(agent) {
     const commands =
       agent.state === "not-installed"
@@ -370,15 +384,19 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         : agent.state === "not-signed-in"
           ? (agent.signIn ?? [])
           : [];
+    const who = menuName(agent);
     const text =
       agent.state === "not-installed"
-        ? `${agent.name} is not installed. Open PowerShell and run this, then sign in:`
+        ? `${who} is not on this computer yet. To add it, open PowerShell (search for it in the Start menu), ` +
+          "paste each line below and press Enter after each one. The last line signs you in:"
         : agent.state === "not-signed-in"
-          ? `${agent.name} is not signed in. Open PowerShell and run:`
-          : agent.detail || `${agent.name} is installed, but it will not start.`;
+          ? `${who} needs you to sign in first. Open PowerShell (search for it in the Start menu), ` +
+            "paste the line below and press Enter:"
+          : `${who} is on this computer, but it will not start.`;
     notice.hidden = false;
     notice.replaceChildren(
       h("p", {}, text),
+      agent.state === "broken" && agent.detail && h("p", { class: "muted" }, agent.detail),
       ...commands.map((command) =>
         h(
           "div",
@@ -399,7 +417,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     picker.replaceChildren(
       ...agents.map((agent) => {
         const note = STATE_NOTES[agent.state];
-        return h("option", { value: agent.id }, note ? `${agent.name} · ${note}` : agent.name);
+        return h("option", { value: agent.id }, note ? `${menuName(agent)} · ${note}` : menuName(agent));
       }),
     );
     picker.value = engine;
@@ -410,14 +428,15 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     modelPick.hidden = models.length === 0;
     modelPick.replaceChildren(
       // "Auto": the app sends small changes to a smaller model (main/agents/sizing.js).
-      h("option", { value: "auto" }, "Auto (saves usage)"),
+      h("option", { value: "auto" }, "Auto (saves your allowance)"),
       h("option", { value: "" }, "Default"),
       ...models.map((model) => h("option", { value: model.id }, model.name)),
     );
     modelPick.value = agent?.model ?? "";
     versionNote.hidden = !agent?.untested;
     versionNote.textContent = agent?.untested
-      ? `${agent.name} ${agent.version} is newer than the ${agent.tested} this app was tried with. It should work; if it does not, that is why.`
+      ? `Your copy of ${agent.product ?? agent.name} (version ${agent.version}) is newer than the one this app was ` +
+        `tested with (${agent.tested}). It should still work. If it does not, that may be why.`
       : "";
     if (!checked || !agent || agent.state === "ready") notice.hidden = true;
     else showFix(agent);
@@ -483,7 +502,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         {
           class: "ghost small",
           type: "button",
-          title: "Clear this chat and start a new conversation. Your video is not changed.",
+          title: "Start a new conversation. Your video is not changed.",
           onclick: reset,
         },
         "Start over",
@@ -494,7 +513,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       h("div", { class: "chat-head" }, h("label", {}, "Assistant", picker), modelPick),
       h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Ask me first", modePick)),
       modeAbout,
-      h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Allowed tools", accessPick)),
+      h("div", { class: "chat-setting-row" },
+        h("label", { class: "access muted" }, "What may the assistant do", accessPick)),
       versionNote,
       studyBar.element,
     ),

@@ -106,7 +106,10 @@ export class AgentRunner {
       engine: chat.engine,
       running: this.#active?.dir === dir,
       // Names only, so the chat can draw at once. `status()` starts each tool and takes seconds.
-      agents: Object.entries(NAMES).map(([id, name]) => ({ id, name })),
+      // `label` is the plain name the person reads ("ChatGPT"), `product` the maker's own ("Codex"): docs/UX.md.
+      agents: Object.entries(BRIDGES).map(([id, { about }]) => ({
+        id, name: about.name, label: about.label ?? about.name, product: about.product ?? about.name,
+      })),
       access: accessFor(readState().access, dir),
       accessLevels: LEVELS,
       mode: chat.mode,
@@ -116,7 +119,7 @@ export class AgentRunner {
 
   /** How involved the person wants to be in this project. It applies from the next message. */
   chooseMode(dir, mode) {
-    if (!knownMode(mode)) throw new Error("That way of working is not known to this app.");
+    if (!knownMode(mode)) throw new Error("That choice is not known to this app.");
     writeChat(dir, { ...readChat(dir), mode });
   }
 
@@ -127,17 +130,17 @@ export class AgentRunner {
 
   /** Switch this project's chat to another agent. It applies from the next message. */
   choose(dir, engine) {
-    if (!knownEngine(engine)) throw new Error("That agent is not known to this app.");
+    if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
     writeChat(dir, { ...readChat(dir), engine });
     updateState({ agent: engine });
   }
 
   /** Pick the model an agent uses, everywhere. `model` null means the agent's own default, AUTO the app's choice. */
   async chooseModel(engine, model) {
-    if (!knownEngine(engine)) throw new Error("That agent is not known to this app.");
+    if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
     // Only an id the agent itself lists is accepted: the value ends up on that agent's command line.
     if (model !== null && model !== AUTO && !(await BRIDGES[engine].models()).some((offered) => offered.id === model)) {
-      throw new Error("That model is not offered by this agent.");
+      throw new Error("That choice is not offered by this assistant.");
     }
     updateState({ models: { ...readState().models, [engine]: model } });
   }
@@ -156,7 +159,7 @@ export class AgentRunner {
    * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
    */
   send({ dir, text, pointing = null, moment = null }) {
-    if (this.#active) throw new Error("The agent is still working. Stop it, or wait for it to finish.");
+    if (this.#active) throw new Error("The assistant is still working. Press Stop, or wait for it to finish.");
     const message = String(text ?? "").trim();
     if (!message) throw new Error("Type what you want to change first.");
     if (message.length > MAX_REQUEST) throw new Error("That message is too long. Shorten it and send again.");

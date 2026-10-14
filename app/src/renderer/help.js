@@ -8,7 +8,7 @@ const EDITOR_WORDS = [
   ["Preview", "Your video", "Watch what your video looks like right now."],
   ["Timeline", "Your clips in order", "Longer bars are longer clips; moving one can affect titles and subtitles."],
   ["Design", "Change it", "Adjust the appearance of the thing you clicked."],
-  ["Layers", "What is on top", "Choose which picture, title or other piece appears in front."],
+  ["Layers", "What is on top of what", "Choose which picture, title or other piece appears in front."],
   ["Catalog", "Ready-made pieces", "Find titles, effects and scenes you can add."],
   ["Variables", "Things you can swap", "Change a name, colour or other value that a scene makes available."],
   ["Lint", "Check for mistakes", "Look for things that could break the video."],
@@ -20,34 +20,39 @@ const EDITOR_WORDS = [
 ];
 
 const SECTIONS = [
-  { id: "home", name: "Starting on Home", parts: [
-    ["Start from footage", "Copy your clips into a new video while keeping the originals."],
-    ["Your projects", "Open a video you have already worked on."],
-    ["Blank project", "Start an empty video, then add clips or ask for a title."],
-    ["Open a folder", "Open a saved Kushmanji or HyperFrames video folder."],
-    ["Make it", "Ask an assistant to turn your idea into a video; this route is still being checked."],
+  { id: "home", name: "Starting out", parts: [
+    ["Start from my clips", "Copy your clips into a new video. Your own files are not changed."],
+    ["My videos", "Open a video you have already worked on."],
+    ["Blank video", "Start an empty video, then add clips or ask for a title."],
+    ["Open a folder", "Open a video that is saved in a folder, from Kushmanji or HyperFrames."],
+    ["Make it", "Ask an assistant to turn your idea into a video. This way of starting is still being tested."],
   ] },
   { id: "watch", name: "Watching and asking for changes", parts: [
     ["Your video", "Press Play to watch, or drag the bar to a moment you want to change."],
     ["The chat", "Tell the assistant what to change in your own words, then press Send."],
     ["At 0:42", "The moment beside your message tells the assistant which part you mean."],
     ["Editing buttons", "See what an action can do, then prepare a message you can check before sending."],
-    ["Assistant and clip settings", "Choose your assistant and its allowed tools, or review your clips."],
+    ["Assistant and clip settings", "Choose your assistant, what it may do, and when it asks you first. " +
+      "You can also look at what the app saw in your clips."],
+    ["Start over", "Start a new conversation with the assistant. Your video is not changed."],
     ["Edit by hand", "Open the full editor to make changes yourself."],
     ["Save video", "Make a video file in your Downloads folder. A long video takes a while; the count shows how far it is."],
   ] },
-  { id: "edit", name: "Editing by hand", parts: EDITOR_WORDS.map(([word, plain, sentence]) =>
-    [`${plain} (${word})`, sentence]),
-  },
+  { id: "edit", name: "Editing by hand", parts: [
+    ...EDITOR_WORDS.map(([word, plain, sentence]) => [`${plain} (${word})`, sentence]),
+    ["Arrow keys", "While the video plays, the left and right arrows skip ten seconds and it keeps playing. " +
+      "While it is paused, they move one picture at a time."],
+  ] },
 ];
 
 const WALK = [
   ["Start with your clips",
-    "On Home, choose Start from footage to copy your clips, or open one of your saved videos."],
+    "At the start, press Start from my clips to copy your clips in, or open a video you already have."],
   ["Watch, then ask for a change",
     "Move to the moment you mean, write what you want in the chat, and press Send when you are ready."],
   ["Check the result",
-    "Watch the change, then press Save video to make a file in your Downloads folder. Edit by hand opens the full editor."],
+    "Watch the change, then press Save video to make a video file in your Downloads folder. " +
+    "Edit by hand opens the full editor."],
 ];
 
 /** Help changes only the shell page; editor files and the assistant are never involved. */
@@ -80,7 +85,8 @@ export function createHelp() {
     content.replaceChildren(...[
       h("p", { class: "help-walk-copy" }, WALK[step][1]),
       step === 1 && h("p", { class: "muted" }, "Sending a message uses your chosen assistant's allowance."),
-      step === 2 && h("p", { class: "muted" }, "Saving a long video takes a while. Automatic subtitles are still being built."),
+      step === 2 && h("p", { class: "muted" },
+        "Saving a long video takes a while. Subtitles that the app writes by itself are not ready yet."),
     ].filter(Boolean));
     footer.replaceChildren(
       h("button", { class: "ghost help-close", type: "button", onclick: close }, "Skip for now"),

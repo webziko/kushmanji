@@ -6,7 +6,7 @@ const clock = (seconds) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 };
 
-/** The same composition the editor shows, with ordinary playback controls around it. */
+/** The same video the editor shows, with ordinary playback controls around it. */
 export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp }) {
   let active = false;
   let source = null;
@@ -89,9 +89,11 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
   const controls = h("fieldset", { class: "player-controls", "aria-label": "Playback controls", disabled: true },
     h("div", { class: "player-progress" }, seek, time),
     h("div", { class: "player-buttons" },
-      h("button", { class: "secondary player-back", type: "button", onclick: () => control("skip", -10) }, "Back 10s"),
+      h("button", { class: "secondary player-back", type: "button", title: "Go back 10 seconds",
+        onclick: () => control("skip", -10) }, "Back 10s"),
       play,
-      h("button", { class: "secondary player-forward", type: "button", onclick: () => control("skip", 10) }, "Forward 10s"),
+      h("button", { class: "secondary player-forward", type: "button", title: "Skip forward 10 seconds",
+        onclick: () => control("skip", 10) }, "Forward 10s"),
       h("span", { class: "spacer" }), mute, volume, full,
     ),
   );

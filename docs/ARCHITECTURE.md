@@ -212,9 +212,9 @@ The person picks one of three levels in the expandable chat settings (`agents/ac
 
 | Level | The agent may | How each bridge enforces it |
 | --- | --- | --- |
-| `project` "Project only" | Edit the project's files, run HyperFrames commands | Claude Code: an allow-list of commands. Codex: its sandbox. Antigravity: approve-all plus its terminal sandbox |
-| `tools` "Editing tools" | The same, plus `ffmpeg` and `ffprobe` on files inside the project | Claude Code: the allow-list gains those two names, in Bash only. Codex and Antigravity: the same switches as `project` |
-| `full` "Full access" | Anything | Each agent's own "skip every check" switch |
+| `project` "Only this video" | Edit the project's files, run HyperFrames commands | Claude Code: an allow-list of commands. Codex: its sandbox. Antigravity: approve-all plus its terminal sandbox |
+| `tools` "Also cut my clips" | The same, plus `ffmpeg` and `ffprobe` on files inside the project | Claude Code: the allow-list gains those two names, in Bash only. Codex and Antigravity: the same switches as `project` |
+| `full` "Anything on this computer" | Anything | Each agent's own "skip every check" switch |
 
 The level is stored in the app's settings (`state.json`, `access: { byProject, usual }`), never in the project:
 a folder someone else made must not be able to give itself access. A new project starts on the level last
@@ -233,7 +233,7 @@ write `ffmpeg ...`, so nothing has to be taught. HyperFrames' own commands are p
 programs (`HYPERFRAMES_FFMPEG_PATH`), because a render writes to cache folders outside the project.
 
 The agent is told its level in words (`accessNote`) at the start of each conversation and again whenever the
-person changes it, so it can say "choose Editing tools" instead of failing oddly.
+person changes it, so it can say "choose Also cut my clips" instead of failing oddly.
 
 ## Pointing
 
@@ -252,11 +252,13 @@ drawing or commenting on the frame needs Studio's parts mounted directly (see "L
 
 ## Ways of working
 
-Upstream's three, named as upstream names them (`agents/working.js`): "Build it for me", "Review the story
-first", "Co-direct it". The choice is kept with the project's chat. In the last two the agent is told to write
-its plan into the project's plan files, tell the person the plan in a few lines, and end its message with a
-line that says only `PLAN READY`. The app removes that line and shows two buttons instead: "Build it" (which
-sends "Yes. Build the plan you just showed me.") and "Change the plan".
+Upstream's three (`agents/working.js`), which upstream calls "Build it for me", "Review the story first" and
+"Co-direct it", and which the person sees as "Just do it", "Show me the plan first" and "Decide with me" (the
+menu labelled "Ask me first"; the ids `build`, `review`, `codirect` are what is stored). The choice is kept
+with the project's chat. In the last two the agent is told to write its plan into the project's plan files,
+tell the person the plan in a few lines, and end its message with a line that says only `PLAN READY`. The app
+removes that line and shows two buttons instead: "Build it" (which sends "Yes. Build the plan you just showed
+me.") and "Change the plan".
 
 The wait is an instruction, not a lock: the agent keeps its access, so a one-word change needs no ceremony.
 What the app adds is the check afterwards. It lists the files the planning turn changed, and if any is not a

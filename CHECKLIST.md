@@ -24,7 +24,7 @@ Two shortcuts are on your Desktop:
       Then open your vlog, wait until the top bar says "Clips are smooth to edit" (a minute or two, once per
       project), and drag the playhead: tell me if it now follows your hand.
 - [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
-- [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools".
+- [ ] **Which access level should a new person start on?** Today: "Only this video". My advice: "Also cut my clips".
 - [ ] **Music made on this PC?** Your channel's own notes say no (its licence does not allow earning from
       it), so your videos use YouTube Audio Library tracks. Still open for other people who use Kushmanji.
 
@@ -67,6 +67,12 @@ Claude measured your vlog playing in the real app, picture by picture.
 - Fixed in your vlog: see "Your City Centre vlog" below.
 
 ## New on the morning of 14 October: moving around the video is smooth
+
+- [x] **Plain words everywhere.** "My videos", "Add clips", "What may the assistant do: Only this video / Also
+      cut my clips / Anything on this computer", "Ask me first: Just do it / Show me the plan first / Decide
+      with me". Help now explains the arrow keys in "Edit by hand"
+- [x] **"Auto (saves your allowance)"** in the model menu: small changes go to a cheaper model, big jobs to the
+      best one. A model you pick yourself is always used
 
 - [x] **Jumping and dragging no longer lag.** Measured first, on a practice video like your vlog: a jump to a
       moment took about a third of a second, and dragging the playhead showed only one or two pictures a

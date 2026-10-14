@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-// What an `ffmpeg` or `ffprobe` command may touch at the "Editing tools" access level: files inside the project
+// What an `ffmpeg` or `ffprobe` command may touch at the "Also cut my clips" access level: files inside the project
 // folder, and nothing else. No network, no camera, microphone or screen, no file anywhere else on the computer.
 //
 // This reads the command the way FFmpeg will and refuses what it can see is outside those limits. It is a guard,

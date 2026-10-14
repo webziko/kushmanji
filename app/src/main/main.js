@@ -76,7 +76,7 @@ const preview = new PreviewManager({
     lightCopies.refresh(dir);
   },
 });
-/** The real programs, never the stand-ins the assistants are given below "Full access" (those are .cmd files). */
+/** The real programs, never the stand-ins the assistants get below "Anything on this computer" (.cmd files). */
 const realTool = (name, override) =>
   override?.trim() || (whereAll(name).find((file) => /\.exe$/i.test(file)) ?? null);
 // Lighter copies of the open project's videos, for smooth watching and editing; "Save video" never uses them.
@@ -101,7 +101,7 @@ const agent = new AgentRunner({
   prepare: async (dir, onStep) => {
     studyStep = ({ dir: studied, status }) => {
       if (studied !== dir || !status.running || !status.current) return;
-      onStep("Studying your footage", `${status.current} (${status.done + 1} of ${status.total})`);
+      onStep("The app is watching your clips", `clip ${status.done + 1} of ${status.total}`);
     };
     try {
       await study.ready(dir);
@@ -184,7 +184,9 @@ function handle(channel, fn) {
 }
 
 function requireProject(dir) {
-  if (!isProject(dir)) throw new Error("That folder is not a HyperFrames project (it has no index.html).");
+  if (!isProject(dir)) {
+    throw new Error("That folder is not a video this app can open. Choose a folder where a video was made.");
+  }
   return dir;
 }
 
@@ -198,7 +200,9 @@ function registerIpc() {
   handle("projects:list", () => listProjects());
   handle("projects:create", (name) => createProject(name));
   handle("projects:fromFootage", async () => {
-    if (agent.busy) throw new Error("Wait for the agent to finish before starting another project.");
+    if (agent.busy) {
+      throw new Error("The assistant is still working. Wait for it to finish before starting another video.");
+    }
     const options = { title: "Choose a folder of video clips", properties: ["openDirectory"] };
     const picked = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
     if (picked.canceled || !picked.filePaths[0]) return null;
@@ -210,9 +214,9 @@ function registerIpc() {
   });
   handle("projects:addMedia", async (dir) => {
     requireProject(dir);
-    if (agent.busy) throw new Error("Wait for the agent to finish before adding footage.");
+    if (agent.busy) throw new Error("The assistant is still working. Wait for it to finish before adding clips.");
     const options = {
-      title: "Add footage (your originals are kept)",
+      title: "Add clips (your own files are not changed)",
       properties: ["openFile", "multiSelections"],
       filters: [{ name: "Video, sound and pictures", extensions: MEDIA_EXTENSIONS }],
     };
@@ -223,7 +227,7 @@ function registerIpc() {
     return imported;
   });
   handle("projects:pickFolder", async () => {
-    const options = { title: "Open a HyperFrames project folder", properties: ["openDirectory"] };
+    const options = { title: "Open the folder of a video", properties: ["openDirectory"] };
     const picked = win
       ? await dialog.showOpenDialog(win, options)
       : await dialog.showOpenDialog(options);
@@ -286,7 +290,7 @@ function registerIpc() {
     const frame = rootPlayerFrame(win.webContents.mainFrame, current);
     if (!frame) {
       if (action === "state") return { ready: false };
-      throw new Error("The video is loading. Try the playback control again in a moment.");
+      throw new Error("The video is still loading. Try again in a moment.");
     }
     return runPlayerCommand(frame, { action, value });
   });

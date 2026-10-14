@@ -15,6 +15,9 @@ import { mediaToolsEnv } from "./mediaTools.js";
 
 export const about = {
   name: "Antigravity (Gemini)",
+  // What the person reads in menus and messages (docs/UX.md, "The words"); see claude.js.
+  label: "Gemini",
+  product: "Antigravity",
   install: ["irm https://antigravity.google/cli/install.ps1 | iex"],
   // The first interactive run walks through Google sign-in in the browser. It shares the Antigravity IDE's sign-in.
   signIn: ["agy"],
@@ -73,9 +76,9 @@ export async function models() {
 
 /** Tool names are agy's own and change between versions, so the label is read off the name itself. */
 function labelFor(toolName = "") {
-  if (/read|view|list|search|grep|find|glob/i.test(toolName)) return "Reading files";
-  if (/write|edit|replace|create|patch|delete/i.test(toolName)) return "Editing files";
-  if (/command|terminal|shell|exec|run/i.test(toolName)) return "Running a command";
+  if (/read|view|list|search|grep|find|glob/i.test(toolName)) return "Looking at your files";
+  if (/write|edit|replace|create|patch|delete/i.test(toolName)) return "Changing your files";
+  if (/command|terminal|shell|exec|run/i.test(toolName)) return "Running a program";
   if (/browser|web|url|fetch/i.test(toolName)) return "Looking on the web";
   return "Working";
 }
@@ -101,8 +104,8 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
   const prompt = withHouseNote(text, !sessionId);
   if (!tool || prompt.length > MAX_PROMPT) {
     const error = tool
-      ? "That message is too long for Antigravity. Shorten it and send again."
-      : "Antigravity is not installed.";
+      ? "That message is too long for Gemini. Shorten it and send again."
+      : "Gemini is not on this computer yet.";
     queueMicrotask(() => done({ ok: false, error }));
     return { stop() {} };
   }
@@ -154,20 +157,20 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
       done({
         ok: false,
         error: /authentication required/i.test(error)
-          ? "Antigravity is not signed in. Open PowerShell, run agy once and sign in with Google."
-          : error || "Antigravity could not finish this change.",
+          ? "Gemini is not signed in. Open PowerShell, type agy, press Enter and sign in with Google."
+          : error || "Gemini could not finish this change.",
       });
     }
   });
 
   let errors = "";
   child.stderr.on("data", (chunk) => (errors = (errors + chunk).slice(-4000)));
-  child.on("error", (error) => done({ ok: false, error: `Antigravity could not start: ${error.message}` }));
+  child.on("error", (error) => done({ ok: false, error: `Gemini could not start: ${error.message}` }));
   child.on("close", (code) => {
     if (stopped) return done({ ok: false, stopped: true });
     // agy writes its routine log to stderr ("logging before google.Init"); those lines are not the reason.
     const reason = lastLine(errors.split(/\r?\n/).filter((line) => !/logging before google\.Init/.test(line)).join("\n"));
-    done({ ok: false, error: reason || `Antigravity stopped unexpectedly (exit code ${code}).` });
+    done({ ok: false, error: reason || `Gemini stopped unexpectedly (code ${code}).` });
   });
 
   return {

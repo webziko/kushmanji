@@ -188,8 +188,9 @@ export function chooseEngine({ language, parakeet, whisper }) {
     return {
       engine: null,
       problem: parakeetSpeaks(language)
-        ? "No speech engine is installed on this computer, so this clip has no transcript."
-        : "This language needs the Whisper speech engine, which is not on this computer yet, so this clip has no transcript.",
+        ? "No speech tool is on this computer yet, so the words in this clip were not written down."
+        : "This language needs a speech tool (Whisper) that is not on this computer yet, so the words in this clip " +
+          "were not written down.",
     };
   }
   // Left to the app. Parakeet works the language out itself, but only among its own (English and 24 other
@@ -197,5 +198,8 @@ export function chooseEngine({ language, parakeet, whisper }) {
   if (parakeet) return { engine: "parakeet", args: ["--engine", "parakeet"], sure: false };
   // Whisper's multilingual model detects the language and reports it.
   if (whisper) return { engine: "whisper", args: ["--engine", "whisper", "--model", WHISPER_MODEL], sure: true };
-  return { engine: null, problem: "No speech engine is installed on this computer, so this clip has no transcript." };
+  return {
+    engine: null,
+    problem: "No speech tool is on this computer yet, so the words in this clip were not written down.",
+  };
 }

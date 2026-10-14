@@ -4,54 +4,54 @@ import { h } from "./dom.js";
 const ACTIONS = [
   {
     label: "Fix the sound",
-    about: "Ask the assistant to balance loud and quiet parts and keep speech clear. " +
-      "Removing strong background music from a voice needs a cleaning tool the app cannot set up yet.",
-    request: "Balance the sound in the whole video so speech is clear and the volume is even. " +
-      "Keep music and clips without speech quieter. Tell me what background noise remains.",
+    about: "Ask the assistant to even out loud and quiet parts and keep voices clear. " +
+      "Taking loud background music out from under a voice needs a cleaning tool this app cannot add yet.",
+    request: "Even out the sound in the whole video so voices are clear and the volume stays the same. " +
+      "Keep music and clips without speech quieter. Tell me what background noise is left.",
   },
   {
     label: "Add subtitles",
-    about: "Automatic subtitles are not ready here yet. You can give the assistant the words and times " +
-      "to put on screen. Check the words yourself, especially when speech is unclear.",
+    about: "Subtitles that the app writes by itself are not ready yet. You can give the assistant the words " +
+      "and the times to show them. Check the words yourself, especially where the speech is hard to hear.",
     request: "Add easy-to-read subtitles using these words and times: ",
   },
   {
     label: "Make it shorter",
-    about: "Ask the assistant to remove repeated takes and long gaps across the video. " +
-      "It should keep the story clear and move titles, subtitles and sounds with the clips.",
-    request: "Make the whole video shorter by removing repeated takes and long gaps. " +
-      "Keep speech complete and the story clear. Move titles, subtitles and sounds with the clips.",
+    about: "Ask the assistant to cut out parts where the same thing is said twice, and long quiet gaps. " +
+      "The story stays clear, and titles, subtitles and sounds move along with the clips.",
+    request: "Make the whole video shorter by cutting out parts where the same thing is said twice, and long " +
+      "quiet gaps. Keep every sentence whole and the story clear. Move titles, subtitles and sounds with the clips.",
   },
   {
     label: "Add music",
-    about: "Use Add footage to bring in your own music file, then ask the assistant to place it under the video. " +
-      "Finding stock music and making new music are not available here yet.",
-    request: "Use a music file I have added with Add footage as background music for the whole video. " +
-      "Keep it quiet under speech. If there is no music file, ask me to add one first.",
+    about: "Use Add clips to bring in your own music, then ask the assistant to play it under the video. " +
+      "Finding music for you and making new music are not ready yet.",
+    request: "Use the music I added with Add clips as quiet background music for the whole video. " +
+      "Turn it down while someone is speaking. If I have not added any music, ask me to add some first.",
   },
   {
     label: "Change the look",
     about: "Ask the assistant to change the video's colours, fonts and title style. " +
-      "Describe the feeling you want in the message.",
+      "Say in your message how you want it to feel.",
     request: "Change the colours, fonts and titles across the whole video, keeping the clips and timing. " +
       "Make it feel: ",
   },
   {
     label: "Add a title",
-    about: "Give the assistant the words to put on screen. In the watching screen, your current moment " +
-      "goes with the message. You can also type a different time.",
+    about: "Give the assistant the words to put on the screen. While you are watching, the moment you are " +
+      "at goes with your message. You can also type a different time.",
     request: "Add a title that says: ",
   },
   {
     label: "Add a voiceover",
-    about: "Give the assistant the words to read aloud. The built-in voice is free and made on your computer.",
+    about: "Give the assistant the words to read aloud. The built-in voice is free and is made on your computer.",
     request: "Add a voiceover that says: ",
   },
   {
     label: "Save the video",
     about: "Makes one video file from your whole video and puts it in your Downloads folder. It takes a while: " +
-      "a four-minute video can take most of an hour. You can keep watching while it works, and the assistant " +
-      "waits until the video is saved.",
+      "a four-minute video can take most of an hour. You can keep watching while it works. The assistant " +
+      "has to wait until the video is saved.",
     save: true,
   },
 ];
@@ -80,10 +80,10 @@ export function createEditActions({ onDraft, onEdit, onSave }) {
       title.textContent = action.label;
       about.textContent = action.about;
       note.textContent = action.request
-        ? "This prepares a message. You can change it before pressing Send. Sending uses your chosen assistant."
+        ? "This writes a message for you. You can change it before pressing Send. Sending uses your chosen assistant."
         : action.save ? "Nothing leaves your computer. You can stop saving at any time."
         : "Your chat and message stay with you in the editor.";
-      use.textContent = action.request ? "Write request" : action.save ? "Save video" : "Open editor";
+      use.textContent = action.request ? "Write the message" : action.save ? "Save video" : "Open the editor";
       dialog.showModal();
     },
   }, action.label));

@@ -4,10 +4,10 @@ import { whereAll } from "./launcher.js";
 
 // Puts the app's check in front of FFmpeg for an agent's run.
 //
-// At "Project only" and "Editing tools" the agent's PATH starts with tools/bin, whose `ffmpeg` and `ffprobe`
-// run tools/guard.mjs instead of the real programs. The guard refuses outright at "Project only", and at
-// "Editing tools" lets a command through only when every file it names is inside the project. At "Full access"
-// nothing is put in front.
+// At "Only this video" and "Also cut my clips" the agent's PATH starts with tools/bin, whose `ffmpeg` and
+// `ffprobe` run tools/guard.mjs instead of the real programs. The guard refuses outright at "Only this video",
+// and at "Also cut my clips" lets a command through only when every file it names is inside the project. At
+// "Anything on this computer" nothing is put in front.
 //
 // The same two names serve every agent and every shell, so an agent types `ffmpeg` as it always would and the
 // HyperFrames skills' own recipes work unchanged.

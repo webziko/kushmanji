@@ -18,7 +18,7 @@ function kindOf(selection) {
   const tag = String(selection.tagName ?? "").toLowerCase();
   if (KINDS[tag]) return KINDS[tag];
   if (selection.dataAttributes?.["composition-src"] || selection.dataAttributes?.["composition-id"]) return "scene";
-  return selection.textContent?.trim() ? "text" : "element";
+  return selection.textContent?.trim() ? "text" : "item";
 }
 
 /** 75.25 → "1:15". Close enough to say where on the timeline something is. */

@@ -24,7 +24,7 @@ is proven and what is not.
 - **Help** explains each screen in plain words, with a short welcome walkthrough and an editor-word glossary.
 - **Edit by hand** opens the real Studio editor. **Watch video** returns to the player and keeps your chat.
 - **Click, then tell, in the editor.** Click anything in the picture or on the timeline and the chat knows which thing you mean.
-- **Plan first, if you want.** Choose "Review the story first" and the agent shows its plan and waits for your yes.
+- **Plan first, if you want.** Choose "Show me the plan first" and the assistant shows its plan and waits for your yes.
 - **You decide how much an agent may do**: only the project's files, also cutting footage with FFmpeg inside the
   project, or everything.
 - **Studies your footage first**: still frames with the time printed on them, and the words that are spoken,

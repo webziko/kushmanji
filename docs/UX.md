@@ -30,7 +30,12 @@ closing it remembers that choice. Studio has a collapsible glossary above it, wi
 its plain meaning. The original tabs stay intact. Help preserves the chat draft, fits the minimum window,
 closes with Escape and prevents playback shortcuts reaching the picture underneath.
 
-The full wording pass, branding and new Home screen remain planned.
+**Built on 2026-10-14 (M14-05 and M14-11, Claude):** every word the app shows itself was reread against "The
+words" below, in the pages, the chat, the menus and the messages from the main process. The line under the chat
+box, "Start over" and the install and sign-in cards now speak the same way. Words that go only to an assistant
+(its notes, the guide it reads) were left alone, except where they quote a menu name the person will see.
+
+Branding (M14-06) and the new Home screen (M14-07) remain planned.
 
 ## What a new person meets today
 
@@ -106,6 +111,13 @@ notices, which is what its licence asks, and the workshop says whose editor it i
 Use the plain word everywhere the app speaks. In the workshop, where HyperFrames' own word is on screen, show
 the plain one beside it.
 
+**Since 2026-10-14 this list is used everywhere in the app** (M14-05). A new screen, message or button takes its
+words from here, and a new word pair is added to the table in the same change. The menu ids and the names
+inside the files (`project`, `tools`, `full`, `build`, `hfwin`) stay as they are: only what a person reads changed.
+In the assistant menu the plain name comes first and the maker's own name follows in brackets ("ChatGPT
+(Codex)"); an install card names both. "How careful" is the label on the model menu, but its choices are still
+each assistant's own names (plus "Auto" and "Default"); Quick, Balanced and Best are not built yet.
+
 | Today | Say instead |
 | --- | --- |
 | agent | assistant |
@@ -128,6 +140,21 @@ the plain one beside it.
 | transcript | What is said |
 | timeline | timeline (kept: people know it), with "your clips in order" the first time |
 | New chat | Start over (your video is not changed) |
+| footage ("Add footage", "Start from footage") | clips ("Add clips", "Start from my clips") |
+| Home (the way back, the first screen) | My videos |
+| Allowed tools, access level | What may the assistant do |
+| Project only / Editing tools / Full access | Only this video / Also cut my clips / Anything on this computer |
+| Build it for me / Review the story first / Co-direct it | Just do it / Show me the plan first / Decide with me |
+| Blank project | Blank video |
+| Studio (when it means the editor) | the editor |
+| not installed, not signed in | not on this computer yet, sign in first |
+| command | program ("Running a program") |
+| Reading files, Editing files | Looking at your files, Changing your files |
+| originals | your own files |
+| stock music | finding music for you |
+| Studying your footage, Study again | The app is watching your clips, Watch again |
+| sandbox | safety box |
+| Dismiss | Close |
 
 ## What each part is, in one sentence
 

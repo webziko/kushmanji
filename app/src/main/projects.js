@@ -84,8 +84,8 @@ export async function createProject(name) {
     const detail = (result.stderr || result.stdout).trim().split(/\r?\n/).slice(-6).join("\n");
     throw new Error(
       result.timedOut
-        ? "Creating the project took too long."
-        : `Could not create the project.\n${detail}`,
+        ? "Making the video took too long."
+        : `Could not make the video.\n${detail}`,
     );
   }
   return describe(dir, false);

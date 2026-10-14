@@ -418,10 +418,15 @@ now comes first**: it changes what every later feature looks like. The review it
       (`preview:changed`, then `reload()` in `renderer/player.js`). Not yet watched during a long real turn on
       a long video: check that it does not flash "Loading your video" over and over, and wait for a quiet
       stretch or the end of the turn if it does
-- [~] M14-11 (Claude) Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
+- [x] M14-11 (Claude, 2026-10-14; done with M14-05) Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
       can change this project's files and run HyperFrames"), "Start over", the header's "built on HyperFrames"
-- [~] M14-05 (Claude) Every word the app itself shows, reread for a twelve-year-old: no "agent", "access level",
-      "composition", "render", "lint" without a plain twin. One list of words in `docs/UX.md`, used everywhere
+- [x] M14-05 Every word the app itself shows, reread for a twelve-year-old (Claude, 2026-10-14, written by a
+      Sonnet helper and reviewed): "My videos", "Add clips", "Start from my clips"; the assistants as "Claude
+      (Claude Code)", "ChatGPT (Codex)", "Gemini (Antigravity)"; "What may the assistant do: Only this video /
+      Also cut my clips / Anything on this computer"; "Ask me first: Just do it / Show me the plan first /
+      Decide with me"; the model menu is "How careful"; the clips bar and review box, editing buttons, Help
+      (with the editor's arrow keys) and the main process's errors rewritten. The list is `docs/UX.md`, "The
+      words". Left for M14-06: "built on HyperFrames" in the header. Not yet looked at on the owner's PC
 - [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
       HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
 - [ ] M14-07 The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from

@@ -1,4 +1,4 @@
-// The check in front of FFmpeg at the "Editing tools" level: what it lets through and what it refuses.
+// The check in front of FFmpeg at the "Also cut my clips" level: what it lets through and what it refuses.
 // The second half runs the real thing, through the same files an agent's shell would find.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -225,10 +225,10 @@ test("a refused command runs nothing and says why", needsFfmpeg, () => {
   assert.equal(fs.existsSync(path.join(project, "assets", "stolen.mp4")), false);
 });
 
-test('at "Project only" the same command is refused, with what to tell the person', needsFfmpeg, () => {
+test('at "Only this video" the same command is refused, with what to tell the person', needsFfmpeg, () => {
   const run = viaShell("cmd", "ffmpeg -version", "project");
   assert.equal(run.status, 77);
-  assert.match(run.stderr, /"Project only".*"Editing tools"/s);
+  assert.match(run.stderr, /"Only this video".*"Also cut my clips"/s);
 });
 
 test("at full access the real FFmpeg answers, with nothing in front", needsFfmpeg, () => {

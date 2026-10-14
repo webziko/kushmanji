@@ -4,22 +4,26 @@ import path from "node:path";
 // turns it into that agent's own limits (`ACCESS` in claude.js, codex.js, antigravity.js), and mediaTools.js
 // puts the FFmpeg check in place. What each level really stops, agent by agent, is in SECURITY.md.
 
-/** In the order the menu shows them, least to most. `about` is the line the person reads under the menu. */
+/**
+ * In the order the menu shows them, least to most. `name` and `about` are what the person reads, in the words of
+ * docs/UX.md ("What may the assistant do"). The ids are what is stored and sent, and never change. The notes
+ * below quote these names, because an assistant tells the person which menu choice to make.
+ */
 export const LEVELS = [
   {
     id: "project",
-    name: "Project only",
-    about: "The agent can change this project's files and run HyperFrames. Nothing else.",
+    name: "Only this video",
+    about: "The assistant can change this video and nothing else on your computer.",
   },
   {
     id: "tools",
-    name: "Editing tools",
-    about: "The agent can also cut, join, convert and colour footage with FFmpeg, only on files inside this project.",
+    name: "Also cut my clips",
+    about: "The assistant can also cut, join and recolour your clips, but only clips that belong to this video.",
   },
   {
     id: "full",
-    name: "Full access",
-    about: "The agent can run any program and change any file on this computer without asking.",
+    name: "Anything on this computer",
+    about: "The assistant can open any program and change or delete any file on this computer, without asking you.",
   },
 ];
 
@@ -44,7 +48,7 @@ export function accessFor(stored, dir) {
  * except "full": that is only ever turned on for the one project it was chosen in.
  */
 export function withAccess(stored, dir, level) {
-  if (!knownAccess(level)) throw new Error("That access level is not known to this app.");
+  if (!knownAccess(level)) throw new Error("That choice is not known to this app.");
   return {
     byProject: { ...stored?.byProject, [keyFor(dir)]: level },
     usual: level === "full" ? (knownAccess(stored?.usual) ?? DEFAULT_ACCESS) : level,
@@ -53,22 +57,23 @@ export function withAccess(stored, dir, level) {
 
 const NOTES = {
   project:
-    'Access for this chat is "Project only": you can change files in this project and run HyperFrames commands. ' +
+    'Access for this chat is "Only this video": you can change files in this project and run HyperFrames commands. ' +
     "FFmpeg and other programs are not available, and you must not look for a way around that. Trimming a clip " +
     "inside the video needs no FFmpeg: set where it starts and how long it plays. If a request truly needs a " +
     "new media file made from footage (a cut saved as its own file, a conversion, a grade baked in), say so in " +
-    'one sentence and tell the person to choose "Editing tools" in the access menu under the chat box.',
+    'one sentence and tell the person to choose "Also cut my clips" in the "What may the assistant do" menu ' +
+    "under the chat box.",
   tools:
-    'Access for this chat is "Editing tools": besides project files and HyperFrames commands, you can run ' +
+    'Access for this chat is "Also cut my clips": besides project files and HyperFrames commands, you can run ' +
     "`ffmpeg` and `ffprobe` on files inside this project folder, to cut, join, convert, resize and grade " +
     "footage. Give paths relative to the project folder. Each command is checked before it runs: a path outside " +
     "the project, a network address, or a camera, microphone or screen source is refused, with the reason. In " +
     "Claude Code, run them with the Bash tool, not PowerShell. Never write over the person's original footage: " +
     "save the result as a new file beside it.",
   full:
-    'Access for this chat is "Full access": you may run any program this request needs. Still work inside the ' +
-    "project folder unless the person asks otherwise, and tell them plainly about anything you installed or " +
-    "changed outside it.",
+    'Access for this chat is "Anything on this computer": you may run any program this request needs. Still ' +
+    "work inside the project folder unless the person asks otherwise, and tell them plainly about anything " +
+    "you installed or changed outside it.",
 };
 
 /** What an agent is told when a conversation starts, and again when the person changes the level. */

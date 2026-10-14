@@ -39,7 +39,7 @@ const PROJECT_COMMANDS = [
   "npm run render",
 ];
 
-// The "Editing tools" level adds these two. On the agent's PATH they are the app's own check in front of the
+// The "Also cut my clips" level adds these two. On the agent's PATH they are the app's own check in front of the
 // real programs (mediaTools.js), which keeps them to files inside the project.
 const MEDIA_COMMANDS = ["ffmpeg", "ffprobe"];
 

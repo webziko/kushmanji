@@ -26,10 +26,10 @@ agent "are you signed in, yes or no".
 | Saving a video writes somewhere it should not, or shows a file it should not | The page gives only a project folder. The main process chooses the place (the person's Downloads folder) and the name (the project's folder name with everything Windows refuses removed, and the time), never overwrites, and starts the HyperFrames command with an argument list. "Show the file" takes no path: it shows only the file this app last finished | `exporter.js`, `main.js` (`save:*`) |
 | A key pressed in the editor becomes a way to run something | Only a plain left or right arrow is taken, only while the editor's own video is playing, and all it can do is the fixed ten-second skip. The two questions asked of the editor's page (is it playing, is the keyboard somewhere that uses arrows) are fixed expressions that return yes or no | `editorKeys.js`, `player.js` |
 | A chat moment names another project or injects instructions | The page supplies only a boolean flag. The main process reads the current project's direct root player and constructs the timestamp and fixed note itself; missing or loading players are refused | `main.js` (`agent:send`), `player.js` (`readPlaybackMoment`) |
-| An agent does more than edit the video | Three access levels, chosen in the expandable chat settings and described below the chat box: "Project only" (edit the project, run HyperFrames), "Editing tools" (the same plus FFmpeg on files inside the project) and "Full access". Each agent's own sandbox or permission system enforces the level | `agents/access.js`, `ACCESS` in each `agents/*.js` |
-| FFmpeg is used to read a private file, send something over the network, or record the screen or camera | Below "Full access", the `ffmpeg` and `ffprobe` an agent finds are the app's own check. At "Project only" it refuses. At "Editing tools" it runs the real program only when every file the command names is inside the project, and refuses network addresses and capture devices. A list of clips to join is opened and checked too | `agents/mediaTools.js`, `agents/tools/` |
+| An agent does more than edit the video | Three access levels, chosen in the expandable chat settings and described below the chat box: "Only this video" (edit the project, run HyperFrames), "Also cut my clips" (the same plus FFmpeg on files inside the project) and "Anything on this computer". Each agent's own sandbox or permission system enforces the level | `agents/access.js`, `ACCESS` in each `agents/*.js` |
+| FFmpeg is used to read a private file, send something over the network, or record the screen or camera | Below "Anything on this computer", the `ffmpeg` and `ffprobe` an agent finds are the app's own check. At "Only this video" it refuses. At "Also cut my clips" it runs the real program only when every file the command names is inside the project, and refuses network addresses and capture devices. A list of clips to join is opened and checked too | `agents/mediaTools.js`, `agents/tools/` |
 | What the person points at in the editor is used to smuggle instructions to an agent | The selection is read by the main process from Studio's local server, never taken from the page, and only when the person sends a message with the "Pointing at" line showing. Every field is cut to a short length before it reaches the agent. It is text from the project's own files, which the agent can read anyway | `selection.js`, `main.js` (`agent:send`) |
-| A project folder someone sends you gives itself more access | The level is kept in the app's own settings, per project, never in the project folder. "Full access" asks first, applies to that one project only, and is never the starting level of another | `agents/access.js`, `renderer/chat.js` |
+| A project folder someone sends you gives itself more access | The level is kept in the app's own settings, per project, never in the project folder. "Anything on this computer" asks first, applies to that one project only, and is never the starting level of another | `agents/access.js`, `renderer/chat.js` |
 | The lighter-copy redirect sends Studio somewhere else | Only GET requests to Studio's own server on 127.0.0.1, only for the open project's preview route, only for a video file name inside the project (no `..`, no hidden folder), and only to a copy that exists in that project's `.cache/kushmanji-preview` folder on the same server. Nothing from the page decides the target. The copy maker runs FFmpeg with an argument list, and only ever deletes its own copies in that folder | `lightCopies.js`, `main.js` (`lockDownSession`) |
 | Another program on the network reaches the preview server | The HyperFrames CLI binds it to `127.0.0.1` only, and the app only ever frames that address | `preview.js`, `index.html` (CSP) |
 | Processes left running after the app closes | The whole process tree is ended on quit | `proc.js` (`killTree`) |
@@ -41,8 +41,8 @@ agent "are you signed in, yes or no".
 
 - **An agent is powerful by design.** In "project" access it can still change or delete anything inside the
   project folder. Keep projects you care about in git or backed up.
-- **"Full access" removes the guard rails.** It lets the agent run any command and install anything. It is not
-  the default and should stay a deliberate choice.
+- **"Anything on this computer" removes the guard rails.** It lets the agent run any command and install
+  anything. It is not the default and should stay a deliberate choice.
 - **The three agents enforce access differently.** Claude Code uses an allow-list of commands. Codex uses its
   own sandbox with a few extra writable folders (npm's cache and HyperFrames' own folders). Antigravity approves
   every tool request and adds its terminal sandbox; it has no finer control when run headless. Antigravity's
@@ -63,9 +63,9 @@ agent "are you signed in, yes or no".
 - **Codex has two sandboxes, and the app may use the second.** When Codex's default Windows sandbox will not
   start, the app starts the turn again with Codex's other built-in one (`windows.sandbox="unelevated"`, a
   restricted token). Both are Codex's own and both keep writes inside the project and the few folders listed in
-  `codex.js`; the app has not measured how the two differ beyond that. Never used at "Full access", which has
-  no sandbox to fall back from.
-- **"Project only" means no FFmpeg, for every agent.** A clip can still be trimmed inside the video, which needs
+  `codex.js`; the app has not measured how the two differ beyond that. Never used at "Anything on this
+  computer", which has no sandbox to fall back from.
+- **"Only this video" means no FFmpeg, for every agent.** A clip can still be trimmed inside the video, which needs
   no new file.
 - **The app trusts the agents' own programs.** It runs whatever `claude`, `codex` or `agy` is installed. If one of
   those is replaced by something hostile, the app would start it.

@@ -1,5 +1,6 @@
-// The app's own pages: Home (the project list) and the project view, which puts the chat beside the open-source
+// The app's own pages: Home (the list of videos) and the video view, which puts the chat beside the open-source
 // Studio. Plain DOM on purpose: two screens do not need a framework or a build step. See docs/ARCHITECTURE.md.
+// What a person reads here follows the words in docs/UX.md ("a project" is "a video", and so on).
 import { createChat } from "./chat.js";
 import { h } from "./dom.js";
 import { createPlayer } from "./player.js";
@@ -48,7 +49,7 @@ function projectCard(project) {
       "button",
       {
         class: "ghost small",
-        title: "Show this project's folder in File Explorer",
+        title: "Show this video's folder in File Explorer",
         onclick: () => api.projects.reveal(project.dir).catch((error) => showError(error.message)),
       },
       "Show folder",
@@ -58,7 +59,7 @@ function projectCard(project) {
         "button",
         {
           class: "ghost small",
-          title: "Take this folder off the list. Its files are not deleted.",
+          title: "Take this video off the list. Its files are not deleted.",
           onclick: async () => {
             await api.projects.forget(project.dir);
             await refreshProjects();
@@ -140,9 +141,10 @@ async function startFromFootage() {
     await openProject(project.dir);
     if (open?.dir !== project.dir) return;
     open.chat.draft(
-      `Review the ${project.imported.count} imported files in assets first. Check what happens, speech, sound ` +
-      "and orientation. Check whether a sideways picture can simply be rotated before cropping it. " +
-      "Keep every original file unchanged. Tell me what you recommend before editing.",
+      `Look at the ${project.imported.count} clips I just added (they are in the assets folder). Tell me what ` +
+      "happens in each one, what is said, how the sound is, and whether any picture is sideways. If a picture is " +
+      "sideways, say whether it can just be turned round instead of cut. Keep my own files as they are. " +
+      "Tell me what you suggest before you change anything.",
     );
   } catch (error) {
     showError(error.message);
@@ -172,24 +174,24 @@ function showHome() {
   home.blank = h(
     "button",
     { class: "secondary", type: "button", onclick: () => createProject("Untitled video") },
-    "Blank project",
+    "Blank video",
   );
   home.footage = h("button", {
     class: "secondary", type: "button", onclick: startFromFootage,
-    title: "Copy a folder of clips into a new project. Your originals stay unchanged.",
-  }, "Start from footage");
+    title: "Copy a folder of clips into a new video. Your own files are not changed.",
+  }, "Start from my clips");
   home.errorText = h("span", {});
   home.error = h(
     "div",
     { class: "banner", role: "alert", hidden: true },
     home.errorText,
-    h("button", { class: "ghost small", onclick: () => showError("") }, "Dismiss"),
+    h("button", { class: "ghost small", onclick: () => showError("") }, "Close"),
   );
   home.grid = h("ul", { class: "grid" });
   home.empty = h(
     "p",
     { class: "empty", hidden: true },
-    "No projects yet. Describe a video above, or open a folder that has an index.html.",
+    "No videos yet. Describe one above, or open the folder of a video you already have.",
   );
 
   app.replaceChildren(
@@ -213,13 +215,16 @@ function showHome() {
         h("span", { class: "muted" }, "Or start from"),
         home.blank,
         home.footage,
-        h("button", { class: "secondary", type: "button", onclick: pickFolder }, "Open a folder"),
+        h("button", {
+          class: "secondary", type: "button", onclick: pickFolder,
+          title: "Open a video that is already in a folder on your computer.",
+        }, "Open a folder"),
       ),
       home.error,
-      h("h2", {}, "Your projects"),
+      h("h2", {}, "My videos"),
       home.grid,
       home.empty,
-      h("p", { class: "muted foot" }, info ? `New projects are kept in ${info.projectsRoot}` : ""),
+      h("p", { class: "muted foot" }, info ? `New videos are kept in this folder: ${info.projectsRoot}` : ""),
     ),
   );
   home.prompt.focus();
@@ -348,25 +353,26 @@ async function openProject(dir, { request } = {}) {
   const destroy = project.destroy;
   project.destroy = () => { unwatchSmooth(); clearTimeout(smoothTimer); destroy(); };
   const addMedia = h("button", {
-    class: "ghost", title: "Copy footage into this project; keep the originals.",
+    class: "ghost", title: "Copy clips into this video. Your own files are not changed.",
     onclick: async () => {
       addMedia.disabled = true;
       try {
         const imported = await api.projects.addMedia(dir);
         if (imported && open === project) {
           mediaStatus.textContent = `${imported.count} files added`;
-          project.chat.draft("Review the new footage in assets. Check the sound and orientation before editing.");
+          project.chat.draft("Look at the clips I just added (they are in the assets folder). Check the sound " +
+            "and whether any picture is sideways before you change anything.");
         }
       } catch (error) { mediaStatus.textContent = error.message; }
       finally { addMedia.disabled = false; }
     },
-  }, "Add footage");
+  }, "Add clips");
 
   app.replaceChildren(
     h(
       "header",
       { class: "topbar" },
-      h("button", { class: "ghost", onclick: goHome, title: "Back to your projects" }, "← Home"),
+      h("button", { class: "ghost", onclick: goHome, title: "Back to your videos" }, "← My videos"),
       h("span", { class: "project-name", title: dir }, project.name),
       mediaStatus,
       smooth,
@@ -380,7 +386,7 @@ async function openProject(dir, { request } = {}) {
         "button",
         {
           class: "ghost",
-          title: "Show this project's folder in File Explorer",
+          title: "Show this video's folder in File Explorer",
           onclick: () => api.projects.reveal(dir).catch(() => {}),
         },
         "Show folder",
@@ -405,7 +411,7 @@ async function openProject(dir, { request } = {}) {
 // Registered before the first await, so an event sent while the page is still starting is not missed.
 api.on("app:open-project", ({ dir }) => void openProject(dir));
 api.on("preview:exit", ({ dir }) => {
-  if (open?.dir === dir) open.fail("stopped", "Studio stopped unexpectedly.");
+  if (open?.dir === dir) open.fail("stopped", "The editor stopped unexpectedly. Press Try again.");
 });
 
 info = await api.app.info().catch(() => null);
