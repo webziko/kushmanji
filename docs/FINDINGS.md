@@ -217,3 +217,11 @@ card will be lower; the before-and-after difference is the point.
   keyframe on every frame scrubbing as well as ProRes Proxy at a tenth of the size; `-tune fastdecode` drops
   CABAC and the deblocking filter. Sources: workflow.frame.io/guide/resolve-proxies,
   community.adobe.com (questions-729, "Are H.264 proxy files really that bad anymore"), support.apple.com/kb/PH12702.
+
+## Node 24.11 cannot delete a path with an accented letter (found 2026-10-14, on the owner's PC)
+
+On Windows, Node 24.11.1's `fs.rmSync` silently does nothing when the path holds a letter such as "é" (the C++
+rewrite of `rmSync` in Node 23). No error is raised, so a temporary file or folder is just left behind.
+`fs.unlinkSync` and `fs.promises.rm` work. Electron 44's own Node (24.21.0) is fixed, so the app is not affected,
+but `npm test` ran on the owner's Node 24.11.1 and four tests failed. `npm test` now runs on Electron's Node
+(`app/scripts/test.mjs`), the same one the app ships with.

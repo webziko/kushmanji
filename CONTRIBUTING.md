@@ -118,8 +118,8 @@ app/src/main/            the main process (Node): the only code with file and pr
     claude.js  codex.js  antigravity.js     one bridge per agent
 app/src/preload/         preload.cjs: the only bridge between page and main process
 app/src/renderer/        the page: Home, the project view, the chat (plain DOM, no build step)
-app/scripts/             check.mjs, smoke.mjs, test-vlog.mjs (a practice project for measuring)
-app/test/                unit tests (Node's built-in test runner)
+app/scripts/             check.mjs, test.mjs, smoke.mjs, test-vlog.mjs (a practice project for measuring)
+app/test/                unit tests (Node's built-in test runner, on Electron's own Node: see test.mjs)
 docs/                    ARCHITECTURE, FINDINGS, MAINTENANCE, HANDOFF
 ```
 

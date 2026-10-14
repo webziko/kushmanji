@@ -18,7 +18,7 @@
     "smoke:codex": "node scripts/smoke.mjs --agent=codex",
     "smoke:antigravity": "node scripts/smoke.mjs --agent=antigravity",
     "check": "node scripts/check.mjs",
-    "test": "node --test \"test/*.test.mjs\"",
+    "test": "node scripts/test.mjs",
     "dist": "electron-builder --win"
   },
   "dependencies": {
