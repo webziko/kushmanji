@@ -187,7 +187,7 @@ Do not build them.
 ## M7 · Catching up with the official app
 
 - [ ] M7-01 "Get inspired" example library
-- [ ] M7-02 Guided first video (hook, proof, turn, call to action)
+- [~] M7-02 (Claude) Guided first video (hook, proof, turn, call to action)
 - [ ] M7-03 Settings screen
 - [ ] M7-04 Keyboard shortcuts that work the same in the frame and inside Studio
 
@@ -387,7 +387,7 @@ with a checklist they can follow (2026-10-13, from a proposal they worked out wi
       1:24"), results. Not three long conversations
 - [ ] M13-03 Jobs that do not touch the video run side by side (Gemini drafts subtitles while Codex makes a
       picture). Only one agent at a time changes the video itself
-- [ ] M13-04 One review by a different agent and one round of fixes, then the person watches. Never a loop
+- [~] M13-04 (Claude) One review by a different agent and one round of fixes, then the person watches. Never a loop
 - [ ] M13-05 A panel in the app that shows the board, who is working, and what is waiting on the person
 - [ ] M13-06 Each agent spends its own account's allowance. Show which agent did what, so the cost is no surprise
 

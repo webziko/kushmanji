@@ -58,6 +58,13 @@ never put the copies in a video).
 - **M2-09 queue or steer, M12-04 carry on after any failure** (`5044f1a`), **M12-03 "Test it now"** (`2f7cd34`).
   All tried in the real app with a stand-in `claude.exe` (fake HOME): it answers the check-up, edits files,
   and can be slowed with `FAKE_SLEEP`; `FAKE_VERSION` makes it look newer than `about.tested`.
+- **M10-03, the app's half** (`df3baee`): `lint --json` after every reply that changed the video.
+- **M16-09** (`cb6ba91`): Home's foot shows the undo copies' size and runs upstream's `hyperframes clean`.
+- **M14-06 branding, owner picked A "Friendly"** (`0b83091`): `:root` colours, wordmark, "unofficial" tag opens
+  About, window icon, `app/build/icon.ico` for M5-02. ImageMagick here cannot read SVG: the PNGs were drawn by
+  the pre-installed Chromium (`--screenshot`) and shrunk with ImageMagick.
+- **M15-04, half** (`f8df8d1`): a fresh conversation after six requests, with `recapNote`.
+- **M13-04, main half** (`a2bb9d0`): `send({ purpose: "review" | "fix" })`; the chat's buttons are next.
 - In this container `killTree` leaves preview servers running (it is written for Windows): 24 were found after
   a day of self-tests and killed by hand. Not a Windows problem; worth knowing before measuring here again.
 - My commits swept in a helper's half-written files twice (`git add -A` while it worked): add files by name.
