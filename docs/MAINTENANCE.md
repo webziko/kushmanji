@@ -49,6 +49,9 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
    Studio's file watcher (`WATCHER_EXCLUDED_DIRS`) and undo history (`isHistoryPath`) skip `.cache`. If one of
    them changes, the copies stop being used or start reloading the editor. Check with the playback measurement
    (`CONTRIBUTING.md`): `pictureShortSides` must read `[720]` once the copies are made.
+6. Kushmanji's face on the editor (`studioFace.js`) hides Studio's logo by its label (`aria-label="Hyperframes"`)
+   and replaces four accent colours by name. `test/studioFace.test.mjs` reads Studio's built files and fails when
+   either changes; then open "Edit by hand" and look.
 
 ## Whisper, the speech tool (every few months)
 

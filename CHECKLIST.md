@@ -263,6 +263,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | Remote Control switched on for the Claude session | This session only | Toolbar switch |
 | Whisper's speech model, large-v3 (3.1 GB, from huggingface.co, checked), 14 October | `%USERPROFILE%\.cache\hyperframes\whisper\models` | Delete `ggml-large-v3.bin` |
 | The Whisper program (9 MB, whisper.cpp's own Windows build), fetched by the app's "Get it" | `%APPDATA%\Kushmanji\tools\whisper` | Delete that folder |
+| The two Kushmanji Desktop shortcuts now show the Kushmanji icon, 14 October | Your Desktop (OneDrive) | Shortcut → Properties → Change Icon |
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.

@@ -516,9 +516,12 @@ now comes first**: it changes what every later feature looks like. The review it
       shadows, one focus ring, hover lift, chat bubbles, a raised player bar, one dialog look with a blurred
       backdrop, reduced motion respected. Contrast checked at 4.5:1 or better. No layout or words changed.
       A before-and-after picture was sent to the owner; not yet seen on a Windows screen
-- [ ] M14-14 HyperFrames' own face still shows (owner, 2026-10-14, on their PC: "still hyperframes logo ... dint
-      go"): "Edit by hand" shows the HeyGen HyperFrames logo and Studio's green Export, and the taskbar shows
-      Electron's atom instead of Kushmanji's icon when the app is started with `npm start`
+- [x] M14-14 HyperFrames' own face still shows (owner, 2026-10-14, on their PC: "still hyperframes logo ... dint
+      go"): "Edit by hand" showed the HeyGen HyperFrames logo and Studio's green, and the taskbar showed
+      Electron's atom (Claude, 2026-10-14). Each time Studio's page loads, `studioFace.js` adds a stylesheet that
+      hides the logo and gives its accent Kushmanji's coral (Studio itself is not changed; a test reads Studio's
+      built files so an update that renames either fails). The app sets its own Windows app id (the installer's),
+      so the taskbar takes its icon, and the owner's two Desktop shortcuts got the Kushmanji icon
 - [ ] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
       use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
       one list per language (`docs/UX.md` is the English one). The assistants already answer in the language
@@ -647,7 +650,7 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       a control that uses arrows, the editor keeps its key. `main/editorKeys.js`. Tried in the self-test with
       real key presses. The owner hit this twice: "its not going forward its pausing". Not yet said anywhere
       in Help (with M14-05)
-- [ ] M17-04 "Make shorts from this video" as something the app does: pick the moments, make an upright project
+- [~] M17-04 (Claude) "Make shorts from this video" as something the app does: pick the moments, make an upright project
       in the video's own look, keep her face in frame. Today it is done by hand with three requests. Design worked out
       in the cloud on 2026-10-14, to build on the owner's PC with real assistants: step one, in the source video,
       the assistant writes the chosen moments into `SHORTS.md` (a JSON block: clip, in and out times in the

@@ -18,6 +18,7 @@ import { LightCopies } from "./lightCopies.js";
 import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
+import { dressStudio } from "./studioFace.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
 import { importMedia, mediaFilesIn, MEDIA_EXTENSIONS } from "./mediaImport.js";
 import { listMentionable, validateDropped } from "./mentions.js";
@@ -193,6 +194,7 @@ function createWindow() {
   });
   watchEditorKeys(win, () => preview.current);
   void catchStudioAsks(win, () => preview.current);
+  void dressStudio(win, () => preview.current);
   win.on("closed", () => (win = null));
   return win.loadFile(RENDERER);
 }
@@ -443,6 +445,11 @@ if (process.env.HFWIN_SMOKE_PLAYBACK) {
   app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
   app.commandLine.appendSwitch("disable-renderer-backgrounding");
 }
+
+// Windows groups a taskbar button by the app's id. Without one, a window started from Electron's own program (the
+// Desktop shortcuts, `npm start`) wore Electron's atom there instead of Kushmanji's icon (owner, 2026-10-14). The
+// installer gives the same id to its shortcuts (electron-builder.yml, appId).
+if (process.platform === "win32") app.setAppUserModelId("io.github.webziko.kushmanji");
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
