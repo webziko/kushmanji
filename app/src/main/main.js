@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, screen, session, shell } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
@@ -15,6 +15,7 @@ import { checkHealth, getBrowser } from "./health.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
+import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
@@ -31,7 +32,7 @@ import {
 import { runSmoke } from "./smoke.js";
 import { FootageStudy } from "./study.js";
 import { readClipStudy } from "./studyRead.js";
-import { projectsRoot } from "./state.js";
+import { projectsRoot, readState, updateState } from "./state.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RENDERER = path.join(here, "..", "renderer", "index.html");
@@ -144,9 +145,13 @@ function folderFromArgv(argv, cwd) {
 }
 
 function createWindow() {
+  // Where the person left it (M1-12). The self-test always opens at the default size, so its pictures compare.
+  const saved = process.env.HFWIN_SMOKE ? null : readState().window;
+  const place = placeToOpen(saved, screen.getAllDisplays().map((display) => display.workArea));
   win = new BrowserWindow({
     width: 1440,
     height: 900,
+    ...(place ?? {}),
     minWidth: 960,
     minHeight: 600,
     show: false,
@@ -162,7 +167,17 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  win.once("ready-to-show", () => win?.show());
+  win.once("ready-to-show", () => {
+    if (place && saved?.maximized) win?.maximize();
+    win?.show();
+  });
+  // Kept as the window closes: its normal size and place, and whether it was maximised.
+  win.on("close", () => {
+    if (!win || process.env.HFWIN_SMOKE) return;
+    try {
+      updateState({ window: { ...win.getNormalBounds(), maximized: win.isMaximized() } });
+    } catch { /* a settings file that cannot be written only means the default size next time */ }
+  });
   // The window holds one local page with Studio framed inside it. Nothing may replace that page (a file dropped
   // on the window would), and links to the web open in the person's browser.
   win.webContents.on("will-navigate", (event) => event.preventDefault());

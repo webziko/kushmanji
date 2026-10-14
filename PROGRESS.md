@@ -85,7 +85,9 @@ Do not build them.
       2026-10-14): letters of any script keep themselves ("ನನ್ನ ಊರಿನ ವ್ಲಾಗ್" becomes the folder
       `ನನ್ನ-ಊರಿನ-ವ್ಲಾಗ್`); Latin accents are still dropped. A video in a Kannada folder was opened, edited by
       a stand-in assistant, recorded for Undo and checked, in the real app
-- [ ] M1-12 Remember the window's size and place, and reopen the last project
+- [x] M1-12 Remember the window's size and place, and reopen the last project (Claude, 2026-10-14): the size,
+      place and maximised state are kept as the window closes and used next time, unless that place is on a
+      monitor no longer connected (`windowPlace.js`); the last project is Home's "Carry on" (M14-07)
 - [ ] M1-13 Drag the divider to resize the chat; hide and show the chat
 
 ## M2 · Chat with an agent
