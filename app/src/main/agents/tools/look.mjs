@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 import { pathToFileURL } from "node:url";
+import { killTree } from "../../proc.js";
 
 const MAX_MOMENTS = 6;
 const KEEP_LOOKS = 3;
@@ -97,8 +98,12 @@ export function snapshotLook(cliEntry, projectDir) {
         cwd: projectDir, windowsHide: true, stdio: ["ignore", "ignore", "pipe"],
         env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
       });
-      const timer = setTimeout(() => child.kill(), TIMEOUT_MS);
-      child.on("error", () => done(-1));
+      // The snapshot starts a browser of its own: the whole tree is ended, or the browser outlives it on Windows.
+      const timer = setTimeout(() => killTree(child.pid), TIMEOUT_MS);
+      child.on("error", () => {
+        clearTimeout(timer);
+        done(-1);
+      });
       child.on("close", (exit) => {
         clearTimeout(timer);
         done(exit ?? -1);

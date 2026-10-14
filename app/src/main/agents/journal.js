@@ -32,13 +32,21 @@ export function filesChangedSince(dir, since) {
       if (entry.name.startsWith(".") || SKIPPED.has(entry.name)) continue;
       const full = path.join(folder, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (entry.isFile() && fs.statSync(full).mtimeMs > since) {
-        changed.push(path.relative(dir, full).split(path.sep).join("/"));
-      }
+      else if (entry.isFile() && modified(full) > since) changed.push(path.relative(dir, full).split(path.sep).join("/"));
     }
   };
   walk(dir);
   return changed.sort();
+}
+
+// A file deleted while the folder is read, or one Windows will not describe while a delete is pending, has not
+// changed in any way the next assistant can use.
+function modified(file) {
+  try {
+    return fs.statSync(file).mtimeMs;
+  } catch {
+    return 0;
+  }
 }
 
 /** Add one turn. A journal that cannot be written must never fail the chat, so errors end here. */

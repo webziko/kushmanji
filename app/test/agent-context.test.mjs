@@ -213,6 +213,8 @@ test("the check-up gives the assistant one small job in a scratch folder and kee
   const got = await agent.checkup("claude");
   assert.equal(got.ok, true);
   assert.match(got.said, /works with Kushmanji/);
+  // Removed in the background, so a folder Windows still holds cannot fail the answer.
+  for (let wait = 0; wait < 50 && fs.existsSync(saved[0]); wait++) await new Promise((done) => setTimeout(done, 20));
   assert.equal(fs.existsSync(saved[0]), false, "the scratch folder is removed");
 });
 

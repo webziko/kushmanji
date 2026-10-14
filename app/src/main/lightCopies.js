@@ -157,8 +157,9 @@ export class LightCopies {
   start(dir, { delayMs = START_DELAY_MS } = {}) {
     this.stop();
     // `light`: names of versions already found light enough, so an assistant's every change does not probe them.
+    // `failed`: versions FFmpeg could not copy, so they are not tried again on every change; the original plays.
     const job = { dir, stopped: false, child: null, timer: null, again: false, running: false, light: new Set(),
-      status: { state: "waiting", done: 0, total: 0 } };
+      failed: new Set(), status: { state: "waiting", done: 0, total: 0 } };
     this.#job = job;
     job.timer = setTimeout(() => void this.#run(job), delayMs);
   }
@@ -216,6 +217,11 @@ export class LightCopies {
         job.again = false;
         await this.#pass(job);
       } while (job.again && !job.stopped);
+    } catch {
+      // A folder Windows will not let the app write (Controlled folder access, an antivirus lock). The originals
+      // still play; the page must not wait for copies that are not coming.
+      job.child = null;
+      this.#report(job, { state: "unavailable" });
     } finally {
       job.running = false;
     }
@@ -238,7 +244,7 @@ export class LightCopies {
       }
       const name = copyName(rel, stat);
       wanted.add(name);
-      if (job.light.has(name) || fs.existsSync(path.join(folder, name))) continue;
+      if (job.light.has(name) || job.failed.has(name) || fs.existsSync(path.join(folder, name))) continue;
       const probed = await collect(spawn(ffprobe, ["-v", "error", "-print_format", "json", "-show_format",
         "-show_streams", source], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }), { timeoutMs: 60_000 });
       let info = null;
@@ -276,11 +282,17 @@ export class LightCopies {
         } catch {
           // An antivirus scanner may hold a brand-new file for a moment.
           await new Promise((done) => setTimeout(done, 1_000));
-          try { fs.renameSync(part, path.join(folder, item.name)); } catch { job.status.failed++; }
+          try {
+            fs.renameSync(part, path.join(folder, item.name));
+          } catch {
+            job.status.failed++;
+            job.failed.add(item.name);
+          }
         }
       } else {
         fs.rmSync(part, { force: true });
         job.status.failed++;
+        job.failed.add(item.name);
       }
       this.#report(job, { done: job.status.done + 1 });
     }

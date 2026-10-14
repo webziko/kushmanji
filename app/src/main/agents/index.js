@@ -96,6 +96,7 @@ function replyFor(messages, index, id) {
 /** Runs chat turns, one at a time, and keeps each project's conversation on disk. */
 export class AgentRunner {
   #active = null;
+  #undoing = null;
   #emit;
   #prepare;
   #history;
@@ -116,7 +117,7 @@ export class AgentRunner {
   }
 
   get busy() {
-    return this.#active !== null;
+    return this.#active !== null || this.#undoing !== null;
   }
 
   /**
@@ -217,20 +218,25 @@ export class AgentRunner {
    */
   async checkup(engine) {
     if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
-    if (this.#active) throw new Error("An assistant is still working. Test this one when it has finished.");
+    if (this.#active || this.#undoing) throw new Error("An assistant is still working. Test this one when it has finished.");
+    // Claimed before the first wait, so a message sent meanwhile is refused and Stop reaches the test.
+    const turn = { dir: null, checkup: true, stopped: false, handle: { stop() { turn.stopped = true; } } };
+    this.#active = turn;
     const bridge = BRIDGES[engine];
     const name = bridge.about.label ?? NAMES[engine];
-    const state = await bridge.status().catch(() => ({ state: "broken" }));
-    if (state.state !== "ready") return { ok: false, said: `${name} can be tested once it is installed and signed in.` };
-    let model = chosenModel(readState().models, engine);
-    if (model === AUTO) {
-      model = sizeModel({ engine, models: await bridge.models().catch(() => []), text: "Change one word." }).model;
-    }
-    const dir = makeScratch(cliVersion);
-    const turn = { dir, checkup: true, stopped: false, handle: null };
-    this.#active = turn;
+    let dir = null;
+    let state;
     let result;
     try {
+      state = await bridge.status().catch(() => ({ state: "broken" }));
+      if (state.state !== "ready") return { ok: false, said: `${name} can be tested once it is installed and signed in.` };
+      let model = chosenModel(readState().models, engine);
+      if (model === AUTO) {
+        model = sizeModel({ engine, models: await bridge.models().catch(() => []), text: "Change one word." }).model;
+      }
+      if (turn.stopped) return { ok: false, said: `The test of ${name} was stopped.` };
+      dir = makeScratch(cliVersion);
+      turn.dir = dir;
       let text = "";
       const activities = [];
       const done = await new Promise((resolve) => {
@@ -245,11 +251,13 @@ export class AgentRunner {
       try {
         changedFile = /\bAFTER\b/.test(fs.readFileSync(path.join(dir, "check.txt"), "utf8"));
       } catch { /* the file is gone: not changed as asked */ }
-      result = judge(name, { ...done, limited: Boolean(usageLimit({ error: done.error, text })), changedFile,
+      result = judge(name, { ...done, limited: Boolean(usageLimit({ error: done.error, text, ok: done.ok })), changedFile,
         ranCommand: activities.includes("Running a program") });
     } finally {
       if (this.#active === turn) this.#active = null;
-      fs.rmSync(dir, { recursive: true, force: true });
+      // The assistant says it is done a moment before it exits, and Windows will not remove a folder a running
+      // program is working in: retried for a while, in the background, and never a reason to lose the answer.
+      if (dir) fs.rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }, () => {});
     }
     updateState({ checkups: { ...readState().checkups,
       [engine]: { version: state.version ?? null, ok: result.ok, said: result.said, at: new Date().toISOString() } } });
@@ -264,6 +272,16 @@ export class AgentRunner {
   async undo(dir, index, id = null) {
     if (!this.#history) throw new Error("Undo is not available in this version of the app.");
     if (this.#active?.dir === dir) throw new Error("The assistant is still working. Undo when it has finished.");
+    if (this.#undoing) throw new Error("A change is still being undone. Try again in a moment.");
+    this.#undoing = dir;
+    try {
+      return await this.#undo(dir, index, id);
+    } finally {
+      this.#undoing = null;
+    }
+  }
+
+  async #undo(dir, index, id) {
     const before = readChat(dir).messages;
     index = replyFor(before, index, id);
     const message = before[index];
@@ -292,6 +310,7 @@ export class AgentRunner {
    */
   send({ dir, text, pointing = null, moment = null, purpose = null }) {
     if (this.#active) throw new Error("The assistant is still working. Press Stop, or wait for it to finish.");
+    if (this.#undoing) throw new Error("A change is still being undone. Send again in a moment.");
     if (purpose !== null && !PURPOSES.has(purpose)) throw new Error("That kind of request is not known to this app.");
     const message = String(text ?? "").trim();
     if (!message) throw new Error("Type what you want to change first.");
@@ -308,7 +327,8 @@ export class AgentRunner {
       delete chat.sessions[engine];
       delete chat.told[engine];
     }
-    chat.turns = { ...chat.turns, [engine]: fresh ? 1 : sofar + 1 };
+    // Counted from one whenever a conversation begins, a lost one included (#finish forgets it).
+    chat.turns = { ...chat.turns, [engine]: chat.sessions[engine] ? sofar + 1 : 1 };
     // Read from the app's own settings here, never taken from the page or from the project folder.
     const access = accessFor(readState().access, dir);
     // The agent hears its limits and the way of working at the start of a conversation, and again whenever the
@@ -344,7 +364,7 @@ export class AgentRunner {
     };
     this.#active = turn;
     if (fresh) this.#onEvent(turn, { type: "activity", label: "A fresh conversation, to save your allowance" });
-    const start = async () => {
+    const begin = async () => {
       let model = chosenModel(readState().models, engine);
       if (model === AUTO) {
         const offered = await BRIDGES[engine].models().catch(() => []);
@@ -371,6 +391,9 @@ export class AgentRunner {
         onEvent: (event) => this.#onEvent(turn, event),
       });
     };
+    // A bridge that throws instead of reporting must not leave the chat busy for good.
+    const start = () => begin().catch((error) => this.#onEvent(turn, { type: "done", ok: false,
+      error: error?.message ?? String(error) }));
     // Stop works from the first moment, even while the model is being chosen or the footage studied.
     const waiting = { stop() { turn.stopped = true; } };
     if (!this.#prepare) {
@@ -406,6 +429,9 @@ export class AgentRunner {
     } else if (event.type === "done") {
       if (turn.ending) return;
       turn.ending = true;
+      // The assistant has finished; Stop while its history entry closes must not reach a process id that is gone
+      // and may already be another program's.
+      turn.handle = { stop() {} };
       // The turn stays the active one until its history entry is closed, or the next turn's would swallow it.
       if (turn.historyOpen) {
         void this.#history.end(turn.dir).catch(() => null).then((entry) => this.#finish(turn, event, entry));
@@ -428,7 +454,7 @@ export class AgentRunner {
     }
     // Stopped by its plan's usage limit part-way through (M17-06): the page says so plainly, names the files it
     // had already changed, and offers another assistant. Some assistants end such a turn "ok".
-    const limit = event.stopped ? null : usageLimit({ error: event.error, text: turn.text });
+    const limit = event.stopped ? null : usageLimit({ error: event.error, text: turn.text, ok: event.ok });
     if (limit) {
       event = { ...event, ok: false, limited: true, resets: limit.resets,
         changed: filesChangedSince(turn.dir, turn.startedAt).slice(0, 50) };
