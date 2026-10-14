@@ -350,7 +350,7 @@ function registerIpc() {
   // `pointing` only says whether to include the selection. The selection itself is read here, from Studio's
   // server, at the moment of sending: the page is not trusted to describe an element.
   // `moment` likewise requests a fresh root-player snapshot, not a time or note supplied by the page.
-  handle("agent:send", async ({ dir, text, pointing, moment = false } = {}) => {
+  handle("agent:send", async ({ dir, text, pointing, moment = false, purpose = null } = {}) => {
     dir = requireProject(dir);
     if (samePath(exporter.dir, dir))
       throw new Error("This video is being saved. Wait until it is saved, or stop saving, then send your message.");
@@ -369,6 +369,8 @@ function registerIpc() {
       text,
       pointing: shown ? { ...shown, note: pointingNote(selection) } : null,
       moment: captured,
+      // A review by another assistant, or the fixes after it (M13-04); the runner checks the value.
+      purpose: typeof purpose === "string" ? purpose : null,
     });
     return { moment: captured ? { seconds: captured.seconds, when: captured.when } : null };
   });

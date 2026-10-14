@@ -98,6 +98,8 @@ function agentMessage({
     stopped && h("div", { class: "msg-note" }, "Stopped."),
     limited && h("div", { class: "msg-note error" }, limitNote(name, { changed, resets })),
     limited && actions,
+    // The review round's buttons (M13-04) and anything else a settled reply offers.
+    !plan && !limited && actions,
     !ok && !stopped && !limited &&
       h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
     undoAction,
@@ -114,6 +116,8 @@ function liveMessage(name) {
   let frame = 0;
   return {
     el,
+    /** The reply's words so far. */
+    reply: () => text,
     onEvent(event) {
       if (event.type === "activity") {
         steps.textContent = [name, event.label, event.detail].filter(Boolean).join(" · ");
@@ -157,6 +161,61 @@ export function createChat(dir, { onEdit, onSave } = {}) {
 
   /** Each settled reply by its place in the chat, so the app's check can be added to it when it arrives. */
   const replies = new Map();
+  /** What was sent last: the request, its purpose, and to which assistant (M13-04). */
+  let sending = null;
+  /** The assistant whose work is being reviewed, while a review runs. */
+  let reviewing = null;
+
+  /**
+   * One review by a different assistant, then one round of fixes, never a loop (M13-04). Under a reply that
+   * changed the video: "Ask ... to check it", one button per other assistant the person has. The reviewer is told
+   * by the main process to change nothing.
+   */
+  function reviewButtons({ engine: author, asked, files = [] }) {
+    const others = team().filter((agent) => agent.id !== author);
+    if (!others.length || !files.length) return null;
+    const ask = `Please check what ${nameOf(author)} just did for my request: “${short(asked ?? "", 300)}”. ` +
+      `Files it changed: ${files.slice(0, 12).join(", ")}.`;
+    return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => {
+        if (live) return;
+        reviewing = author;
+        engine = agent.id;
+        render();
+        void api.agent.choose({ dir, engine }).catch(() => {});
+        void submit(ask, false, "review");
+      },
+    }, `Ask ${agent.label ?? agent.name} to check it`)));
+  }
+
+  /** Under a review: back to the assistant that did the work, with the list. A clean review says so instead. */
+  function fixButton(reviewer, author, review) {
+    if (!author || author === reviewer) return null;
+    if (/^\W*(it |this |everything )?(looks|seems) (right|good|fine)|no (real )?problems/i.test(review.trim())) {
+      return h("p", { class: "muted" }, "Nothing to fix. Watch your video to be sure.");
+    }
+    const ask = `Please fix the problems ${nameOf(reviewer)} found in your last change:\n\n${review.trim().slice(0, 4000)}` +
+      "\n\nThen check your work once and stop.";
+    return h("div", { class: "notice-actions" }, h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => {
+        if (live) return;
+        engine = author;
+        render();
+        void api.agent.choose({ dir, engine }).catch(() => {});
+        void submit(ask, false, "fix");
+      },
+    }, `Ask ${nameOf(author)} to fix these`));
+  }
+
+  /** The buttons that come after a settled reply in the review round, or null. */
+  function roundButtons({ purpose, ok, engine: by, text, files, asked, author }) {
+    if (!ok) return null;
+    if (purpose === "review") return fixButton(by, author, text ?? "");
+    if (purpose === "fix") return null;
+    return reviewButtons({ engine: by, asked, files });
+  }
 
   /**
    * What the app's check found after a reply changed the video (M10-03, main/agents/turnCheck.js). Mistakes come
@@ -518,8 +577,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     );
   });
 
-  async function submit(text, includeMoment = true) {
+  async function submit(text, includeMoment = true, purpose = null) {
     if (live) return;
+    sending = { text, purpose, engine };
     const about = pointed();
     planActions?.remove();
     planActions = null;
@@ -530,7 +590,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     append(live.el);
     setRunning(true);
     try {
-      const accepted = await api.agent.send({ dir, text, pointing: Boolean(about), moment: Boolean(watched) });
+      const accepted = await api.agent.send({ dir, text, pointing: Boolean(about), moment: Boolean(watched), purpose });
       sent.replaceWith(userMessage({ text, pointing: about, moment: accepted?.moment }));
     } catch (error) {
       live.finish({ ok: false, error: error.message });
@@ -1068,8 +1128,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
     // A reply that failed, for whatever reason, offers the person's other assistants (M12-04).
     const failed = event.limited || (!event.ok && !event.stopped);
+    const round = roundButtons({ purpose: sending?.purpose, ok: event.ok && !event.plan, engine,
+      text: event.text ?? live.reply(), files: event.undo?.files, asked: sending?.text, author: reviewing });
+    if (sending?.purpose !== "review") reviewing = null;
     const settled = live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
-      event.plan ? planButtons() : failed ? carryOnButtons(engine, event.changed ?? event.undo?.files, event.limited) : null);
+      event.plan ? planButtons() : failed ? carryOnButtons(engine, event.changed ?? event.undo?.files, event.limited) : round);
     if (Number.isInteger(event.index)) replies.set(event.index, settled);
     live = null;
     setRunning(false);
@@ -1108,12 +1171,18 @@ export function createChat(dir, { onEdit, onSave } = {}) {
           continue;
         }
         // Replies saved before there was a choice of agent were all Claude Code's.
+        // The review round's buttons stay on the last reply (M13-04).
+        const asked = saved.messages[i - 1];
+        const author = asked?.purpose === "review" ? saved.messages[i - 2]?.engine : null;
         const reply = agentMessage({ ...message, name: nameOf(message.engine ?? "claude"),
           undoAction: undoControl(i, message.undo),
           actions: waitingPlan ? planButtons()
             : (message.limited || (!message.ok && !message.stopped)) && last
               ? carryOnButtons(message.engine ?? "claude", message.changed ?? message.undo?.files, message.limited)
-              : null });
+              : last ? roundButtons({ purpose: message.purpose, ok: message.ok && !message.plan,
+                engine: message.engine ?? "claude", text: message.text, files: message.undo?.files,
+                asked: asked?.text, author })
+                : null });
         replies.set(i, reply);
         if (message.checked) reply.append(checkedNote(message.checked));
         append(reply);

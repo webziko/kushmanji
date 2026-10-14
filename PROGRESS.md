@@ -394,7 +394,12 @@ with a checklist they can follow (2026-10-13, from a proposal they worked out wi
       1:24"), results. Not three long conversations
 - [ ] M13-03 Jobs that do not touch the video run side by side (Gemini drafts subtitles while Codex makes a
       picture). Only one agent at a time changes the video itself
-- [~] M13-04 (Claude) One review by a different agent and one round of fixes, then the person watches. Never a loop
+- [x] M13-04 One review by a different agent and one round of fixes, then the person watches. Never a loop
+      (Claude, 2026-10-14). Under a reply that changed the video: "Ask ChatGPT to check it" (one per other ticked
+      assistant); the reviewer is told by the main process to change nothing and answer with a numbered list.
+      Under the review: "Ask Claude to fix these", or "Nothing to fix" when it looks right. A fix gets no review
+      button. Tried in the real app with a stand-in Claude and a saved review (no stand-in Codex can be found on
+      Linux)
 - [ ] M13-05 A panel in the app that shows the board, who is working, and what is waiting on the person
 - [ ] M13-06 Each agent spends its own account's allowance. Show which agent did what, so the cost is no surprise
 
