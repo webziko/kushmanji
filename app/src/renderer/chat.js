@@ -599,9 +599,26 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     log.replaceChildren(empty);
   }
 
+  // The editor's own "Ask agent" buttons land here (M3-02, main/askAgent.js): the request goes in the message box,
+  // and the person presses Send. Only a message from the editor's own frame on the local server is taken.
+  const askNote = h("p", { class: "composer-note muted", role: "status", hidden: true });
+  const fromEditor = (event) => {
+    const studio = document.querySelector('iframe[title="HyperFrames Studio"]');
+    if (!studio || event.source !== studio.contentWindow || !/^http:\/\/127\.0\.0\.1:\d+$/.test(event.origin)) return;
+    const { source, type, text } = event.data ?? {};
+    if (source !== "kushmanji-studio" || type !== "ask-agent" || typeof text !== "string" || !text.trim()) return;
+    input.value = input.value.trim() ? `${input.value.trim()}\n\n${text.trim()}` : text.trim();
+    askNote.hidden = false;
+    askNote.textContent = "The editor's request is in your message. Add anything you want, then press Send.";
+    input.focus();
+  };
+  window.addEventListener("message", fromEditor);
+  input.addEventListener("input", () => { askNote.hidden = true; });
+
   const form = h(
     "form",
     { class: "composer", onsubmit: onSubmit },
+    askNote,
     pointingChip,
     h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, "Your message"), momentChip),
     input,
@@ -732,6 +749,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     },
     destroy() {
       stopListening();
+      window.removeEventListener("message", fromEditor);
       clearInterval(watchPointing);
       studyBar.destroy();
       editActions.destroy();

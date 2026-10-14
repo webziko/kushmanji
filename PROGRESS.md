@@ -102,9 +102,12 @@ Do not build them.
       Built. The "Make it" button's path has not been run end to end yet
 - [ ] M2-08 Install and refresh HyperFrames skills for the agent (project creation skips them for speed)
 - [ ] M2-09 While the agent works: queue the next message, or steer (stop and restart with it)
-- [~] M2-10 (Claude) Undo for each agent run. Built (2026-10-14): each turn is wrapped in `hyperframes history
-      begin`/`end`, and a reply that changed files has "Undo this change", then "Bring it back"
-      (`agents/turnHistory.js`). Unit-tested; the click-through in the real app is next
+- [x] M2-10 Undo for each agent run (Claude, 2026-10-14). Each turn is a history "window" on the open
+      project's preview server (the CLI's `history` commands are refused while Studio runs: "This project is
+      open in another app"), so everything the assistant writes is one entry in HyperFrames' own history. A
+      reply that changed files has "Undo this change", then "Bring it back" (`agents/turnHistory.js`). Tried in
+      the real app with a stand-in assistant: the file went back, the note said so. A turn silent for over ten
+      minutes ends its window early (the server's limit); later writes stay in history but outside its undo
 - [x] M2-11 Write chat turns where `hyperframes catch-up` reads them: `.hyperframes/app-history.jsonl`, in
       upstream's own format (Claude, 2026-10-12)
 - [ ] M2-12 Plain messages for: usage limit reached, signed out mid-run, no internet
@@ -138,7 +141,11 @@ Do not build them.
       or on the timeline and the chat says "Pointing at ..."; the next message is about it. Read from Studio's
       own server, nothing injected. Proven in the real app: a click on the owner's vlog named the right clip,
       and on a test project "Make this bright red and twice as big" changed exactly the clicked title
-- [ ] M3-02 Route Studio's own "Describe a change to the agent" button into the chat
+- [x] M3-02 Route Studio's own "Describe a change to the agent" button into the chat (Claude, 2026-10-14). Studio's
+      "Ask agent" buttons (element, timeline stretch, mistakes, console errors, catalog) only copy a prompt to the
+      clipboard; the app wraps the clipboard in Studio's page and hands those copies, recognised by how they
+      begin, to the chat's message box, where the person presses Send (`main/askAgent.js`). Other copies still
+      reach the clipboard. Tried in the real app
 - [ ] M3-03 `@` in the message box to mention files, media and moments
 - [ ] M3-04 Pending edits: collect up to 10 picks and send them as one request
 - [ ] M3-05 Draw and comment on the frame (needs Studio's components mounted directly; see ARCHITECTURE "Later")
@@ -431,8 +438,10 @@ now comes first**: it changes what every later feature looks like. The review it
       words". Left for M14-06: "built on HyperFrames" in the header. Not yet looked at on the owner's PC
 - [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
       HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
-- [~] M14-07 (Claude) The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
-      an idea", "Carry on with ..." with a picture of each video
+- [x] M14-07 (Claude, 2026-10-14; page by a Sonnet helper, reviewed) The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
+      an idea", "Carry on with ..." with a picture of each video. Built: a "Carry on" card with the
+      last video's picture, "From my clips" and "From an idea" cards, then "My videos" as pictures. The picture
+      is taken from the player as the person leaves a video (`covers.js`; nearly black frames are skipped)
 - [ ] M14-08 Try it on someone who has never seen it, and fix what they stumble on
 
 ## M15 · Spend less: smaller models, and a team you choose

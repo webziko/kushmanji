@@ -74,6 +74,10 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **When an assistant runs out of its allowance mid-job**, the chat now says so plainly, lists the files it
       had already changed, says when it can work again, and offers "Carry on with ChatGPT" or "Carry on with
       Gemini", which prepares the message for you
+- [x] **A new Home screen**: "Carry on" with a picture of the video you last worked on, then "From my clips" and
+      "From an idea", and your videos as pictures (each picture is taken when you leave that video)
+- [x] **"Undo this change"** under every reply that changed your video, and "Bring it back" after
+- [x] **The editor's own "Ask agent" buttons** now put their request in the chat box instead of copying it
 - [x] **"Your assistants: tick the ones you have."** In the chat's settings. Someone with only ChatGPT never
       sees Claude or Gemini offered
 - [x] **"Auto (saves your allowance)"** in the model menu: small changes go to a cheaper model, big jobs to the

@@ -66,13 +66,25 @@ renders with the CLI in its own browser and always reads the full files. The top
 to edit (5 of 19)" while it works. Without FFmpeg nothing is made and the originals play. Measured: a jump went
 from 0.28 to 0.04 seconds, and a dragged playhead from 1 or 2 pictures a second to 33 (`docs/FINDINGS.md`).
 
-**Undo for each assistant turn** (M2-10, `agents/turnHistory.js`). Just before an assistant starts, the runner
-calls `hyperframes history begin --who <assistant>`; when the turn ends, `history end`. Everything written in
-between is one entry in HyperFrames' own history (the same one Studio's history panel shows), and the reply is
-saved with that entry's id when it changed any file. "Undo this change" under the reply runs `history undo` on it;
-the undo is an entry too, so "Bring it back" undoes the undo. The turn stays the active one until `history end`
+**Undo for each assistant turn** (M2-10, `agents/turnHistory.js`). While a project is open its preview server
+keeps the history and refuses the CLI's `history` commands, so just before an assistant starts the runner opens
+a history "window" on that server (`POST /api/projects/:id/history/window`, under the assistant's name, ending by
+itself after ten minutes without a write) and closes it when the turn ends. Everything written in between is one
+entry in HyperFrames' own history (the same one Studio's history panel shows), and the reply is saved with that
+entry's id when it changed any file. "Undo this change" under the reply runs `history undo` on it;
+the undo is an entry too, so "Bring it back" undoes the undo (`POST .../history/undo`). The turn stays the active one until `history end`
 returns, so the next request cannot begin inside it. The next assistant's handover says what the person undid.
 Without the history (an error from the CLI) the turn simply has no undo.
+
+**The editor's "Ask agent" buttons** (M3-02, `main/askAgent.js`). Studio's buttons that hand something to an
+assistant only copy a prompt. When Studio's page loads directly inside the app's page, the main process wraps
+`Clipboard.prototype.writeText` there: a text that begins like one of Studio's prompts is posted to the app's page
+instead of copied, and `renderer/chat.js` puts it in the message box (only from the Studio frame on 127.0.0.1).
+
+**Home's pictures** (M14-07, `main/covers.js`). As the person leaves a video from the watching screen, the page
+names the box of its player; the main process captures that part of its own window, refuses a nearly black
+frame, and keeps a 480-pixel JPEG in the project's `.cache/kushmanji-preview/cover.jpg`. `projects.list` returns
+it as a data URL.
 
 The preview manager watches source and media with a short quiet period, ignores hidden journals, saved
 versions, dependencies and exports, and emits `preview:changed`. The player reloads at its last position and
