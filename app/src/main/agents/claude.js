@@ -3,6 +3,8 @@ import path from "node:path";
 import { collect, killTree } from "../proc.js";
 import { HOUSE_PROMPT } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
+import { CLAUDE_LOOK_TOOL, claudeLookArgs } from "./lookTool.js";
+import { fromClaude } from "./usage.js";
 import { mediaToolsEnv } from "./mediaTools.js";
 
 // The Claude Code bridge, and the reference for the agent bridge contract in docs/ARCHITECTURE.md.
@@ -11,6 +13,10 @@ import { mediaToolsEnv } from "./mediaTools.js";
 /** What the chat shows for this agent, and the PowerShell commands that fix a missing install or sign-in. */
 export const about = {
   name: "Claude Code",
+  // What the person reads in menus and messages (docs/UX.md, "The words"): the plain name, with the product's own
+  // name beside it where they might need to recognise or install it. `name` stays for the assistants' own notes.
+  label: "Claude",
+  product: "Claude Code",
   install: ["irm https://claude.ai/install.ps1 | iex"],
   signIn: ["claude auth login"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
@@ -35,7 +41,7 @@ const PROJECT_COMMANDS = [
   "npm run render",
 ];
 
-// The "Editing tools" level adds these two. On the agent's PATH they are the app's own check in front of the
+// The "Also cut my clips" level adds these two. On the agent's PATH they are the app's own check in front of the
 // real programs (mediaTools.js), which keeps them to files inside the project.
 const MEDIA_COMMANDS = ["ffmpeg", "ffprobe"];
 
@@ -48,6 +54,8 @@ const limited = (...commands) => [
   "acceptEdits",
   "--allowedTools",
   ...commands,
+  // The app's own "look at the video" (lookTool.js): it only draws this project.
+  CLAUDE_LOOK_TOOL,
   "WebFetch",
   "WebSearch",
   "Skill",
@@ -68,21 +76,21 @@ const ACCESS = {
 };
 
 const LABELS = {
-  Read: "Reading files",
-  Grep: "Reading files",
-  Glob: "Reading files",
-  Edit: "Editing files",
-  Write: "Editing files",
-  MultiEdit: "Editing files",
-  NotebookEdit: "Editing files",
-  Bash: "Running a command",
-  PowerShell: "Running a command",
+  Read: "Looking at your files",
+  Grep: "Looking at your files",
+  Glob: "Looking at your files",
+  Edit: "Changing your files",
+  Write: "Changing your files",
+  MultiEdit: "Changing your files",
+  NotebookEdit: "Changing your files",
+  Bash: "Running a program",
+  PowerShell: "Running a program",
   WebFetch: "Looking on the web",
   WebSearch: "Looking on the web",
   Task: "Working on one part",
   Agent: "Working on one part",
   TodoWrite: "Planning",
-  Skill: "Using a HyperFrames skill",
+  Skill: "Using one of its skills",
 };
 
 // Anthropic's installer puts the .exe here and does not always add the folder to PATH.
@@ -135,7 +143,7 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
 
   const tool = findClaude();
   if (!tool) {
-    queueMicrotask(() => done({ ok: false, error: "Claude Code is not installed." }));
+    queueMicrotask(() => done({ ok: false, error: "Claude is not on this computer yet." }));
     return { stop() {} };
   }
 
@@ -151,6 +159,7 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
       HOUSE_PROMPT,
       ...(sessionId ? ["--resume", sessionId] : []),
       ...(model ? ["--model", model] : []),
+      ...claudeLookArgs(dir),
       ...(ACCESS[access] ?? ACCESS.project),
     ],
     { cwd: dir, env: mediaToolsEnv(agentEnv(), { dir, access }) },
@@ -176,17 +185,18 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
         if (block.type === "tool_use") onEvent(activityFor(block));
       }
     } else if (event.type === "result") {
-      if (event.subtype === "success" && !event.is_error) done({ ok: true });
-      else done({ ok: false, error: String(event.result || "Claude Code could not finish this change.") });
+      const usage = fromClaude(event);
+      if (event.subtype === "success" && !event.is_error) done({ ok: true, usage });
+      else done({ ok: false, error: String(event.result || "Claude could not finish this change."), usage });
     }
   });
 
   let errors = "";
   child.stderr.on("data", (chunk) => (errors = (errors + chunk).slice(-2000)));
-  child.on("error", (error) => done({ ok: false, error: `Claude Code could not start: ${error.message}` }));
+  child.on("error", (error) => done({ ok: false, error: `Claude could not start: ${error.message}` }));
   child.on("close", (code) => {
     if (stopped) done({ ok: false, stopped: true });
-    else done({ ok: false, error: lastLine(errors) || `Claude Code stopped unexpectedly (exit code ${code}).` });
+    else done({ ok: false, error: lastLine(errors) || `Claude stopped unexpectedly (code ${code}).` });
   });
 
   return {

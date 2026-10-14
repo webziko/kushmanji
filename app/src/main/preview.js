@@ -120,7 +120,7 @@ export class PreviewManager {
         settle(reject, new Error(tail ? `${message}\n${tail}` : message));
       };
       const timer = setTimeout(() => {
-        fail("Studio took too long to start.");
+        fail("The editor took too long to start. Press Try again.");
         killTree(child.pid);
       }, READY_TIMEOUT_MS);
 
@@ -146,10 +146,10 @@ export class PreviewManager {
         }
       });
       child.stderr.on("data", keep);
-      child.on("error", (error) => fail(`Studio could not start: ${error.message}`));
+      child.on("error", (error) => fail(`The editor could not start: ${error.message}`));
       child.on("close", (code) => {
         const wasReady = settled;
-        fail(`Studio stopped before it was ready (exit code ${code}).`);
+        fail(`The editor stopped before it was ready (code ${code}).`);
         // Still the open project's server: it died by itself, so the window has to know. A stop() clears the
         // session first and so never reports.
         if (this.#session?.child !== child) return;

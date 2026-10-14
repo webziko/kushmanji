@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kushmanji app icon, friendly direction">
+<title>Kushmanji icon (friendly)</title>
+<rect width="512" height="512" rx="132" fill="#F4644A"/>
+<path d="M176 150 L176 362 L386 256 Z" fill="#FFF4E9" stroke="#FFF4E9" stroke-width="100" stroke-linejoin="round"/>
+<g fill="#F4644A" opacity=".42"><circle cx="176" cy="276" r="21"/><circle cx="304" cy="276" r="21"/></g>
+<g fill="#3A2420"><ellipse cx="206" cy="232" rx="21" ry="28"/><ellipse cx="274" cy="232" rx="21" ry="28"/></g>
+<path d="M208 278 Q240 316 272 278" fill="none" stroke="#3A2420" stroke-width="26" stroke-linecap="round"/>
+</svg>

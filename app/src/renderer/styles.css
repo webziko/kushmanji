@@ -4,24 +4,27 @@
 
 :root {
   color-scheme: light;
-  --bg: oklch(0.955 0.005 70);
-  --surface: oklch(0.987 0.005 70);
-  --raised: oklch(1 0 70);
-  --text: oklch(0.205 0.003 70);
-  --text-2: oklch(0.403 0.003 70);
-  --muted: oklch(0.503 0.003 70);
+  /* Kushmanji's own colours, "Friendly" (owner's pick, 2026-10-14): coral on cream with cocoa text. Every text
+     pair passes WCAG AA; the ratios are in docs/brand/README.md. */
+  --bg: #fff4e9;
+  --surface: #fffaf4;
+  --raised: #fffdfa;
+  --text: #3a2420;
+  --text-2: #6b4a42;
+  --muted: #7d5c52;
   --border: color-mix(in oklab, var(--text) 8%, transparent);
   --border-strong: color-mix(in oklab, var(--text) 15%, transparent);
   --hover: color-mix(in oklab, var(--text) 5.5%, transparent);
   --press: color-mix(in oklab, var(--text) 9.5%, transparent);
-  --accent: oklch(0.536 0.114 164);
-  --accent-hover: oklch(0.486 0.103 164);
-  --accent-ink: oklch(0.45 0.096 164);
+  --accent: #ce4630;
+  --accent-hover: #b53a26;
+  --accent-ink: #a02f1b;
   --accent-wash: color-mix(in oklab, var(--accent) 13%, transparent);
   --on-accent: oklch(1 0 0);
-  --danger-ink: oklch(0.45 0.17 25);
-  --danger-wash: color-mix(in oklab, oklch(0.56 0.19 25) 10%, transparent);
-  --radius: 10px;
+  /* Crimson, not the coral of the brand, so "you must do something" never looks like a button. */
+  --danger-ink: #a3122a;
+  --danger-wash: color-mix(in oklab, #a3122a 9%, transparent);
+  --radius: 14px;
   --topbar: 44px;
 }
 
@@ -152,15 +155,13 @@ button:disabled {
   font-weight: 650;
 }
 
-/* A plain play mark. Deliberately not HeyGen's logo: this build is unofficial and must not pass for theirs. */
-.brand-mark {
-  width: 0;
-  height: 0;
-  border-block: 7px solid transparent;
-  border-inline-start: 12px solid var(--accent);
-}
+/* Kushmanji's own mark and lettering (docs/brand, direction A). Never HeyGen's or HyperFrames' logo. */
+.brand-wordmark { height: 24px; width: auto; display: block; }
 
 .tag {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
   padding: 1px 8px;
   border-radius: 999px;
   background: var(--accent-wash);
@@ -178,15 +179,21 @@ button:disabled {
 
 /* ------------------------------------------------------------ home */
 
+/* Home is a place to start: the Carry on card is the one big thing, or without a video the two start cards. */
 .home {
   flex: 1;
   overflow-y: auto;
-  padding: 56px 32px 40px;
+  padding: clamp(20px, 5vh, 56px) 32px 28px;
 }
 
 .home > * {
   max-width: 920px;
   margin-inline: auto;
+}
+
+/* Held back until the list of videos has arrived, so nothing jumps when the Carry on card appears. */
+.home[data-loading] > * {
+  opacity: 0;
 }
 
 h1 {
@@ -204,18 +211,194 @@ h2 {
   color: var(--text-2);
 }
 
-.create,
-.create-more {
+.my-videos {
+  margin-block: 36px 14px;
+}
+
+/* One picture shape everywhere: 16:9, the video's own picture or its first letter on a soft surface. */
+.cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--accent) 9%, var(--surface));
+}
+
+/* Filled from the box's own edges: a percentage height inside the 16:9 box would not hold, and a tall picture
+ * (one taken with the player's black bars) would spill out of it instead of being cropped. */
+.cover img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-letter {
+  color: var(--accent-ink);
+  font-size: 34px;
+  font-weight: 600;
+  opacity: 0.55;
+}
+
+.carry-slot {
+  margin-bottom: 16px;
+}
+
+.carry {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+  padding: 12px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--text) 6%, transparent),
+    0 10px 28px color-mix(in oklab, var(--text) 7%, transparent);
+  cursor: pointer;
+}
+
+.carry:hover {
+  border-color: var(--border-strong);
+}
+
+.carry:hover .carry-go {
+  background: var(--accent-hover);
+}
+
+.carry .cover {
+  border-radius: var(--radius);
+}
+
+.carry .cover-letter {
+  font-size: 72px;
+}
+
+.carry-text {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding-inline-end: 14px;
+  min-width: 0;
+}
+
+.carry-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin: 0;
+  overflow: hidden;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.carry-when {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 15px;
+}
+
+.carry-go {
+  margin-top: 14px;
+  min-height: 46px;
+  padding-inline: 28px;
+  font-size: 16px;
+}
+
+/* The button is the card's one real control; this stretches its click area over the whole card. */
+.carry-go::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.carry-go:focus-visible {
+  outline: none;
+}
+
+.carry:has(.carry-go:focus-visible) {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 3px;
+}
+
+.starts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.start {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 22px 20px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--text) 6%, transparent),
+    0 10px 28px color-mix(in oklab, var(--text) 7%, transparent);
+}
+
+/* Behind the Carry on card they are the quieter choice. */
+.home[data-carry] .start {
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.start-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.start-about {
+  margin: 0 0 14px;
+  color: var(--text-2);
+  font-size: 15px;
+  text-wrap: pretty;
+}
+
+/* The buttons of both cards sit on one line, however much text is above them. */
+.start-action {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.start-action button,
+.start-action .field {
+  min-height: 42px;
+}
+
+.start-action button {
+  padding-inline: 20px;
+}
+
+.start-action .field {
+  padding-block: 0;
+}
+
+.start-more {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.create-more {
   margin-top: 12px;
 }
 
 .banner {
+  scroll-margin-block: 16px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -250,6 +433,7 @@ h2 {
 
 .card:hover {
   border-color: var(--border-strong);
+  box-shadow: 0 6px 18px color-mix(in oklab, var(--text) 8%, transparent);
 }
 
 .card-open {
@@ -263,15 +447,13 @@ h2 {
   white-space: normal;
 }
 
-.card-thumb {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 16 / 9;
+.card-open .cover {
   margin-bottom: 10px;
-  background: oklch(0.235 0.007 70);
-  color: oklch(0.965 0.004 70 / 0.55);
-  font-size: 34px;
-  font-weight: 600;
+}
+
+/* The card clips its own corners, so the ring goes inside it. */
+.card-open:focus-visible {
+  outline-offset: -3px;
 }
 
 .card-name,
@@ -310,8 +492,23 @@ h2 {
   color: var(--text);
 }
 
+@media (max-width: 760px) {
+  .carry {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .carry-text {
+    padding: 0 6px 6px;
+  }
+
+  .starts {
+    grid-template-columns: 1fr;
+  }
+}
+
 .empty {
-  padding: 28px;
+  padding: 24px;
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
   color: var(--muted);
@@ -319,7 +516,7 @@ h2 {
 }
 
 .foot {
-  margin-top: 28px;
+  margin-top: 20px;
   user-select: text;
 }
 
@@ -655,6 +852,9 @@ h2 {
 .composer-row {
   display: flex;
   align-items: center;
+  /* "Send when done", "Stop and send now" and "Stop" side by side do not fit the narrowest chat. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -776,3 +976,118 @@ h2 {
 /* Save video: the count sits beside the project's name and must never push the buttons off the bar. */
 .save-status { min-width: 0; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .save-video { white-space: nowrap; }
+
+/* "Your assistants" in the chat's settings (M15-01). */
+.chat-team { border: 0; margin: 0; padding: 4px 12px 8px; display: grid; gap: 4px; font-size: 13px; min-width: 0; }
+.chat-team legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; color: var(--text-2); }
+.chat-team .team-member { display: flex; gap: 8px; align-items: baseline; }
+.chat-team .msg-note:empty { display: none; }
+
+/* "Undo this change" under a reply (M2-10). */
+.msg-undo { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; }
+.composer-note { margin: 0 0 6px; font-size: 12px; }
+.composer-note.queued { display: flex; align-items: center; gap: 8px; }
+.composer-note.queued[hidden] { display: none; }
+/* "Test it now" beside the note about a newer assistant (M12-03). */
+.chat-version:not([hidden]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* The app's check under a reply (M10-03). */
+.msg-check { display: grid; gap: 4px; justify-items: start; margin-top: 6px; font-size: 12px; }
+.msg-check .msg-actions { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.msg-check-details summary { cursor: pointer; color: var(--text-2); padding: 4px 0; }
+.msg-check-details p { margin: 4px 0; color: var(--text-2); }
+
+/* About Kushmanji (M14-06). */
+.about-dialog { max-width: 440px; text-align: center; }
+.about-dialog .about-wordmark { height: 44px; width: auto; display: block; margin: 8px auto 4px; }
+.about-dialog .notice-actions { justify-content: center; }
+.foot.space button { text-decoration: underline; color: var(--accent-ink); }
+
+/* "@" in the message box, and clips dropped on the chat (M3-03). */
+.chat { position: relative; }
+.composer-field { position: relative; display: grid; }
+.composer-note.problem { color: var(--danger-ink); }
+.mention-list {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(100% + 6px);
+  z-index: 30;
+  max-height: min(280px, 45vh);
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px color-mix(in oklab, var(--text) 14%, transparent);
+  font-size: 13px;
+}
+.mention-title { padding: 6px 8px 2px; color: var(--muted); font-size: 11px; letter-spacing: 0.02em; }
+.mention-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+}
+.mention-item.active { background: var(--accent-wash); color: var(--accent-ink); }
+.mention-name { flex: none; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mention-detail { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--muted); font-size: 12px; text-align: end; }
+.mention-note { padding: 8px; color: var(--muted); font-size: 12px; }
+.drop-hint {
+  position: absolute;
+  inset: 8px;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface));
+  color: var(--accent-ink);
+  font-weight: 600;
+  text-align: center;
+  text-wrap: balance;
+  pointer-events: none;
+}
+.drop-hint p { margin: 0; }
+
+/* A guided first video (M7-02): three rows of choices to tap. */
+.guided-dialog, .about-dialog { padding: 20px 24px; }
+.guided-dialog { max-width: 520px; }
+.guided-dialog h2 { margin: 0 0 2px; font-size: 20px; }
+.guided-dialog > p { margin: 0; }
+.guided-dialog .notice-actions { margin-top: 20px; justify-content: flex-end; }
+.guided-row { border: 0; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.guided-row legend { padding: 0; margin-bottom: 6px; font-weight: 600; }
+.chip {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  padding: 6px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.chip:hover { background: var(--hover); }
+.chip[aria-pressed="true"] { background: var(--accent-wash); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.chip:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+
+/* Saved looks (M10-04). */
+.look-row { flex-wrap: wrap; gap: 6px; }
+.look-row .look-name { flex: 1 1 160px; min-width: 0; }
+.look-note { margin: 0; padding: 0 12px 8px; font-size: 12px; }
+.look-note:empty { display: none; }
+
+/* What this computer still needs (M5-04). */
+.health { margin: 16px 0 0; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--raised); }
+.health h2 { margin: 0 0 6px; font-size: 15px; }
+.health > p { margin: 0; }
+.health-list { margin: 0 0 8px; padding-left: 18px; display: grid; gap: 10px; }
+.health-list p { margin: 0 0 4px; }
+.health-fix { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.health-fix code { padding: 3px 8px; border-radius: 6px; background: var(--hover); font-size: 12px; }
+
+/* How much of the allowance a reply used (M15-05). */
+.msg-usage { margin-top: 4px; font-size: 11px; }

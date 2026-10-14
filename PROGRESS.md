@@ -8,7 +8,7 @@ The owner's short version is `CHECKLIST.md`.
 
 ## Where things stand
 
-_Updated 2026-10-14, in the night, by Claude; existing tasks keep their original ownership._
+_Updated 2026-10-14, morning, by Claude; existing tasks keep their original ownership._
 
 **The app is called Kushmanji** (owner, 2026-10-13), is public at `github.com/webziko/kushmanji` under
 Apache-2.0, and has its first commits. The owner wants every feature of the official app, one by one: the order
@@ -46,6 +46,9 @@ before most joins, because the clips' pictures are 0.2 seconds shorter than thei
 **New on 2026-10-14:** "Save video" makes the file in the Downloads folder in one press, with a count; in "Edit
 by hand" the arrow keys skip ten seconds while the video plays instead of pausing it; the owner's vlog has its
 fourth version (the channel's name, an ending card, a little music) and three upright shorts (M17).
+
+**New on the morning of 2026-10-14:** jumping and dragging in the video are smooth: the app plays 720p copies of
+big clips while watching and editing (M16-07), measured in the cloud on a practice vlog; not yet on the owner's PC.
 
 **Not there yet:** an installer (today it starts with `npm start`), drawing on the picture, updates.
 
@@ -98,11 +101,24 @@ Do not build them.
 - [~] M2-07 Home prompt box: describe a video, the app makes the project and asks the agent (Claude).
       Built. The "Make it" button's path has not been run end to end yet
 - [ ] M2-08 Install and refresh HyperFrames skills for the agent (project creation skips them for speed)
-- [ ] M2-09 While the agent works: queue the next message, or steer (stop and restart with it)
-- [ ] M2-10 Undo for each agent run
+- [x] M2-09 While the agent works: queue the next message, or steer (stop and restart with it) (Claude,
+      2026-10-14). While a reply is being written the person can type on: "Send when done" (also Enter) keeps
+      the message and sends it as soon as the turn ends; "Stop and send now" stops the turn first. A note shows
+      what waits, with Cancel. After a failed turn the waiting message goes back in the box instead. Tried in
+      the real app with a slowed stand-in assistant: both orders came out right
+- [x] M2-10 Undo for each agent run (Claude, 2026-10-14). Each turn is a history "window" on the open
+      project's preview server (the CLI's `history` commands are refused while Studio runs: "This project is
+      open in another app"), so everything the assistant writes is one entry in HyperFrames' own history. A
+      reply that changed files has "Undo this change", then "Bring it back" (`agents/turnHistory.js`). Tried in
+      the real app with a stand-in assistant: the file went back, the note said so. A turn silent for over ten
+      minutes ends its window early (the server's limit); later writes stay in history but outside its undo
 - [x] M2-11 Write chat turns where `hyperframes catch-up` reads them: `.hyperframes/app-history.jsonl`, in
       upstream's own format (Claude, 2026-10-12)
-- [ ] M2-12 Plain messages for: usage limit reached, signed out mid-run, no internet
+- [x] M2-12 Plain messages for: usage limit reached, signed out mid-run, no internet (Claude, 2026-10-14). The
+      limit is M17-06; a sign-out ("Claude is signed out, so it stopped. Sign in again (open PowerShell and run:
+      claude auth login)...") and a lost connection are recognised in any assistant's error and said in one
+      sentence, with what was changed still in the video and Undo working (`agents/problems.js`). Main-process
+      words are English only for now (M14-12)
 - [ ] M2-13 Show what a run cost or how much of the plan's limit is used (the agent reports both)
 - [x] M2-14 Antigravity bridge for Gemini models: `agents/antigravity.js` (Claude, 2026-10-12). `agy` installed,
       already signed in through the Antigravity IDE. Proven with `npm run smoke:antigravity`
@@ -133,8 +149,17 @@ Do not build them.
       or on the timeline and the chat says "Pointing at ..."; the next message is about it. Read from Studio's
       own server, nothing injected. Proven in the real app: a click on the owner's vlog named the right clip,
       and on a test project "Make this bright red and twice as big" changed exactly the clicked title
-- [ ] M3-02 Route Studio's own "Describe a change to the agent" button into the chat
-- [ ] M3-03 `@` in the message box to mention files, media and moments
+- [x] M3-02 Route Studio's own "Describe a change to the agent" button into the chat (Claude, 2026-10-14). Studio's
+      "Ask agent" buttons (element, timeline stretch, mistakes, console errors, catalog) only copy a prompt to the
+      clipboard; the app wraps the clipboard in Studio's page and hands those copies, recognised by how they
+      begin, to the chat's message box, where the person presses Send (`main/askAgent.js`). Other copies still
+      reach the clipboard. Tried in the real app
+- [x] M3-03 `@` in the message box to mention files, media and moments (Claude, 2026-10-14; built by a Sonnet
+      helper, reviewed). Typing `@` lists "This moment", then the video's clips, sounds, pictures and scenes;
+      it filters as you type and inserts `@clip-03.mp4`. Clips dropped from File Explorer onto the chat are
+      copied into the video by the same safe import as "Add clips" and mentioned (`main/mentions.js`; Electron's
+      `webUtils.getPathForFile` in the preload). Tried in the real app here; a non-ASCII file name dropped on
+      Windows is still to be tried
 - [ ] M3-04 Pending edits: collect up to 10 picks and send them as one request
 - [ ] M3-05 Draw and comment on the frame (needs Studio's components mounted directly; see ARCHITECTURE "Later")
 
@@ -150,10 +175,19 @@ Do not build them.
 
 ## M5 · Installer and updates
 
-- [ ] M5-01 Installer (.exe, per user, no admin rights) with electron-builder (suggested: ChatGPT)
-- [ ] M5-02 App icon; Start Menu and Desktop shortcuts
+- [~] M5-01 Installer (.exe, per user, no admin rights) with electron-builder (Claude, 2026-10-14; it was only
+      suggested for ChatGPT). `app/electron-builder.yml`, `npm run dist`, and `.github/workflows/installer.yml`
+      builds `Kushmanji-Setup-<version>.exe` on GitHub's Windows machines for every push (a download on the run's
+      page for 14 days). Plain files, not an asar archive: the HyperFrames CLI needs real paths. Tried here as a
+      Linux build: the packaged app's self-test passes up to the known Linux-only step. Open: install and run it
+      on the owner's PC; it is not signed, so SmartScreen warns
+- [~] M5-02 App icon; Start Menu and Desktop shortcuts (Claude, 2026-10-14): the icon (M14-06) and both shortcuts
+      are in the installer; to be seen on the owner's PC
 - [ ] M5-03 Machines without FFmpeg or Chrome: fetch them on first run
-- [ ] M5-04 First-run health check built on `hyperframes doctor`
+- [x] M5-04 First-run health check built on `hyperframes doctor` (Claude, 2026-10-14): Home shows "Before you
+      start" only when something is missing: FFmpeg (with the `winget` line to copy and how to run it), the
+      browser for saving videos (Kushmanji fetches it with one press), little disk space or memory. Otherwise
+      "Kushmanji has everything it needs on this computer". `main/health.js`. Not yet seen on a fresh Windows PC
 - [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version
 - [ ] M5-06 Work with no system Node installed (the CLI calls `npx` for a few things)
 - [ ] M5-07 Windows on ARM build
@@ -171,7 +205,9 @@ Do not build them.
 ## M7 · Catching up with the official app
 
 - [ ] M7-01 "Get inspired" example library
-- [ ] M7-02 Guided first video (hook, proof, turn, call to action)
+- [x] M7-02 Guided first video (hook, proof, turn, call to action) (Claude, 2026-10-14): "Make it" on Home
+      asks how long, which shape and what feel, as buttons to tap, then asks for a hook, the main moment, a turn
+      and a call to action (`renderer/guided.js`). "Just make it" skips the questions
 - [ ] M7-03 Settings screen
 - [ ] M7-04 Keyboard shortcuts that work the same in the frame and inside Studio
 
@@ -245,7 +281,8 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       study. English and the other 24 Parakeet languages work. **Not proven: any other language** (Hindi,
       Telugu, Japanese...). They need Whisper, which HyperFrames cannot get on Windows by itself (UP-01); the
       app says so in plain words instead of writing a wrong transcript. See M10-11 and M10-12
-- [ ] M10-11 Whisper on Windows, so the study covers every language: with the person's yes, fetch the official
+- [ ] M10-11 (to do on the owner's PC: github.com releases and huggingface.co are both refused from the cloud
+      machine) Whisper on Windows, so the study covers every language: with the person's yes, fetch the official
       whisper.cpp Windows build into the app's own folder and point HyperFrames at it
       (`HYPERFRAMES_WHISPER_PATH`). Then prove Hindi and one more non-European language end to end
 - [ ] M10-12 Work out the spoken language instead of assuming it: with Whisper present, detect on the first
@@ -257,11 +294,18 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       plan". The wait is an instruction, and the app checks afterwards and says so if anything but the plan was
       changed. Proven in the real app with Claude Code: a plan, the video untouched, then built after "Build
       it". Not yet run: "Co-direct it", and either mode with Codex or Gemini
-- [ ] M10-03 Check its own work, once. After an edit the agent looks at rendered frames and fixes what is wrong:
+- [~] M10-03 Check its own work, once. After an edit the agent looks at rendered frames and fixes what is wrong:
       one check and at most one round of fixes per request, then it reports, including anything still wrong.
-      Never an open-ended loop
-- [ ] M10-04 A style kit per project, not per channel: colours, fonts, title and caption styles. Start from a
-      preset, from a website, or from a description. Reusable across projects as a named kit
+      Never an open-ended loop. The app's half is done (Claude, 2026-10-14): after every reply that changed the
+      video, HyperFrames' `lint` runs (about two seconds, no allowance) and the reply says "The app checked your
+      video: no mistakes found" or "found 3 mistakes", with "Ask to fix them" and the details behind "Show
+      them" (`agents/turnCheck.js`). Open: the assistant looking at still frames itself (Codex cannot, M17-07)
+- [~] M10-04 A style kit per project, not per channel: colours, fonts, title and caption styles. Start from a
+      preset, from a website, or from a description. Reusable across projects as a named kit. Built (Claude,
+      2026-10-14): a video's look lives in its `STYLE.md`, which every assistant is told to follow and keep true;
+      "Look" in the chat's settings saves it under a name (the app's settings folder, `looks/`) and uses a saved
+      one in another video, keeping the old one as `STYLE.before.md` (`main/kits.js`). If no look is written
+      yet, the button prepares the request to write it. Open: presets, and a look from a website
 - [ ] M10-05 The right agent for each job, chosen by the app: images to Codex; watching clips to Gemini (proven
       on a 6-second test clip: it read on-screen words and when they appeared. On 2026-10-13 it also listened
       to the owner's 20 real clips, 15 seconds each, and wrote down Kannada-English speech with times, better
@@ -342,10 +386,15 @@ stopped running commands (M2-22). The owner asked for a bigger answer than fixin
 - [ ] M12-02 A check-up for each agent that proves the three things a turn needs: it starts, it is signed in,
       and it can run a command. Free where the agent allows it (`codex sandbox` runs a command with no AI
       usage); otherwise one tiny real turn, which the person agrees to
-- [ ] M12-03 "Test this agent" when the installed version is newer than the one this app was tried with: one
+- [x] M12-03 "Test this agent" when the installed version is newer than the one this app was tried with: one
       small real turn in a scratch folder (change a file, run a command), the result said in plain words and
-      remembered for that version, so it is asked once
-- [ ] M12-04 When the chosen agent is down, one tap carries on with another. Shared memory already carries the story
+      remembered for that version, so it is asked once (Claude, 2026-10-14). "Test it now" beside the note about
+      a newer version; it asks first, runs at "Only this video" on the smaller model, and says e.g. "Claude works
+      with Kushmanji: it changed a file and ran a program." A version that passed is not asked about again
+      (`agents/checkup.js`). Tried in the real app with a stand-in Claude posing as 2.2.0
+- [x] M12-04 When the chosen agent is down, one tap carries on with another. Shared memory already carries the story
+      (Claude, 2026-10-14): any failed reply, not only a usage limit, offers "Carry on with ..." for the person's
+      other assistants (with M17-06 and M15-01)
 - [ ] M12-05 Known problems in one place per agent: what the agent prints, what the app does about it (try
       another way, or say it plainly), and the version it was seen on. Tested against recorded real output
 - [ ] M12-06 For whoever maintains the app: one command that runs all three agents' tests against what is
@@ -363,7 +412,12 @@ with a checklist they can follow (2026-10-13, from a proposal they worked out wi
       1:24"), results. Not three long conversations
 - [ ] M13-03 Jobs that do not touch the video run side by side (Gemini drafts subtitles while Codex makes a
       picture). Only one agent at a time changes the video itself
-- [ ] M13-04 One review by a different agent and one round of fixes, then the person watches. Never a loop
+- [x] M13-04 One review by a different agent and one round of fixes, then the person watches. Never a loop
+      (Claude, 2026-10-14). Under a reply that changed the video: "Ask ChatGPT to check it" (one per other ticked
+      assistant); the reviewer is told by the main process to change nothing and answer with a numbered list.
+      Under the review: "Ask Claude to fix these", or "Nothing to fix" when it looks right. A fix gets no review
+      button. Tried in the real app with a stand-in Claude and a saved review (no stand-in Codex can be found on
+      Linux)
 - [ ] M13-05 A panel in the app that shows the board, who is working, and what is waiting on the person
 - [ ] M13-06 Each agent spends its own account's allowance. Show which agent did what, so the cost is no surprise
 
@@ -415,15 +469,31 @@ now comes first**: it changes what every later feature looks like. The review it
       (`preview:changed`, then `reload()` in `renderer/player.js`). Not yet watched during a long real turn on
       a long video: check that it does not flash "Loading your video" over and over, and wait for a quiet
       stretch or the end of the turn if it does
-- [ ] M14-11 Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
+- [x] M14-11 (Claude, 2026-10-14; done with M14-05) Words still in the app's own voice that M14-05 must catch: the line under the chat box ("The agent
       can change this project's files and run HyperFrames"), "Start over", the header's "built on HyperFrames"
-- [ ] M14-05 Every word the app itself shows, reread for a twelve-year-old: no "agent", "access level",
-      "composition", "render", "lint" without a plain twin. One list of words in `docs/UX.md`, used everywhere
-- [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
-      HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
-- [ ] M14-07 The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
-      an idea", "Carry on with ..." with a picture of each video
+- [x] M14-05 Every word the app itself shows, reread for a twelve-year-old (Claude, 2026-10-14, written by a
+      Sonnet helper and reviewed): "My videos", "Add clips", "Start from my clips"; the assistants as "Claude
+      (Claude Code)", "ChatGPT (Codex)", "Gemini (Antigravity)"; "What may the assistant do: Only this video /
+      Also cut my clips / Anything on this computer"; "Ask me first: Just do it / Show me the plan first /
+      Decide with me"; the model menu is "How careful"; the clips bar and review box, editing buttons, Help
+      (with the editor's arrow keys) and the main process's errors rewritten. The list is `docs/UX.md`, "The
+      words". Left for M14-06: "built on HyperFrames" in the header. Not yet looked at on the owner's PC
+- [x] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
+      HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames" (Claude,
+      2026-10-14). The owner picked direction A, "Friendly", from `docs/brand/choices.png`: coral on cream
+      with cocoa text, a smiling play-button icon, a rounded wordmark. Colours in `styles.css` `:root`, errors
+      in crimson so they never look like the brand. The header shows the wordmark and an "unofficial" tag that
+      opens "About Kushmanji" (the credit to HyperFrames, not HeyGen's, the versions). The window has the icon;
+      `app/build/icon.ico` (16 to 256 px) is ready for the installer (M5-02)
+- [x] M14-07 (Claude, 2026-10-14; page by a Sonnet helper, reviewed) The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
+      an idea", "Carry on with ..." with a picture of each video. Built: a "Carry on" card with the
+      last video's picture, "From my clips" and "From an idea" cards, then "My videos" as pictures. The picture
+      is taken from the player as the person leaves a video (`covers.js`; nearly black frames are skipped)
 - [ ] M14-08 Try it on someone who has never seen it, and fix what they stumble on
+- [ ] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
+      use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
+      one list per language (`docs/UX.md` is the English one). The assistants already answer in the language
+      they are written to; the footage study's speech is M10-11
 
 ## M15 · Spend less: smaller models, and a team you choose
 
@@ -431,15 +501,28 @@ The owner, 2026-10-13: usage runs out during editing; "maybe you guiding differe
 antigravity also", "the user also should have the option to work with 1 app model or 2 ... some might not have
 subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each job).
 
-- [ ] M15-01 "Your team": tick which assistants you have (one, two or three). The app only ever uses those, and
-      says what each is used for. Someone with one subscription gets a complete app
-- [ ] M15-02 The right size of model for the job, chosen by the app: a small fast one for "make this red", a
-      large one for planning a whole video. The person can still pick by hand
+- [x] M15-01 "Your team": tick which assistants you have (one, two or three). The app only ever uses those, and
+      says what each is used for. Someone with one subscription gets a complete app (Claude, 2026-10-14):
+      "Your assistants: tick the ones you have" at the top of the chat's settings, one line each on what it is
+      good for; the assistant menu and "Carry on with" offer only those, one always stays ticked, and the main
+      process refuses an assistant that is not ticked. Kept in the app's settings (`team`), not per project
+- [x] M15-02 (Claude, 2026-10-14) The right size of model for the job, chosen by the app: a small fast one for "make this red", a
+      large one for planning a whole video. The person can still pick by hand. Built (2026-10-14): "Auto (saves
+      usage)" in the model menu, and the choice when none was made; a short request about one thing goes to
+      Sonnet, a Codex "mini" or a Gemini "flash" model, found by name in the assistant's own list, anything
+      about the whole video, shorts, subtitles or a plan to the default (`agents/sizing.js`). Seen choosing
+      Sonnet in the real app with a stand-in Claude; not yet tried with a real assistant
 - [ ] M15-03 Heavy looking and listening goes to the assistant that does it cheapest (today Gemini: it listened
       to 20 clips), and comes back as a short note the others read, instead of each one studying the footage
-- [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
-      conversation when a job is done, carrying a short summary forward
-- [ ] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13)
+- [~] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
+      conversation when a job is done, carrying a short summary forward. Half done (Claude, 2026-10-14): after
+      six requests in one conversation the assistant starts a fresh one, with a recap of the latest six turns
+      from the shared record (`recapNote` in `journal.js`); the steps line says "A fresh conversation, to save
+      your allowance". Open: the study's summary; measuring what it saves (M15-05)
+- [~] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13).
+      Half done (Claude, 2026-10-14): each reply says "Used a little / some / a lot of Claude's allowance", from
+      the tokens Claude Code and Codex report (re-read context weighed at a tenth; the counts are in its tooltip,
+      `agents/usage.js`). Open: how much of the plan is left (the assistants do not report it), Gemini's counts
 - [x] M15-06 A smaller model through the chat's model menu (Claude, 2026-10-13). Sonnet was picked in the menu
       and did the whole vlog repair (M16-02) in one request of about 17 minutes, without reaching the limit.
       What it cost was not recorded: the app does not show it yet (M15-05)
@@ -476,9 +559,24 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       pause. Probably not visible. Open only so that someone watches a plain cut with the owner before closing
       it; if it does show, it is upstream's media sync (`packages/core/src/runtime/media.ts`) and goes under
       "Upstream" with these numbers
-- [ ] M16-07 "Still laggy" (owner, 2026-10-14, not sure where). Measure jumping to a moment and the editor's
-      own controls on the real vlog, then fix; likely lighter copies for watching and editing only. Plan in
-      `docs/HANDOFF.md`, top entry
+- [x] M16-07 "Still laggy": lighter copies for watching and editing (Claude, 2026-10-14). Measured first: a
+      jump to a moment took 0.28 s (watching) and 0.39 s (editor), and a dragged playhead showed 1 or 2
+      pictures a second. A few seconds after a project opens, the app now makes a 720p copy of every heavy clip
+      (keyframe every half second, no B-frames) in `.cache/kushmanji-preview`, below normal priority, and
+      redirects the preview's requests to it; "Save video" still renders the full files (`lightCopies.js`).
+      After: jumps 0.04 and 0.07 s, a drag shows 33 pictures a second, the editor uses 719 MB instead of 1,268.
+      The measurement now also times jumps, a drag, opening the editor and memory, and
+      `scripts/test-vlog.mjs` makes a practice project. Measured in the cloud on a practice vlog, not yet on
+      the owner's PC: see M16-08. Numbers: `docs/FINDINGS.md`, last section
+- [ ] M16-08 Measure the lighter copies on the owner's PC with the real vlog (`CONTRIBUTING.md`, playback
+      measurement, `HFWIN_SMOKE_PLAYBACK_AT=none` for jumps only) and ask the owner whether moving around now
+      feels smooth. If it is still not smooth enough there: a keyframe on every picture (`-g 1`, files about
+      four times bigger) or 540p
+- [x] M16-09 (Claude, 2026-10-14; done as below) HyperFrames keeps a second full copy of every video in its undo history
+      (`%USERPROFILE%\.cache\hyperframes\history`, see UP-02). Show the owner how much room it takes, and offer
+      to clear the history of projects that are gone (upstream has `pruneGoneProjectHistories`). Done: Home's foot says "Undo copies of your videos take 666 MB on this computer", and when
+      some belong to deleted videos, "174 MB of that is for videos you have deleted. Free up 174 MB", which runs
+      upstream's own `hyperframes clean` after asking (`main/storage.js`)
 - [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,
@@ -509,7 +607,7 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       (at most +9 or -6 dB, with a limiter), copying the picture; a video with no sound, or a computer with no
       FFmpeg, keeps the file as made. `main/loudness.js`. Tried on one of the owner's shorts from outside the
       app (-18.9 to -14.2); inside the app the self-test's video has no sound, so that path is the one tried
-- [ ] M17-09 One kit for a channel's shorts: the three ending cards and the top titles came out a little
+- [~] M17-09 (Claude; the means are in M10-04, the owner's own kit is not made yet) One kit for a channel's shorts: the three ending cards and the top titles came out a little
       different each time, because each short was a separate request. Goes with M17-04 and M10-04
 - [x] M17-03 Arrow keys in "Edit by hand" (Claude, 2026-10-14): while the video plays they skip ten seconds and
       it keeps playing, as on the watching screen; while it is paused, with a modifier, in the chat box, or on
@@ -517,15 +615,28 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       real key presses. The owner hit this twice: "its not going forward its pausing". Not yet said anywhere
       in Help (with M14-05)
 - [ ] M17-04 "Make shorts from this video" as something the app does: pick the moments, make an upright project
-      in the video's own look, keep her face in frame. Today it is done by hand with three requests
+      in the video's own look, keep her face in frame. Today it is done by hand with three requests. Design worked out
+      in the cloud on 2026-10-14, to build on the owner's PC with real assistants: step one, in the source video,
+      the assistant writes the chosen moments into `SHORTS.md` (a JSON block: clip, in and out times in the
+      clip, title); step two, the app makes one project per short beside it, hard-links the clips it needs (no
+      extra space on the same drive), copies `STYLE.md` and the study, and sends each short's request in turn
+      with `look_at_video` and the saved look. Shorts as scenes inside one project were ruled out: the player and
+      `look_at_video` only show `index.html` (render alone could take `--composition`)
 - [x] M17-05 "Save the video" done by the app, not by the person: done as M4-02 (Claude, 2026-10-14). An
       assistant is the wrong tool for it: a four-minute video takes most of an hour to make here, far longer
       than an assistant's command may run
-- [ ] M17-06 When an assistant is stopped by its usage limit in the middle of a job, the work is left half
+- [x] M17-06 (Claude, 2026-10-14) When an assistant is stopped by its usage limit in the middle of a job, the work is left half
       done and unchecked, and the chat only shows the limit message. Seen twice on 2026-10-14 (the vlog's
       fourth version stopped before its own check; a short never started). Say plainly what was and was not
-      finished, and offer to carry on with another assistant (with M12-04)
-- [ ] M17-07 Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
+      finished, and offer to carry on with another assistant (with M12-04). Main process done (2026-10-14):
+      `agents/limits.js` recognises the three assistants' limit messages, and the saved turn carries
+      `limited`, `resets` and the files changed; the shared record says the work is unchecked. The chat says
+      "Claude ran out of its allowance before it finished. It had already changed: index.html. Nobody has
+      checked those changes yet. Claude says it can work again: 3pm", with "Carry on with ChatGPT" and "Carry
+      on with Gemini": each switches the chat and prepares a message asking that assistant to check the half
+      done work and finish it (the person presses Send). Tried in the real app with a stand-in Claude that
+      prints the limit message; not yet with a real limit
+- [~] M17-07 (Claude, 2026-10-14: the means are built, Codex not yet tried) Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
       ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
       good short that way, with two faults a look would have caught (lips not matching the words, a strip
       across the top). Find a way for Codex to take still frames inside its sandbox (with M2-21)
@@ -533,7 +644,12 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
 ## Upstream
 
 Windows bugs found in heygen-com/hyperframes itself. Each becomes a pull request there, not a patch here.
-
+. Built: `look_at_video`, a tiny MCP server
+      (`agents/tools/look.mjs`) the assistant starts itself, outside its sandbox, that renders still pictures of
+      its own project at the moments it asks for with HyperFrames' snapshot and returns them as images. Claude Code
+      gets it with `--mcp-config`, Codex with `-c mcp_servers...` (`agents/lookTool.js`); every assistant is told
+      to look before saying a change is done. Proven with a real Claude Code (Haiku, half a cent): it called the
+      tool at 5 s and described the picture correctly. Not yet tried with Codex or Gemini
 - [ ] UP-01 `hyperframes transcribe --engine whisper` cannot set itself up on Windows. It only builds
       whisper.cpp from source (needs git, cmake and a C compiler), and even after a build it looks for
       `build/bin/whisper-cli` with no `.exe`, which Windows never produces. Found by reading
@@ -541,7 +657,14 @@ Windows bugs found in heygen-com/hyperframes itself. Each becomes a pull request
       PC has no cmake. Seen for real: `transcribe -l hi --json` answers `whisper_unavailable`. A fix upstream:
       download whisper.cpp's own Windows release, and look for the `.exe`
 
-Template: `- [ ] UP-02 What breaks · how to reproduce · upstream file · issue or PR link`
+- [ ] UP-02 Studio's undo history copies every video over 1 MB into `~/.cache/hyperframes/history` on a
+      project's first open (`adoptMediaInBackground`, `packages/cli` history code; a full copy on NTFS, which
+      has no reflink), then hashes it. 553 MB of footage became 636 MB of history in the measuring runs of
+      M16-07. Not Windows-only, but it hurts most there and with big footage. Reproduce: open a project with a
+      few large videos in Studio, then look at that folder. A fix upstream: reference media by hash in place,
+      or an option to keep media out of history
+
+Template: `- [ ] UP-03 What breaks · how to reproduce · upstream file · issue or PR link`
 
 ## Questions for the owner
 

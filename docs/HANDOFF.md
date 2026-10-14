@@ -5,6 +5,84 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-14 · Claude · Smooth jumping and dragging: lighter copies (M16-07), in the cloud
+
+This sitting ran in a Claude Code cloud container (Linux, 4 cores, no graphics card), not on the owner's PC:
+no real vlog, no Codex, no Windows. Everything was measured on a practice vlog made by
+`app/scripts/test-vlog.mjs` (19 clips of 1080p at 16 Mbps, a keyframe a second, 4:32).
+
+**Done: M16-07.** Measured first (the playback measurement now times jumps, a drag, opening the editor and
+memory): a jump took 0.28 s watching and 0.39 s in the editor, a dragged playhead showed 1 or 2 pictures a
+second. Fix: `main/lightCopies.js` makes 720p copies (keyframe every half second, no B-frames, sound copied)
+of every heavy clip the project's pages use, below normal priority, into `<project>/.cache/kushmanji-preview`,
+and the session's `onBeforeRequest` redirects the preview's requests to them. After: 0.04 and 0.07 s, 33
+pictures a second, 719 MB instead of 1,268. Numbers and research: `docs/FINDINGS.md`, last section.
+
+**What would surprise you**
+- Why `.cache`: HyperFrames' own watcher (`WATCHER_EXCLUDED_DIRS`) and undo history (`isHistoryPath`) skip it,
+  and its preview route serves it. A copy in any other hidden folder would make Studio re-read the whole file
+  on every write; under `.hyperframes` the route answers 404. `docs/MAINTENANCE.md` says what to recheck when
+  the CLI is bumped.
+- HyperFrames' undo history copies every video over 1 MB into `~/.cache/hyperframes/history` on a project's
+  first open (UP-02, M16-09). That is probably part of "opening the editor feels slow" with big footage.
+- `onBeforeRequest` allows one listener per session: it lives in `lockDownSession` in `main.js`; share it.
+- Running the app in a Linux container: `npm install` did not fetch Electron (run `node install.js` in
+  `node_modules/electron`), Electron needs `--disable-gpu` under Xvfb (or `capturePage` fails with
+  UnknownVizError) and `ELECTRON_DISABLE_SANDBOX=1` as root. The copy maker and the exporter only find
+  `ffmpeg.exe`; set `HYPERFRAMES_FFMPEG_PATH` and `HYPERFRAMES_FFPROBE_PATH` there. Seven unit tests are
+  Windows-only and fail on Linux; the full self-test stops at the editor's arrow-key step there, with or
+  without this change. CI (Windows) runs check and the unit tests.
+
+**Shared files touched:** `main.js` (the copy maker, the redirect, `realTool`), `preload.cjs` (one event,
+`preview:copies`), `app.js` (the top bar's "Making clips smooth to edit" line), `agents/house.js` (one sentence:
+never put the copies in a video).
+
+**Then, same sitting:**
+- **M14-05, M14-11 plain words** (`64bb415`), written by a Sonnet helper from `docs/UX.md` and reviewed. The
+  helper's `claude.js` edits landed in the commit before it (`a0cca8b`), because that commit was made while it
+  worked: harmless, but that is why `a0cca8b` has wording changes in it.
+- **M17-06** (`a0cca8b`, `d01f74a`): `agents/limits.js` recognises the three assistants' limit messages; the
+  chat's card lists what was changed and offers "Carry on with ...". A stand-in `claude.exe` that prints the
+  limit message (in a fake HOME, `.local/bin/claude.exe`) is how it was tried; no real limit was spent.
+- **M15-02** (`a0cca8b`): "Auto (saves your allowance)" is the model menu's choice when none was made
+  (`agents/sizing.js`); small requests go to Sonnet, a Codex "mini" or a Gemini "flash". Not tried with a real
+  assistant yet. If the owner finds Sonnet's small edits worse, the floor is one line in `SMALLER`.
+- **M15-01 "Your assistants"** (`cd989bb`): ticks in the chat's settings; the menu and "Carry on" offer only those.
+- **M14-06 branding**: three directions in `docs/brand/choices.png`, sent to the owner; waiting for a pick.
+- **M14-07 Home** (`3c26b73`), page by a Sonnet helper; pictures from `covers.js` (captured from the window).
+- **M2-10 undo** (`a88c46e`, `894810b`): **the CLI's `history` commands are refused while the preview server runs**
+  ("open in another app"), so turns are history windows on the server (`POST /api/projects/:id/history/window`,
+  `.../close`, `.../undo`). Its default window ends after 30 s without a write; we ask for its maximum, 10 min.
+- **M3-02** (`894810b`): Studio's "Ask agent" buttons only copy to the clipboard; `askAgent.js` wraps the
+  clipboard in Studio's page and sends recognised prompts to the chat box.
+- **M2-09 queue or steer, M12-04 carry on after any failure** (`5044f1a`), **M12-03 "Test it now"** (`2f7cd34`).
+  All tried in the real app with a stand-in `claude.exe` (fake HOME): it answers the check-up, edits files,
+  and can be slowed with `FAKE_SLEEP`; `FAKE_VERSION` makes it look newer than `about.tested`.
+- **M10-03, the app's half** (`df3baee`): `lint --json` after every reply that changed the video.
+- **M16-09** (`cb6ba91`): Home's foot shows the undo copies' size and runs upstream's `hyperframes clean`.
+- **M14-06 branding, owner picked A "Friendly"** (`0b83091`): `:root` colours, wordmark, "unofficial" tag opens
+  About, window icon, `app/build/icon.ico` for M5-02. ImageMagick here cannot read SVG: the PNGs were drawn by
+  the pre-installed Chromium (`--screenshot`) and shrunk with ImageMagick.
+- **M15-04, half** (`f8df8d1`): a fresh conversation after six requests, with `recapNote`.
+- **M13-04, main half** (`a2bb9d0`): `send({ purpose: "review" | "fix" })`; the chat's buttons are next.
+- **M5-01 installer** (`2ccd03d`): `Installer` workflow builds `Kushmanji-Setup-<version>.exe` (137 MB) on
+  windows-latest for every push, in about two minutes; `asar: false` on purpose. **M5-04** (`3004b29`): Home's
+  "Before you start" from `hyperframes doctor`.
+- **M17-07 "look_at_video"** (`b06eb1a`): an MCP server per turn for Claude Code (`--mcp-config`, a variadic
+  option: the next argument must start with `--`) and Codex (`-c mcp_servers...`). Proven with one real Claude
+  Code turn on Haiku. Codex and Gemini not tried; Gemini is not given it yet.
+- **CI on GitHub runs on Windows for every push and passed** for this sitting's commits: the seven unit tests that
+  fail on Linux pass there. Read it with the GitHub tools after pushing from a cloud session.
+- In this container `killTree` leaves preview servers running (it is written for Windows): 24 were found after
+  a day of self-tests and killed by hand. Not a Windows problem; worth knowing before measuring here again.
+- My commits swept in a helper's half-written files twice (`git add -A` while it worked): add files by name.
+- **M17-04 shorts** was skipped here on purpose: its worked example (`reviews/shisha-shorts`) and the channel's
+  rules (`C:\Creators\happywithshisha`) are only on the owner's PC.
+
+**Next:** M16-08 (measure on the owner's PC with the real vlog), M17-04 on the owner's PC, then the plan below.
+
+---
+
 ## For Claude's next sitting (written 2026-10-14, morning, at the owner's request)
 
 The owner starts a fresh chat and wants about 18 hours of continuous work while their usage lasts. Their words:
@@ -24,7 +102,7 @@ The owner starts a fresh chat and wants about 18 hours of continuous work while 
   this file true as you go, not only at the end. Send screenshots of visible results with SendUserFile.
 
 **The order**
-1. **"Laggy" (new task M16-07).** The owner still feels lag in the preview and is not sure where. Measured so
+1. **Done in the cloud, see the entry above.** ~~"Laggy" (new task M16-07).~~ The owner still feels lag in the preview and is not sure where. Measured so
    far: playing inside a clip is smooth (M16-05). Not measured: jumping to a moment (dragging the bar, clicking
    the timeline), and the editor's own controls with 19 clips and their filmstrips. Extend
    `app/src/main/playbackProbe.js` with seek times (from the seek to the first new picture) and long tasks in

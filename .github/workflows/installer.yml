@@ -1,0 +1,35 @@
+# Builds Kushmanji's Windows installer on GitHub's Windows machines (M5-01), on every push and by hand, and keeps it
+# for 14 days as a download on the run's page ("Artifacts": Kushmanji-Setup). Nothing is published or signed.
+name: Installer
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run dist
+        env:
+          # No certificate yet: do not look for one.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kushmanji-Setup
+          path: app/dist/*.exe
+          retention-days: 14
+          if-no-files-found: error

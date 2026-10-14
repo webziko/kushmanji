@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kushmanji app icon, bold and creative direction">
+<title>Kushmanji icon (bold and creative)</title>
+<defs><clipPath id="ul"><path d="M-200 712 L712 -200 L-200 -200Z"/></clipPath><clipPath id="lr"><path d="M-200 712 L712 -200 L712 712Z"/></clipPath></defs>
+<rect width="512" height="512" rx="112" fill="#4527C6"/>
+<g fill="#FF8A1F" stroke="#FF8A1F" stroke-width="16" stroke-linejoin="round">
+<g transform="translate(7.1 -29.7)"><g clip-path="url(#ul)"><path d="M256 56 C288 158 328 215 456 256 C328 297 288 354 256 456 C224 354 184 297 56 256 C184 215 224 158 256 56Z"/></g></g>
+<g transform="translate(-7.1 29.7)"><g clip-path="url(#lr)"><path d="M256 56 C288 158 328 215 456 256 C328 297 288 354 256 456 C224 354 184 297 56 256 C184 215 224 158 256 56Z"/></g></g></g>
+<path d="M404 88 C408 114 420 126 446 130 C420 134 408 146 404 172 C400 146 388 134 362 130 C388 126 400 114 404 88Z" fill="#FFFFFF"/>
+</svg>

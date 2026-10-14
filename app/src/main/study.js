@@ -327,7 +327,7 @@ export class FootageStudy {
       source: { size: clip.size, modifiedMs: Math.round(clip.modifiedMs) },
     };
     if (!tools.ffmpeg || !tools.ffprobe) {
-      entry.notes.push("FFmpeg is not installed on this computer, so this clip could not be studied.");
+      entry.notes.push("The free tool FFmpeg is not on this computer yet, so the app could not watch this clip.");
       return entry;
     }
 
@@ -338,7 +338,7 @@ export class FootageStudy {
     const audio = info?.streams?.find((stream) => stream.codec_type === "audio");
     const seconds = Number(info?.format?.duration);
     if (!info || !(seconds > 0)) {
-      entry.notes.push("This file could not be read as video or sound.");
+      entry.notes.push("The app could not open this file as a video or a sound.");
       return entry;
     }
     entry.seconds = Math.round(seconds * 100) / 100;
@@ -362,7 +362,7 @@ export class FootageStudy {
       this.#tell(job);
       entry.sheets = await this.#sheets(job, { source, folder, seconds, tall: video.height > video.width, tools });
       for (const sheet of entry.sheets) sheet.file = inProject(sheet.file);
-      if (entry.sheets.length === 0) entry.notes.push("Still frames could not be taken from this clip.");
+      if (entry.sheets.length === 0) entry.notes.push("The app could not take pictures from this clip.");
     }
 
     // The words are written afresh every time. Old ones left behind (the language was changed, and no engine
@@ -475,7 +475,11 @@ export class FootageStudy {
     const wordsFile = path.join(folder, "transcript.json");
     const words = readJson(wordsFile, null);
     if (!reply?.ok || !Array.isArray(words)) {
-      return { problem: ran.timedOut ? "Transcribing this clip took too long and was stopped." : "The speech in this clip could not be transcribed." };
+      return {
+        problem: ran.timedOut
+          ? "Writing down what is said in this clip took too long, so it was stopped."
+          : "The app could not write down what is said in this clip.",
+      };
     }
     const phrases = phrasesFrom(words);
     const textFile = path.join(folder, "transcript.txt");

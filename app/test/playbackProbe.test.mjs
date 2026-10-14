@@ -1,7 +1,7 @@
 // The playback measurement's arithmetic: what counts as a hold at a join, a frozen ending and a jumping clock.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { summarise } from "../src/main/playbackProbe.js";
+import { jumpSummary, jumpTargets, summarise } from "../src/main/playbackProbe.js";
 
 // Two clips of one second each at 10 pictures a second. The first one's picture stops 0.3 seconds early, the
 // way the owner's vlog clips did; the second had its first picture drawn at page load, long before its turn.
@@ -39,4 +39,18 @@ test("a playhead that is dragged or skips is reported, so a spoiled run is not m
   const run = summarise(spoiled, { from: 0, seconds: 2 });
   assert.deepEqual(run.playheadJumps, [{ afterSeconds: 2.05, from: 2, to: 9 }]);
   assert.equal(run.nothingPlayingMs, 50);
+});
+
+test("jumps are summed up by their middle and slowest time, and a jump with no picture is counted apart", () => {
+  const got = jumpSummary([{ pictureMs: 300 }, { pictureMs: 100 }, { pictureMs: null }, { pictureMs: 200 }]);
+  assert.deepEqual(got, { jumps: 4, middleMs: 200, slowestMs: 300, neverShown: 1 });
+  assert.deepEqual(jumpSummary([]), { jumps: 0, middleMs: null, slowestMs: null, neverShown: 0 });
+});
+
+test("jump moments spread over the video and stay inside it", () => {
+  const at = jumpTargets(270);
+  assert.equal(at.length, 8);
+  assert.ok(at.every((time) => time > 0 && time < 269.5));
+  assert.ok(at.every((time) => Math.abs(time - Math.round(time)) > 0.05), "no jump lands on a whole second");
+  assert.ok(jumpTargets(2).every((time) => time < 1.5));
 });

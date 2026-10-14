@@ -51,6 +51,55 @@ the keyboard is in the chat box, and when the editor's focus is on anything that
 box, a slider, a menu, an open dialog). Whether a key is ours has to be answered at once, so what the editor
 is doing is asked four times a second while an editor is on screen. Nothing is added to the editor's page.
 
+**Lighter copies for watching and editing** (M16-07, `main/lightCopies.js`). Phone footage (1080p, about 16
+Mbps, a keyframe every second) made every jump to a moment decode up to a second of full-size pictures. A few
+seconds after a project opens, the main process makes a 720p copy of each heavy video the project's pages use
+(short side over 720, over 5 Mbps, or a codec other than H.264, VP8 or VP9): a keyframe every half second, no
+B-frames, the sound copied, timestamps kept. One FFmpeg at a time, below normal priority, into
+`<project>/.cache/kushmanji-preview/`, named after the original's path, size and modified time, so a changed
+original never uses an old copy. HyperFrames' file watcher and undo history both skip `.cache`, and its preview
+server still serves it. The session's `onBeforeRequest` answers a GET to the open project's
+`/api/projects/:id/preview/<video>` with a redirect to its copy when the copy exists; Studio, its filmstrips and
+the watching screen never know. A clip already loaded keeps its original until the runtime loads it again (it
+unloads clips a few seconds away from the playhead), so the copies take over without a reload. "Save video"
+renders with the CLI in its own browser and always reads the full files. The top bar says "Making clips smooth
+to edit (5 of 19)" while it works. Without FFmpeg nothing is made and the originals play. Measured: a jump went
+from 0.28 to 0.04 seconds, and a dragged playhead from 1 or 2 pictures a second to 33 (`docs/FINDINGS.md`).
+
+**Undo for each assistant turn** (M2-10, `agents/turnHistory.js`). While a project is open its preview server
+keeps the history and refuses the CLI's `history` commands, so just before an assistant starts the runner opens
+a history "window" on that server (`POST /api/projects/:id/history/window`, under the assistant's name, ending by
+itself after ten minutes without a write) and closes it when the turn ends. Everything written in between is one
+entry in HyperFrames' own history (the same one Studio's history panel shows), and the reply is saved with that
+entry's id when it changed any file. "Undo this change" under the reply runs `history undo` on it;
+the undo is an entry too, so "Bring it back" undoes the undo (`POST .../history/undo`). The turn stays the active one until `history end`
+returns, so the next request cannot begin inside it. The next assistant's handover says what the person undid.
+Without the history (an error from the CLI) the turn simply has no undo.
+
+**The app's check after a reply** (M10-03, `agents/turnCheck.js`). When a turn changed the project, the runner
+runs `hyperframes lint --json` on it (static, a second or two, no assistant involved), saves the counts and the
+first five mistakes with that reply, and sends a `checked` event; the chat adds "The app checked your video..."
+under the reply, with a button that puts a request to fix them in the message box. Notes (warnings) are only
+counted: some are expected.
+
+**Assistants can look at the video** (M17-07, `agents/tools/look.mjs`, `agents/lookTool.js`). Each Claude Code and
+Codex turn is given a small MCP server, run by the app's own Electron as Node, with one tool, `look_at_video`: up
+to six moments in seconds, answered with PNG pictures made by `hyperframes snapshot` into the project's
+`.cache/kushmanji-look` (the newest three looks are kept). The assistant starts it itself, so it runs outside
+Codex's sandbox, which refuses the browser a snapshot needs. Claude Code takes it with `--mcp-config` (that option
+takes a list, so the next argument must start with `--`) and `mcp__kushmanji__look_at_video` in its allowed
+tools; Codex with three `-c mcp_servers.kushmanji...` settings. Gemini (Antigravity) is not given it yet.
+
+**The editor's "Ask agent" buttons** (M3-02, `main/askAgent.js`). Studio's buttons that hand something to an
+assistant only copy a prompt. When Studio's page loads directly inside the app's page, the main process wraps
+`Clipboard.prototype.writeText` there: a text that begins like one of Studio's prompts is posted to the app's page
+instead of copied, and `renderer/chat.js` puts it in the message box (only from the Studio frame on 127.0.0.1).
+
+**Home's pictures** (M14-07, `main/covers.js`). As the person leaves a video from the watching screen, the page
+names the box of its player; the main process captures that part of its own window, refuses a nearly black
+frame, and keeps a 480-pixel JPEG in the project's `.cache/kushmanji-preview/cover.jpg`. `projects.list` returns
+it as a data URL.
+
 The preview manager watches source and media with a short quiet period, ignores hidden journals, saved
 versions, dependencies and exports, and emits `preview:changed`. The player reloads at its last position and
 playback state. On folders Windows cannot watch it also refreshes after an assistant's turn ends. Timers,
@@ -123,6 +172,9 @@ and the caller in `renderer/`.
 | `projects.create(name)` | `hyperframes init` in the projects folder |
 | `projects.fromFootage()` | Native folder picker; scan up to 200 media files, create a project, copy into assets, return project and imported files |
 | `projects.addMedia(dir)` | Native media picker; safe copies into an existing project's assets and start its study |
+| `projects.addDropped({ dir, paths })` | Clips dropped on the chat (M3-03). `paths` come from `files.pathOf`; one to 50 absolute paths of real files with a media extension, else the whole drop is refused in plain words (`mentions.js`, `validateDropped`). Then the same safe copy and study as `addMedia`, returning the same `{ files, count }`. Refused while an assistant works |
+| `files.pathOf(file)` | Not an IPC call: a function in `preload.cjs` that returns the real path of a `File` the page got from a drop (`webUtils.getPathForFile`; Electron removed `File.path`), or `""` for a file the page made itself |
+| `mentions.list(dir)` | The "@" list in the message box (M3-03): `[{ path, name, kind, mention }]`, `kind` being `video`, `audio`, `image` or `scene`, `path` with forward slashes. Up to 500 files, four folders deep, nearest the top first; skips hidden folders, `node_modules`, `renders` and links; `index.html` of the video is left out. `mention` is the file name, or its whole path when another file has the same name |
 | `projects.pickFolder()` | Folder dialog; must contain `index.html` |
 | `projects.open(dir)` | Starts the preview server; returns `{ port, serverUrl, studioUrl, projectName }` |
 | `projects.ready(dir)` | Whether the active editor's root or selected-scene preview has finished loading |
@@ -141,8 +193,16 @@ and the caller in `renderer/`.
 | `agent.send({ dir, text, pointing, moment })` | Starts one chat turn. `moment: true` reads the active root player at Send and returns the captured `{ seconds, when }` for the message. Otherwise `pointing: true` reads Studio's selection. Refused while another turn is running |
 | `agent.chooseMode({ dir, mode })` | How involved the person wants to be in this project: `build`, `review` or `codirect`. Kept with the project's chat |
 | `agent.chooseAccess({ dir, level })` | How much the agents may do in this project, from the next message. Only `project`, `tools` or `full` is accepted. Kept in the app's settings, not in the project |
-| `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message |
-| `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default. Only an id from that agent's `models()` is accepted |
+| `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message. Refused for an agent the person has not ticked |
+| `agent.undo({ dir, index })` | Undo what the reply at `index` changed, or bring it back when it was undone (M2-10). The main process runs `hyperframes history undo` on the entry it saved with that reply; the page names only the reply. Refused while a turn runs |
+| `looks.list(dir)` / `looks.save({ dir, name })` / `looks.use({ dir, name })` | Saved looks (M10-04, `kits.js`): `{ looks: [{ name }], written }`; save copies the video's `STYLE.md` into the app's `looks/` folder under a safe name; use copies one back, keeping the old one as `STYLE.before.md`. Refused while an assistant works |
+| `health.check()` / `health.getBrowser()` | Home's "Before you start" (M5-04, `health.js`): the few lines of `hyperframes doctor --json` a person needs (FFmpeg, FFprobe, the browser for saving, disk, memory) with their fix; `getBrowser` runs `hyperframes browser ensure` after the person presses the button |
+| `storage.status()` / `storage.free()` | Home's "Undo copies of your videos take ..." (M16-09): the size of HyperFrames' history folder, and what `hyperframes clean` would free (`--dry-run`); `free` runs it. `clean` gets an empty folder of its own, so it only sweeps HyperFrames' shared caches |
+| `agent.send({ ..., purpose })` | `purpose` is `null`, `"review"` or `"fix"` (M13-04): a review is told by the main process to change nothing, and what it changed anyway is named on its reply; the chat offers one review and one round of fixes |
+| `agent.checkup(engine)` | "Test it now" (M12-03): one small real turn in a new scratch folder at "Only this video", then `{ ok, said, version }`; kept in the app's settings per version, and `status()` no longer marks a version that passed as `untested` |
+| `agent.setTeam(engines)` | Which assistants the person has ("Your assistants", M15-01): known ids only, at least one. Kept in the app's settings; `status()` and `history()` mark each agent `inTeam` |
+| `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default, `"auto"` (also the value when nothing was chosen) sizes each request (`agents/sizing.js`). Otherwise only an id from that agent's `models()` is accepted |
+| event `preview:copies` | `{ dir, status: { state, done, total, failed } }`: the lighter copies for watching and editing (`lightCopies.js`) |
 | `agent.stop()` / `agent.reset(dir)` | Stop the run / forget the conversation (project files untouched) |
 | `save.start(dir)` | Make the project's video file with the CLI's own `render`, in the person's Downloads folder, named after the project and the time. Its sound is then brought to about -14 LUFS (`loudness.js`; the picture is copied). One at a time; refused while an assistant works. Returns the status below |
 | `save.stop()` / `save.status(dir)` / `save.show()` | Stop saving (no half-made file is kept) / `{ state: idle, saving, busy, saved, stopped or failed, percent?, name?, megabytes?, message? }` / show the file this app last finished in File Explorer |
@@ -197,9 +257,9 @@ The person picks one of three levels in the expandable chat settings (`agents/ac
 
 | Level | The agent may | How each bridge enforces it |
 | --- | --- | --- |
-| `project` "Project only" | Edit the project's files, run HyperFrames commands | Claude Code: an allow-list of commands. Codex: its sandbox. Antigravity: approve-all plus its terminal sandbox |
-| `tools` "Editing tools" | The same, plus `ffmpeg` and `ffprobe` on files inside the project | Claude Code: the allow-list gains those two names, in Bash only. Codex and Antigravity: the same switches as `project` |
-| `full` "Full access" | Anything | Each agent's own "skip every check" switch |
+| `project` "Only this video" | Edit the project's files, run HyperFrames commands | Claude Code: an allow-list of commands. Codex: its sandbox. Antigravity: approve-all plus its terminal sandbox |
+| `tools` "Also cut my clips" | The same, plus `ffmpeg` and `ffprobe` on files inside the project | Claude Code: the allow-list gains those two names, in Bash only. Codex and Antigravity: the same switches as `project` |
+| `full` "Anything on this computer" | Anything | Each agent's own "skip every check" switch |
 
 The level is stored in the app's settings (`state.json`, `access: { byProject, usual }`), never in the project:
 a folder someone else made must not be able to give itself access. A new project starts on the level last
@@ -218,7 +278,7 @@ write `ffmpeg ...`, so nothing has to be taught. HyperFrames' own commands are p
 programs (`HYPERFRAMES_FFMPEG_PATH`), because a render writes to cache folders outside the project.
 
 The agent is told its level in words (`accessNote`) at the start of each conversation and again whenever the
-person changes it, so it can say "choose Editing tools" instead of failing oddly.
+person changes it, so it can say "choose Also cut my clips" instead of failing oddly.
 
 ## Pointing
 
@@ -237,11 +297,13 @@ drawing or commenting on the frame needs Studio's parts mounted directly (see "L
 
 ## Ways of working
 
-Upstream's three, named as upstream names them (`agents/working.js`): "Build it for me", "Review the story
-first", "Co-direct it". The choice is kept with the project's chat. In the last two the agent is told to write
-its plan into the project's plan files, tell the person the plan in a few lines, and end its message with a
-line that says only `PLAN READY`. The app removes that line and shows two buttons instead: "Build it" (which
-sends "Yes. Build the plan you just showed me.") and "Change the plan".
+Upstream's three (`agents/working.js`), which upstream calls "Build it for me", "Review the story first" and
+"Co-direct it", and which the person sees as "Just do it", "Show me the plan first" and "Decide with me" (the
+menu labelled "Ask me first"; the ids `build`, `review`, `codirect` are what is stored). The choice is kept
+with the project's chat. In the last two the agent is told to write its plan into the project's plan files,
+tell the person the plan in a few lines, and end its message with a line that says only `PLAN READY`. The app
+removes that line and shows two buttons instead: "Build it" (which sends "Yes. Build the plan you just showed
+me.") and "Change the plan".
 
 The wait is an instruction, not a lock: the agent keeps its access, so a one-word change needs no ceremony.
 What the app adds is the check afterwards. It lists the files the planning turn changed, and if any is not a

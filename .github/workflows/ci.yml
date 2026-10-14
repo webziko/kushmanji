@@ -1,5 +1,5 @@
-# Runs on every push and pull request once the project is on GitHub. Not yet run for real: the repository has
-# no remote. The first run should be watched (PROGRESS.md, M9-03).
+# Runs on every push and pull request, on Windows (M9-03). It is the only place the Windows-only unit tests run
+# when the work is done from a Linux machine (a cloud session), so read its result after pushing from one.
 #
 # It covers what needs no window and no agent sign-in: every file parses, the unit tests pass, and no dependency
 # has a known vulnerability. The end-to-end self-test (`npm run smoke`) and the agent tests stay local, because

@@ -59,7 +59,7 @@ test("media cannot be copied through a project junction leading elsewhere", asyn
   const video = path.join(source, "clip.mp4");
   await fs.writeFile(video, "video");
   assert.equal(typeof importer.importMedia, "function");
-  await assert.rejects(importer.importMedia(project, [video]), /outside this project/);
+  await assert.rejects(importer.importMedia(project, [video]), /leads outside this video/);
   assert.deepEqual(await fs.readdir(outside), []);
 });
 

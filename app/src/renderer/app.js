@@ -1,29 +1,37 @@
-// The app's own pages: Home (the project list) and the project view, which puts the chat beside the open-source
+// The app's own pages: Home (the list of videos) and the video view, which puts the chat beside the open-source
 // Studio. Plain DOM on purpose: two screens do not need a framework or a build step. See docs/ARCHITECTURE.md.
+// What a person reads here follows the words in docs/UX.md ("a project" is "a video", and so on).
 import { createChat } from "./chat.js";
 import { h } from "./dom.js";
 import { createPlayer } from "./player.js";
+import { createAbout } from "./about.js";
+import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
 const help = createHelp();
+const about = createAbout(() => info);
 
 const folderName = (dir) => dir.split(/[\\/]/).filter(Boolean).pop() ?? dir;
 
-function ago(ms) {
+/** How long ago, in the plain words the app uses: "just now", "5 minutes ago", "yesterday", "3 days ago". */
+function since(ms) {
   if (!ms) return "";
-  const format = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-  const diff = ms - Date.now();
-  for (const [unit, size] of [
-    ["day", 86_400_000],
-    ["hour", 3_600_000],
-    ["minute", 60_000],
-  ]) {
-    if (Math.abs(diff) >= size) return format.format(Math.round(diff / size), unit);
-  }
-  return "just now";
+  const minutes = Math.floor((Date.now() - ms) / 60_000);
+  // Also covers a file stamped a moment ahead of this computer's clock.
+  if (minutes < 1) return "just now";
+  const ago = (count, unit) => `${count} ${unit}${count === 1 ? "" : "s"} ago`;
+  if (minutes < 60) return ago(minutes, "minute");
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return ago(hours, "hour");
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 14) return ago(days, "day");
+  if (days < 60) return ago(Math.floor(days / 7), "week");
+  if (days < 365) return ago(Math.floor(days / 30), "month");
+  return ago(Math.floor(days / 365), "year");
 }
 
 let info = null;
@@ -38,6 +46,41 @@ function showError(message) {
   if (!home.error) return;
   home.error.hidden = !message;
   home.errorText.textContent = message ?? "";
+  // The banner sits under the start cards; in a small window that can be below the fold.
+  if (message) home.error.scrollIntoView({ block: "nearest" });
+}
+
+/** A video's picture, or its first letter on a soft surface when it has none yet or the picture will not load. */
+function cover(project) {
+  const letter = () => h("span", { class: "cover-letter" }, [...project.name][0]?.toUpperCase() ?? "");
+  const picture = project.cover && h("img", {
+    src: project.cover, alt: "", draggable: "false", decoding: "async",
+    onerror: (event) => event.target.replaceWith(letter()),
+  });
+  return h("span", { class: "cover", "aria-hidden": "true" }, picture || letter());
+}
+
+/**
+ * The hero when there is a video: the one changed last. The whole card opens it, through the button's stretched
+ * ::after (a button inside a button is not allowed), so a click anywhere and the keyboard do the same thing.
+ */
+function carryOnCard(project) {
+  const when = since(project.modifiedAt);
+  return h(
+    "div",
+    { class: "carry" },
+    cover(project),
+    h(
+      "div",
+      { class: "carry-text" },
+      h("p", { class: "carry-name" }, project.name),
+      when && h("p", { class: "carry-when" }, `Changed ${when}`),
+      h("button", {
+        class: "primary carry-go", type: "button", "aria-label": `Carry on with ${project.name}`,
+        onclick: () => openProject(project.dir),
+      }, "Carry on"),
+    ),
+  );
 }
 
 function projectCard(project) {
@@ -48,7 +91,7 @@ function projectCard(project) {
       "button",
       {
         class: "ghost small",
-        title: "Show this project's folder in File Explorer",
+        title: "Show this video's folder in File Explorer",
         onclick: () => api.projects.reveal(project.dir).catch((error) => showError(error.message)),
       },
       "Show folder",
@@ -58,7 +101,7 @@ function projectCard(project) {
         "button",
         {
           class: "ghost small",
-          title: "Take this folder off the list. Its files are not deleted.",
+          title: "Take this video off the list. Its files are not deleted.",
           onclick: async () => {
             await api.projects.forget(project.dir);
             await refreshProjects();
@@ -73,23 +116,38 @@ function projectCard(project) {
     h(
       "button",
       { class: "card-open", onclick: () => openProject(project.dir), title: project.dir },
-      h("span", { class: "card-thumb", "aria-hidden": "true" }, project.name.slice(0, 1).toUpperCase()),
+      cover(project),
       h("span", { class: "card-name" }, project.name),
       h(
         "span",
         { class: "card-meta" },
-        [ago(project.modifiedAt), project.external && "opened from a folder"].filter(Boolean).join(" · "),
+        [since(project.modifiedAt), project.external && "opened from a folder"].filter(Boolean).join(" · "),
       ),
     ),
     actions,
   );
 }
 
+function showProjects(projects) {
+  // Newest first, so the first is the one to carry on with. The grid lists every video, that one too.
+  const latest = projects[0];
+  home.carry.replaceChildren(...(latest ? [carryOnCard(latest)] : []));
+  home.carry.hidden = !latest;
+  home.grid.replaceChildren(...projects.map(projectCard));
+  home.empty.hidden = projects.length > 0;
+  // One main thing on the screen: the Carry on card when there is one, otherwise the two ways to start.
+  home.main.toggleAttribute("data-carry", Boolean(latest));
+  for (const button of [home.make, home.footage]) {
+    button.classList.toggle("primary", !latest);
+    button.classList.toggle("secondary", Boolean(latest));
+  }
+}
+
 async function refreshProjects() {
   const projects = await api.projects.list();
   if (!home.grid) return;
-  home.grid.replaceChildren(...projects.map(projectCard));
-  home.empty.hidden = projects.length > 0;
+  showProjects(projects);
+  return projects;
 }
 
 /** Make a project. With `request`, the agent is asked to build it as soon as the project opens. */
@@ -111,12 +169,15 @@ async function createProject(name, request) {
   }
 }
 
-function makeFromPrompt(event) {
+async function makeFromPrompt(event) {
   event.preventDefault();
-  const request = home.prompt.value.trim();
+  const idea = home.prompt.value.trim();
+  if (!idea) return home.prompt.focus();
+  // Three quick choices first (M7-02); closing the box changes nothing.
+  const request = await askGuided(idea);
   if (!request) return home.prompt.focus();
   // The folder is named after the first few words; the whole description goes to the agent.
-  void createProject(request.split(/\s+/).slice(0, 5).join(" "), request);
+  void createProject(idea.split(/\s+/).slice(0, 5).join(" "), request);
 }
 
 async function pickFolder() {
@@ -140,9 +201,10 @@ async function startFromFootage() {
     await openProject(project.dir);
     if (open?.dir !== project.dir) return;
     open.chat.draft(
-      `Review the ${project.imported.count} imported files in assets first. Check what happens, speech, sound ` +
-      "and orientation. Check whether a sideways picture can simply be rotated before cropping it. " +
-      "Keep every original file unchanged. Tell me what you recommend before editing.",
+      `Look at the ${project.imported.count} clips I just added (they are in the assets folder). Tell me what ` +
+      "happens in each one, what is said, how the sound is, and whether any picture is sideways. If a picture is " +
+      "sideways, say whether it can just be turned round instead of cut. Keep my own files as they are. " +
+      "Tell me what you suggest before you change anything.",
     );
   } catch (error) {
     showError(error.message);
@@ -150,6 +212,69 @@ async function startFromFootage() {
     home.busy = false;
     home.footage.disabled = false;
   }
+}
+
+/**
+ * What this computer still needs (M5-04, main/health.js): shown on Home only when something is missing, with the
+ * command that fixes it, or a button when Kushmanji can fetch it itself.
+ */
+async function showHealth(box) {
+  const health = await api.health.check().catch(() => null);
+  if (!health?.checked || !box.isConnected) return;
+  if (!health.items.length) {
+    box.replaceChildren(h("p", { class: "muted" }, "Kushmanji has everything it needs on this computer."));
+    box.hidden = false;
+    return;
+  }
+  const rows = health.items.map((item) => {
+    const row = h("li", {}, h("p", {}, item.said));
+    if (item.fix) {
+      const copy = h("button", { class: "ghost small", type: "button" }, "Copy");
+      copy.addEventListener("click", () =>
+        navigator.clipboard.writeText(item.fix).then(() => { copy.textContent = "Copied"; }).catch(() => {}));
+      row.append(h("div", { class: "health-fix" }, h("code", {}, item.fix), copy),
+        h("p", { class: "muted" }, "Open PowerShell (search for it in the Start menu), paste this, press Enter, then " +
+          "close and open Kushmanji again."));
+    }
+    if (item.get) {
+      const get = h("button", { class: "secondary small", type: "button" }, "Get it now (about 100 MB)");
+      get.addEventListener("click", async () => {
+        get.disabled = true;
+        get.textContent = "Getting it…";
+        const done = await api.health.getBrowser().catch(() => false);
+        get.textContent = done ? "Done" : "That did not work. Check the internet connection and try again.";
+        if (!done) get.disabled = false;
+      });
+      row.append(get);
+    }
+    return row;
+  });
+  box.replaceChildren(
+    h("h2", {}, health.ready ? "Good to know" : "Before you start"),
+    h("ul", { class: "health-list" }, ...rows),
+    h("button", { class: "ghost small", type: "button", onclick: () => void showHealth(box) }, "Check again"));
+  box.hidden = false;
+}
+
+/**
+ * How much room HyperFrames' undo copies take (M16-09, main/storage.js), and a button that frees what belongs to
+ * videos that were deleted. Asked after Home is drawn: counting takes a few seconds.
+ */
+async function showSpace(line) {
+  const status = await api.storage.status().catch(() => null);
+  if (!status?.historyBytes || !line.isConnected) return;
+  const free = h("button", { class: "ghost small", type: "button" }, `Free up ${status.freeable}`);
+  free.addEventListener("click", async () => {
+    if (!confirm(`Remove the undo copies of videos you have deleted (${status.freeable})? ` +
+      "Videos you still have keep theirs.")) return;
+    free.disabled = true;
+    const done = await api.storage.free().catch(() => null);
+    line.textContent = done ? `Freed ${done.freed}.` : "Nothing could be freed just now.";
+  });
+  line.replaceChildren(
+    `Undo copies of your videos take ${status.history} on this computer.`,
+    ...(status.freeableBytes > 0 ? [` ${status.freeable} of that is for videos you have deleted. `, free] : []),
+  );
 }
 
 function showHome() {
@@ -165,71 +290,139 @@ function showHome() {
     class: "field",
     type: "text",
     maxlength: "600",
-    placeholder: "Describe the video you want, for example a 15 second intro for my bakery",
+    placeholder: "A 15 second intro for my bakery",
     "aria-label": "Describe the video you want",
   });
+  // Primary or secondary is decided once the list of videos is known (showProjects).
   home.make = h("button", { class: "primary", type: "submit" }, "Make it");
   home.blank = h(
     "button",
     { class: "secondary", type: "button", onclick: () => createProject("Untitled video") },
-    "Blank project",
+    "Blank video",
   );
   home.footage = h("button", {
-    class: "secondary", type: "button", onclick: startFromFootage,
-    title: "Copy a folder of clips into a new project. Your originals stay unchanged.",
-  }, "Start from footage");
+    class: "primary", type: "button", onclick: startFromFootage,
+    title: "Copy a folder of clips into a new video. Your own files are not changed.",
+  }, "Choose clips");
   home.errorText = h("span", {});
   home.error = h(
     "div",
     { class: "banner", role: "alert", hidden: true },
     home.errorText,
-    h("button", { class: "ghost small", onclick: () => showError("") }, "Dismiss"),
+    h("button", { class: "ghost small", onclick: () => showError("") }, "Close"),
   );
+  home.carry = h("section", { class: "carry-slot", hidden: true });
   home.grid = h("ul", { class: "grid" });
   home.empty = h(
     "p",
     { class: "empty", hidden: true },
-    "No projects yet. Describe a video above, or open a folder that has an index.html.",
+    "No videos yet. Describe one above, or open the folder of a video you already have.",
+  );
+  // Held back for a moment, so the page does not jump when the videos arrive and the Carry on card appears.
+  home.main = h(
+    "main",
+    { class: "home", "data-loading": true },
+    h("h1", {}, "What do you want to make?"),
+    home.carry,
+    h(
+      "div",
+      { class: "starts" },
+      h(
+        "section",
+        { class: "start" },
+        h("h2", { class: "start-title" }, "From my clips"),
+        h(
+          "p",
+          { class: "start-about" },
+          "Pick the clips from your phone or camera. The assistant puts them together.",
+        ),
+        h("div", { class: "start-action" }, home.footage),
+      ),
+      h(
+        "section",
+        { class: "start" },
+        h("h2", { class: "start-title" }, "From an idea"),
+        h("p", { class: "start-about" }, "Say what you want. The assistant makes it."),
+        h("form", { class: "start-action", onsubmit: makeFromPrompt }, home.prompt, home.make),
+      ),
+    ),
+    h(
+      "div",
+      { class: "start-more" },
+      h("span", { class: "muted" }, "Or"),
+      home.blank,
+      h("button", {
+        class: "secondary", type: "button", onclick: pickFolder,
+        title: "Open a video that is already in a folder on your computer.",
+      }, "Open a folder"),
+    ),
+    home.error,
+    home.health = h("section", { class: "health", hidden: true, role: "status" }),
+    h("h2", { class: "my-videos" }, "My videos"),
+    home.grid,
+    home.empty,
+    h("p", { class: "muted foot" }, info ? `New videos are kept in this folder: ${info.projectsRoot}` : ""),
+    home.space = h("p", { class: "muted foot space", role: "status" }),
   );
 
   app.replaceChildren(
     h(
       "header",
       { class: "topbar" },
-      h("span", { class: "brand" }, h("span", { class: "brand-mark", "aria-hidden": "true" }), "Kushmanji"),
-      h("span", { class: "tag" }, "built on HyperFrames · unofficial"),
+      h("img", { class: "brand-wordmark", src: "brand/wordmark.svg", alt: "Kushmanji" }),
+      // "Unofficial" stays in sight (AGENTS.md); the credit to HyperFrames and the versions are in About.
+      h("button", { class: "tag", type: "button", title: "About Kushmanji", onclick: () => about.show() }, "unofficial"),
       h("span", { class: "spacer" }),
-      h("span", { class: "muted" }, info ? `App ${info.appVersion} · HyperFrames ${info.cliVersion}` : ""),
       help.button,
     ),
-    h(
-      "main",
-      { class: "home" },
-      h("h1", {}, "What do you want to make?"),
-      h("form", { class: "create", onsubmit: makeFromPrompt }, home.prompt, home.make),
-      h(
-        "div",
-        { class: "create-more" },
-        h("span", { class: "muted" }, "Or start from"),
-        home.blank,
-        home.footage,
-        h("button", { class: "secondary", type: "button", onclick: pickFolder }, "Open a folder"),
-      ),
-      home.error,
-      h("h2", {}, "Your projects"),
-      home.grid,
-      home.empty,
-      h("p", { class: "muted foot" }, info ? `New projects are kept in ${info.projectsRoot}` : ""),
-    ),
+    home.main,
   );
-  home.prompt.focus();
-  refreshProjects().catch((error) => showError(error.message));
+  const main = home.main;
+  void showSpace(home.space);
+  void showHealth(home.health);
+  refreshProjects()
+    .then((projects) => {
+      // With videos, "Carry on" is the thing to press, so the text box does not grab the keyboard. Nothing is
+      // taken from the person if they have already clicked somewhere, or the welcome guide is open.
+      const idle = main.isConnected && document.activeElement === document.body;
+      if (idle && !projects?.length) home.prompt.focus();
+    })
+    .catch((error) => showError(error.message))
+    .finally(() => main.removeAttribute("data-loading"));
+  // Never leave the page invisible, whatever happens to the list.
+  setTimeout(() => main.removeAttribute("data-loading"), 3000);
   help.firstTime();
 }
 
 // ---------------------------------------------------------------- Project
 
+/**
+ * Keep what the open video looks like right now as its picture on Home. Only from the watching screen with the
+ * picture loaded (in the editor the player is hidden), and only for a moment: Home and the next video matter
+ * more than their pictures, so a slow or failed save is simply dropped.
+ */
+async function keepPicture() {
+  const current = open;
+  const { screen, studio } = document.body.dataset;
+  if (!current || screen !== "watch" || studio !== "loaded") return;
+  let timer;
+  try {
+    const box = document.querySelector(".player-screen")?.getBoundingClientRect();
+    if (!box) return;
+    const rect = { x: box.x, y: box.y, width: box.width, height: box.height };
+    await Promise.race([
+      api.projects.saveCover({ dir: current.dir, rect }).catch(() => false),
+      new Promise((resolve) => { timer = setTimeout(resolve, 1500); }),
+    ]);
+  } catch {
+    // The picture is a nicety.
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function goHome() {
+  await keepPicture();
   await api.projects.close().catch(() => {});
   showHome();
 }
@@ -242,6 +435,8 @@ function setStudio(state, error = "") {
 }
 
 async function openProject(dir, { request } = {}) {
+  // Moving to another video from an open one: keep the picture of the one being left first.
+  if (open) await keepPicture();
   open?.destroy();
   const project = { dir, name: folderName(dir) };
   const save = createSaveVideo(dir);
@@ -333,28 +528,44 @@ async function openProject(dir, { request } = {}) {
       project.fail("failed", "The editor opened, but the video's picture did not finish loading. Try again.");
   });
   const mediaStatus = h("span", { class: "muted", role: "status" });
+  // The app makes lighter copies of big clips for smooth watching and editing (main/lightCopies.js).
+  const smooth = h("span", { class: "muted", role: "status" });
+  let smoothTimer;
+  const unwatchSmooth = api.on("preview:copies", ({ dir: changed, status }) => {
+    if (changed !== dir || open !== project) return;
+    clearTimeout(smoothTimer);
+    if (status.state === "making") smooth.textContent = `Making clips smooth to edit (${status.done} of ${status.total})`;
+    else if (status.state === "ready" && status.total > 0) {
+      smooth.textContent = "Clips are smooth to edit";
+      smoothTimer = setTimeout(() => { smooth.textContent = ""; }, 6000);
+    } else smooth.textContent = "";
+  });
+  const destroy = project.destroy;
+  project.destroy = () => { unwatchSmooth(); clearTimeout(smoothTimer); destroy(); };
   const addMedia = h("button", {
-    class: "ghost", title: "Copy footage into this project; keep the originals.",
+    class: "ghost", title: "Copy clips into this video. Your own files are not changed.",
     onclick: async () => {
       addMedia.disabled = true;
       try {
         const imported = await api.projects.addMedia(dir);
         if (imported && open === project) {
           mediaStatus.textContent = `${imported.count} files added`;
-          project.chat.draft("Review the new footage in assets. Check the sound and orientation before editing.");
+          project.chat.draft("Look at the clips I just added (they are in the assets folder). Check the sound " +
+            "and whether any picture is sideways before you change anything.");
         }
       } catch (error) { mediaStatus.textContent = error.message; }
       finally { addMedia.disabled = false; }
     },
-  }, "Add footage");
+  }, "Add clips");
 
   app.replaceChildren(
     h(
       "header",
       { class: "topbar" },
-      h("button", { class: "ghost", onclick: goHome, title: "Back to your projects" }, "← Home"),
+      h("button", { class: "ghost", onclick: goHome, title: "Back to your videos" }, "← My videos"),
       h("span", { class: "project-name", title: dir }, project.name),
       mediaStatus,
+      smooth,
       save.status,
       h("span", { class: "spacer" }),
       save.show,
@@ -365,7 +576,7 @@ async function openProject(dir, { request } = {}) {
         "button",
         {
           class: "ghost",
-          title: "Show this project's folder in File Explorer",
+          title: "Show this video's folder in File Explorer",
           onclick: () => api.projects.reveal(dir).catch(() => {}),
         },
         "Show folder",
@@ -390,7 +601,7 @@ async function openProject(dir, { request } = {}) {
 // Registered before the first await, so an event sent while the page is still starting is not missed.
 api.on("app:open-project", ({ dir }) => void openProject(dir));
 api.on("preview:exit", ({ dir }) => {
-  if (open?.dir === dir) open.fail("stopped", "Studio stopped unexpectedly.");
+  if (open?.dir === dir) open.fail("stopped", "The editor stopped unexpectedly. Press Try again.");
 });
 
 info = await api.app.info().catch(() => null);

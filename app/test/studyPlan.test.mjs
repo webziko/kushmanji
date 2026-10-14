@@ -139,8 +139,8 @@ test("Parakeet is used for the languages it speaks, Whisper for the rest", () =>
 test("a language no installed engine speaks gets a plain reason, not a wrong transcript", () => {
   const hindi = chooseEngine({ language: "hi", parakeet: true, whisper: false });
   assert.equal(hindi.engine, null);
-  assert.match(hindi.problem, /Whisper speech engine/);
-  assert.match(chooseEngine({ language: "en", parakeet: false, whisper: false }).problem, /No speech engine/);
+  assert.match(hindi.problem, /speech tool \(Whisper\)/);
+  assert.match(chooseEngine({ language: "en", parakeet: false, whisper: false }).problem, /No speech tool/);
 });
 
 test("with the language left to the app, Parakeet's transcript is marked as a guess", () => {

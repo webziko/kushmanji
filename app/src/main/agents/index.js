@@ -1,11 +1,17 @@
+import fs from "node:fs";
 import path from "node:path";
+import { cliVersion } from "../cli.js";
 import { readJson, writeJson } from "../jsonFile.js";
 import { readState, updateState } from "../state.js";
 import { accessFor, accessNote, LEVELS, withAccess } from "./access.js";
 import * as antigravity from "./antigravity.js";
+import { CHECK_REQUEST, judge, makeScratch, testedOk } from "./checkup.js";
 import * as claude from "./claude.js";
 import * as codex from "./codex.js";
-import { filesChangedSince, handoverNote, recordTurn } from "./journal.js";
+import { filesChangedSince, handoverNote, recapNote, recordTurn } from "./journal.js";
+import { usageLimit } from "./limits.js";
+import { plainProblem } from "./problems.js";
+import { AUTO, sizeModel } from "./sizing.js";
 import { isNewer } from "./versions.js";
 import { DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles } from "./working.js";
 
@@ -16,6 +22,16 @@ const DEFAULT_ENGINE = "claude";
 const MAX_MESSAGES = 200;
 // Longer than any real request; it stops a runaway paste from becoming a runaway bill.
 const MAX_REQUEST = 20_000;
+// After this many requests in one conversation an assistant starts a fresh one with a recap (M15-04).
+const FRESH_AFTER = 6;
+// One review by a different assistant, then one round of fixes (M13-04). The page names the purpose; what the
+// reviewer is told about it comes from here.
+const PURPOSES = new Set(["review", "fix"]);
+const REVIEW_NOTE =
+  "This request is a review of another assistant's work. Look, do not change: do not edit, create, move or delete " +
+  "any file. Read the files it changed and, if you can, look at still frames of the moments it changed. Then reply " +
+  "with a short numbered list of the real problems, most important first, each with where it is (a time or a " +
+  "file). If it looks right, say so in one line. Your list goes back to the assistant that did the work.";
 
 const NAMES = Object.fromEntries(Object.entries(BRIDGES).map(([id, bridge]) => [id, bridge.about.name]));
 
@@ -25,11 +41,24 @@ const NAMES = Object.fromEntries(Object.entries(BRIDGES).map(([id, bridge]) => [
 const chatFile = (dir) => path.join(dir, ".hyperframes", "studio-win-chat.json");
 
 const knownEngine = (id) => (Object.hasOwn(BRIDGES, id) ? id : null);
+/**
+ * The assistants the person has (M15-01, "Your team"): someone with one subscription gets a complete app that
+ * never offers the others. Nothing chosen yet means all of them.
+ */
+function teamOf(state) {
+  const chosen = Array.isArray(state?.team) ? state.team.filter((id) => knownEngine(id)) : [];
+  return chosen.length ? chosen : Object.keys(BRIDGES);
+}
+
+/** The person's model choice for an agent. Nothing chosen yet means "Auto"; null means the agent's own default. */
+const chosenModel = (models, engine) => (models && Object.hasOwn(models, engine) ? models[engine] : AUTO);
 
 /** A new project starts with the agent the person last chose anywhere. */
 const emptyChat = () => ({
   engine: knownEngine(readState().agent) ?? DEFAULT_ENGINE,
   sessions: {},
+  // How many requests each assistant's current conversation has had: a long one starts afresh (M15-04).
+  turns: {},
   // How involved the person wants to be in this project: see working.js.
   mode: DEFAULT_MODE,
   // What each agent's conversation was last told about its access and the way of working, so a change is said
@@ -44,7 +73,10 @@ function readChat(dir) {
   const engine = knownEngine(chat.engine) ?? DEFAULT_ENGINE;
   // Each agent keeps its own conversation. Chats saved before there was a choice had one `sessionId`.
   const sessions = chat.sessions ?? (chat.sessionId ? { [engine]: chat.sessionId } : {});
-  return { engine, sessions, mode: knownMode(chat.mode) ?? DEFAULT_MODE, told: chat.told ?? {}, messages: chat.messages };
+  const turns = chat.turns && typeof chat.turns === "object" ? chat.turns : {};
+  return {
+    engine, sessions, turns, mode: knownMode(chat.mode) ?? DEFAULT_MODE, told: chat.told ?? {}, messages: chat.messages,
+  };
 }
 
 function writeChat(dir, chat) {
@@ -56,15 +88,21 @@ export class AgentRunner {
   #active = null;
   #emit;
   #prepare;
+  #history;
+  #check;
 
   /**
    * `emit({ dir, event })` forwards an agent event to the window. `prepare(dir, onStep)`, when given, runs
    * before each turn's agent starts: whatever the project needs first (the footage study). It reports what it
-   * is doing through `onStep(label, detail)`, and its failure never stops the chat.
+   * is doing through `onStep(label, detail)`, and its failure never stops the chat. `history`, when given, is
+   * `{ begin, end, undo }` (turnHistory.js): each turn becomes one entry the person can undo (M2-10). `check(dir)`,
+   * when given, looks the project over after a turn that changed it (turnCheck.js, M10-03).
    */
-  constructor({ emit, prepare }) {
+  constructor({ emit, prepare, history, check }) {
     this.#emit = emit;
     this.#prepare = prepare;
+    this.#history = history;
+    this.#check = check;
   }
 
   get busy() {
@@ -77,6 +115,7 @@ export class AgentRunner {
    */
   async status() {
     const chosen = readState().models ?? {};
+    const team = teamOf(readState());
     return Promise.all(
       Object.entries(BRIDGES).map(async ([id, bridge]) => {
         const state = await bridge.status().catch((error) => ({ state: "broken", detail: error.message }));
@@ -85,10 +124,14 @@ export class AgentRunner {
           id,
           ...bridge.about,
           ...state,
-          untested: isNewer(state.version, bridge.about.tested),
+          // Newer than the version this app was tried with, and not yet tested here (checkup.js).
+          untested: isNewer(state.version, bridge.about.tested) && !testedOk(readState().checkups, id, state.version),
+          checkup: readState().checkups?.[id] ?? null,
+          inTeam: team.includes(id),
           models,
-          // A model the agent no longer offers falls back to the agent's own default.
-          model: models.some((model) => model.id === chosen[id]) ? chosen[id] : null,
+          // Nothing chosen yet means "Auto" (sizing.js). A model the agent no longer offers falls back to the
+          // agent's own default.
+          model: chosenModel(chosen, id) === AUTO ? AUTO : models.some((model) => model.id === chosen[id]) ? chosen[id] : null,
         };
       }),
     );
@@ -101,7 +144,11 @@ export class AgentRunner {
       engine: chat.engine,
       running: this.#active?.dir === dir,
       // Names only, so the chat can draw at once. `status()` starts each tool and takes seconds.
-      agents: Object.entries(NAMES).map(([id, name]) => ({ id, name })),
+      // `label` is the plain name the person reads ("ChatGPT"), `product` the maker's own ("Codex"): docs/UX.md.
+      agents: Object.entries(BRIDGES).map(([id, { about }]) => ({
+        id, name: about.name, label: about.label ?? about.name, product: about.product ?? about.name,
+        inTeam: teamOf(readState()).includes(id),
+      })),
       access: accessFor(readState().access, dir),
       accessLevels: LEVELS,
       mode: chat.mode,
@@ -111,7 +158,7 @@ export class AgentRunner {
 
   /** How involved the person wants to be in this project. It applies from the next message. */
   chooseMode(dir, mode) {
-    if (!knownMode(mode)) throw new Error("That way of working is not known to this app.");
+    if (!knownMode(mode)) throw new Error("That choice is not known to this app.");
     writeChat(dir, { ...readChat(dir), mode });
   }
 
@@ -120,19 +167,28 @@ export class AgentRunner {
     updateState({ access: withAccess(readState().access, dir, level) });
   }
 
+  /** Which assistants the person has. At least one: the chat needs someone to talk to. */
+  setTeam(engines) {
+    const team = [...new Set((Array.isArray(engines) ? engines : []).map(String))];
+    if (!team.length) throw new Error("Keep at least one assistant ticked.");
+    if (!team.every((id) => knownEngine(id))) throw new Error("That assistant is not known to this app.");
+    updateState({ team });
+  }
+
   /** Switch this project's chat to another agent. It applies from the next message. */
   choose(dir, engine) {
-    if (!knownEngine(engine)) throw new Error("That agent is not known to this app.");
+    if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
+    if (!teamOf(readState()).includes(engine)) throw new Error("Tick that assistant under \"Your assistants\" first.");
     writeChat(dir, { ...readChat(dir), engine });
     updateState({ agent: engine });
   }
 
-  /** Pick the model an agent uses, everywhere. `model` null means the agent's own default. */
+  /** Pick the model an agent uses, everywhere. `model` null means the agent's own default, AUTO the app's choice. */
   async chooseModel(engine, model) {
-    if (!knownEngine(engine)) throw new Error("That agent is not known to this app.");
+    if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
     // Only an id the agent itself lists is accepted: the value ends up on that agent's command line.
-    if (model !== null && !(await BRIDGES[engine].models()).some((offered) => offered.id === model)) {
-      throw new Error("That model is not offered by this agent.");
+    if (model !== null && model !== AUTO && !(await BRIDGES[engine].models()).some((offered) => offered.id === model)) {
+      throw new Error("That choice is not offered by this assistant.");
     }
     updateState({ models: { ...readState().models, [engine]: model } });
   }
@@ -146,18 +202,100 @@ export class AgentRunner {
   }
 
   /**
+   * "Test this assistant" (M12-03): one small real job in a scratch folder, change a file and run a program. It uses
+   * a little of the assistant's allowance, so the page asks first. The answer is kept for the installed version.
+   */
+  async checkup(engine) {
+    if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
+    if (this.#active) throw new Error("An assistant is still working. Test this one when it has finished.");
+    const bridge = BRIDGES[engine];
+    const name = bridge.about.label ?? NAMES[engine];
+    const state = await bridge.status().catch(() => ({ state: "broken" }));
+    if (state.state !== "ready") return { ok: false, said: `${name} can be tested once it is installed and signed in.` };
+    let model = chosenModel(readState().models, engine);
+    if (model === AUTO) {
+      model = sizeModel({ engine, models: await bridge.models().catch(() => []), text: "Change one word." }).model;
+    }
+    const dir = makeScratch(cliVersion);
+    const turn = { dir, checkup: true, stopped: false, handle: null };
+    this.#active = turn;
+    let result;
+    try {
+      let text = "";
+      const activities = [];
+      const done = await new Promise((resolve) => {
+        turn.handle = bridge.run({ dir, text: CHECK_REQUEST, sessionId: null, model, access: "project",
+          onEvent: (event) => {
+            if (event.type === "activity") activities.push(event.label);
+            else if (event.type === "text") text += event.text;
+            else if (event.type === "done") resolve(event);
+          } });
+      });
+      let changedFile = false;
+      try {
+        changedFile = /\bAFTER\b/.test(fs.readFileSync(path.join(dir, "check.txt"), "utf8"));
+      } catch { /* the file is gone: not changed as asked */ }
+      result = judge(name, { ...done, limited: Boolean(usageLimit({ error: done.error, text })), changedFile,
+        ranCommand: activities.includes("Running a program") });
+    } finally {
+      if (this.#active === turn) this.#active = null;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+    updateState({ checkups: { ...readState().checkups,
+      [engine]: { version: state.version ?? null, ok: result.ok, said: result.said, at: new Date().toISOString() } } });
+    return { ...result, version: state.version ?? null };
+  }
+
+  /**
+   * Undo what one assistant turn changed (M2-10), or bring it back when it was undone. `index` is the reply's place
+   * in the chat. The files go back as they were; the change is recorded so the next assistant knows.
+   */
+  async undo(dir, index) {
+    if (!this.#history) throw new Error("Undo is not available in this version of the app.");
+    if (this.#active?.dir === dir) throw new Error("The assistant is still working. Undo when it has finished.");
+    const message = readChat(dir).messages[index];
+    if (message?.role !== "agent" || !message.undo?.id) throw new Error("That change cannot be undone.");
+    const back = Boolean(message.undo.undoneBy);
+    const done = await this.#history.undo(dir, back ? message.undo.undoneBy : message.undo.id);
+    const chat = readChat(dir);
+    const saved = chat.messages[index];
+    if (saved?.undo?.id !== message.undo.id) throw new Error("The chat changed while undoing. Your files were put back.");
+    saved.undo = back ? { id: saved.undo.id, files: saved.undo.files } : { ...saved.undo, undoneBy: done.id };
+    writeChat(dir, chat);
+    const files = saved.undo.files.slice(0, 8).join(", ");
+    recordTurn(dir, {
+      engine: "person",
+      asked: back ? "Bring back a change" : "Undo a change",
+      did: `${back ? "Brought back" : "Undid"} what ${NAMES[saved.engine] ?? "an assistant"} changed: ${files}`,
+      startedAt: Date.now(),
+    });
+    return saved.undo;
+  }
+
+  /**
    * Start one chat turn. `pointing`, when the person has something selected in Studio, is
    * `{ name, kind, when, note }`: what the chat shows beside their message, and what the agent is told.
    * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
    */
-  send({ dir, text, pointing = null, moment = null }) {
-    if (this.#active) throw new Error("The agent is still working. Stop it, or wait for it to finish.");
+  send({ dir, text, pointing = null, moment = null, purpose = null }) {
+    if (this.#active) throw new Error("The assistant is still working. Press Stop, or wait for it to finish.");
+    if (purpose !== null && !PURPOSES.has(purpose)) throw new Error("That kind of request is not known to this app.");
     const message = String(text ?? "").trim();
     if (!message) throw new Error("Type what you want to change first.");
     if (message.length > MAX_REQUEST) throw new Error("That message is too long. Shorten it and send again.");
 
     const chat = readChat(dir);
     const { engine } = chat;
+    if (!teamOf(readState()).includes(engine)) throw new Error("Choose one of your assistants first.");
+    // Every request in a resumed conversation sends all of it again, so a long one spends the person's allowance
+    // on old words. After a few requests the assistant starts afresh, with a recap from the shared record (M15-04).
+    const sofar = chat.turns?.[engine] ?? 0;
+    const fresh = Boolean(chat.sessions[engine]) && sofar >= FRESH_AFTER;
+    if (fresh) {
+      delete chat.sessions[engine];
+      delete chat.told[engine];
+    }
+    chat.turns = { ...chat.turns, [engine]: fresh ? 1 : sofar + 1 };
     // Read from the app's own settings here, never taken from the page or from the project folder.
     const access = accessFor(readState().access, dir);
     // The agent hears its limits and the way of working at the start of a conversation, and again whenever the
@@ -170,17 +308,20 @@ export class AgentRunner {
     const pointed = pointing ? { name: pointing.name, kind: pointing.kind, when: pointing.when } : null;
     const watched = moment ? { seconds: moment.seconds, when: moment.when } : null;
     chat.messages.push({ role: "user", text: message, ...(pointed ? { pointing: pointed } : {}),
-      ...(watched ? { moment: watched } : {}), at: Date.now() });
+      ...(watched ? { moment: watched } : {}), ...(purpose ? { purpose } : {}), at: Date.now() });
     writeChat(dir, chat);
 
     // What other agents did since this one last worked here, so it does not act on a stale picture.
-    const handover = handoverNote(dir, engine, NAMES);
-    const preface = [handover, limits, pointing?.note, moment?.note].filter(Boolean).join("\n\n");
+    const names = { ...NAMES, person: "The person, by hand" };
+    const handover = fresh ? recapNote(dir, names) : handoverNote(dir, engine, names);
+    const preface = [handover, limits, purpose === "review" ? REVIEW_NOTE : "", pointing?.note, moment?.note]
+      .filter(Boolean).join("\n\n");
     const turn = {
       dir,
       engine,
       asked: watched ? `At ${watched.when} (${watched.seconds}s into the video): ${message}` : message,
       mode,
+      purpose,
       startedAt: Date.now(),
       text: "",
       activities: [],
@@ -189,18 +330,40 @@ export class AgentRunner {
       handle: null,
     };
     this.#active = turn;
-    const start = () => {
+    if (fresh) this.#onEvent(turn, { type: "activity", label: "A fresh conversation, to save your allowance" });
+    const start = async () => {
+      let model = chosenModel(readState().models, engine);
+      if (model === AUTO) {
+        const offered = await BRIDGES[engine].models().catch(() => []);
+        const sized = sizeModel({ engine, models: offered, text: message, mode, pointing: Boolean(pointing) });
+        model = sized.model;
+        if (sized.small) {
+          const name = offered.find((item) => item.id === model)?.name ?? model;
+          this.#onEvent(turn, { type: "activity", label: `${name} for a small change` });
+        }
+      }
       if (turn.stopped) return this.#onEvent(turn, { type: "done", ok: false, stopped: true });
+      // Everything the assistant writes from here becomes one entry in HyperFrames' history, so it can be undone.
+      if (this.#history) {
+        const who = BRIDGES[engine].about.label ?? NAMES[engine];
+        turn.historyOpen = Boolean(await this.#history.begin(dir, who).catch(() => null));
+        if (turn.stopped) return this.#onEvent(turn, { type: "done", ok: false, stopped: true });
+      }
       turn.handle = BRIDGES[engine].run({
         dir,
         text: preface ? `${preface}\n\nThe person's request now:\n${message}` : message,
         sessionId: turn.resumed,
-        model: readState().models?.[engine] ?? null,
+        model,
         access,
         onEvent: (event) => this.#onEvent(turn, event),
       });
     };
-    if (!this.#prepare) return start();
+    // Stop works from the first moment, even while the model is being chosen or the footage studied.
+    const waiting = { stop() { turn.stopped = true; } };
+    if (!this.#prepare) {
+      turn.handle = waiting;
+      return void start();
+    }
     // Stop must work while the preparation is still going: it ends the wait, and the preparation carries on
     // behind the scenes for the next message.
     const halted = new Promise((resolve) => {
@@ -228,43 +391,97 @@ export class AgentRunner {
       // Each kind of step once, in the order first seen: a long run alternates between two of them all day.
       if (!turn.activities.includes(event.label)) turn.activities.push(event.label);
     } else if (event.type === "done") {
-      if (this.#active === turn) this.#active = null;
-      const chat = readChat(turn.dir);
-      // A resumed conversation the agent no longer has (cleared, or made on another machine) fails before it
-      // starts. Forget its id so the next message begins a new one instead of failing the same way forever.
-      if (!event.ok && !event.stopped && turn.resumed && !turn.sawSession) {
-        delete chat.sessions[turn.engine];
-        delete chat.told[turn.engine];
+      if (turn.ending) return;
+      turn.ending = true;
+      // The turn stays the active one until its history entry is closed, or the next turn's would swallow it.
+      if (turn.historyOpen) {
+        void this.#history.end(turn.dir).catch(() => null).then((entry) => this.#finish(turn, event, entry));
+        return;
       }
-      // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
-      // and the names of any files the agent changed that are not the plan: it was told to change none.
-      const read = turn.mode === "build" || !event.ok ? { text: turn.text, plan: false } : readPlan(turn.text);
-      if (read.plan) {
-        turn.text = read.text;
-        event = { ...event, plan: true, text: read.text, touched: strayFiles(filesChangedSince(turn.dir, turn.startedAt)) };
-      }
-      chat.messages.push({
-        role: "agent",
-        engine: turn.engine,
-        text: turn.text,
-        activities: turn.activities,
-        ok: event.ok,
-        stopped: Boolean(event.stopped),
-        error: event.error ?? null,
-        ...(read.plan ? { plan: true, touched: event.touched } : {}),
-        at: Date.now(),
-      });
-      writeChat(turn.dir, chat);
-      // A stopped or failed turn is recorded too: it may have changed files before it ended.
-      const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : ` (failed: ${event.error ?? "unknown"})`;
-      recordTurn(turn.dir, {
-        engine: turn.engine,
-        asked: turn.asked,
-        did: `${turn.text.trim()}${outcome}`.trim(),
-        startedAt: turn.startedAt,
-      });
+      return this.#finish(turn, event, null);
     }
     this.#emit({ dir: turn.dir, event });
+  }
+
+  /** The end of a turn: saved, recorded for the other assistants, and sent to the page. */
+  #finish(turn, event, entry) {
+    if (this.#active === turn) this.#active = null;
+    const chat = readChat(turn.dir);
+    // A resumed conversation the agent no longer has (cleared, or made on another machine) fails before it
+    // starts. Forget its id so the next message begins a new one instead of failing the same way forever.
+    if (!event.ok && !event.stopped && turn.resumed && !turn.sawSession) {
+      delete chat.sessions[turn.engine];
+      delete chat.told[turn.engine];
+    }
+    // Stopped by its plan's usage limit part-way through (M17-06): the page says so plainly, names the files it
+    // had already changed, and offers another assistant. Some assistants end such a turn "ok".
+    const limit = event.stopped ? null : usageLimit({ error: event.error, text: turn.text });
+    if (limit) {
+      event = { ...event, ok: false, limited: true, resets: limit.resets,
+        changed: filesChangedSince(turn.dir, turn.startedAt).slice(0, 50) };
+    }
+    // Signed out or offline part-way through (M2-12): one plain sentence instead of the assistant's own lines.
+    const problem = !event.ok && !event.stopped && !limit ? plainProblem(event, {
+      name: BRIDGES[turn.engine].about.label ?? NAMES[turn.engine],
+      signIn: BRIDGES[turn.engine].about.signIn?.[0] ?? "",
+    }) : null;
+    if (problem) event = { ...event, error: problem.said, problem: problem.kind };
+    // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
+    // and the names of any files the agent changed that are not the plan: it was told to change none.
+    const read = turn.mode === "build" || turn.purpose || !event.ok
+      ? { text: turn.text, plan: false } : readPlan(turn.text);
+    // A reviewer was told to change nothing; whatever it changed anyway is named to the person.
+    if (turn.purpose === "review") event = { ...event, touched: filesChangedSince(turn.dir, turn.startedAt) };
+    if (read.plan) {
+      turn.text = read.text;
+      event = { ...event, plan: true, text: read.text, touched: strayFiles(filesChangedSince(turn.dir, turn.startedAt)) };
+    }
+    chat.messages.push({
+      role: "agent",
+      engine: turn.engine,
+      text: turn.text,
+      activities: turn.activities,
+      ok: event.ok,
+      stopped: Boolean(event.stopped),
+      error: event.error ?? null,
+      ...(read.plan ? { plan: true, touched: event.touched } : {}),
+      ...(turn.purpose ? { purpose: turn.purpose, ...(event.touched?.length ? { touched: event.touched } : {}) } : {}),
+      ...(limit ? { limited: true, resets: limit.resets, changed: event.changed } : {}),
+      // How much of the assistant's allowance the reply used, when it said (usage.js, M15-05).
+      ...(event.usage ? { usage: event.usage } : {}),
+      // Only a turn that changed something can be undone.
+      ...(entry?.files.length ? { undo: { id: entry.id, files: entry.files.slice(0, 200) } } : {}),
+      at: Date.now(),
+    });
+    writeChat(turn.dir, chat);
+    const index = chat.messages.length - 1;
+    event = { ...event, index, undo: chat.messages[index].undo ?? null };
+    if (this.#check && (entry?.files.length || filesChangedSince(turn.dir, turn.startedAt).length)) {
+      this.#checkReply(turn.dir, index);
+    }
+    // A stopped or failed turn is recorded too: it may have changed files before it ended.
+    const outcome = event.ok ? "" : event.stopped ? " (stopped before finishing)" : limit
+      ? " (stopped by its usage limit before finishing; its work is unchecked)"
+      : ` (failed: ${event.error ?? "unknown"})`;
+    recordTurn(turn.dir, {
+      engine: turn.engine,
+      asked: turn.asked,
+      did: `${turn.text.trim()}${outcome}`.trim(),
+      startedAt: turn.startedAt,
+    });
+    this.#emit({ dir: turn.dir, event });
+  }
+
+  /** Look the project over after a reply that changed it, and add what was found to that reply. */
+  #checkReply(dir, index) {
+    void Promise.resolve().then(() => this.#check(dir)).catch(() => null).then((checked) => {
+      if (!checked) return;
+      const chat = readChat(dir);
+      if (chat.messages[index]?.role !== "agent") return;
+      chat.messages[index].checked = checked;
+      writeChat(dir, chat);
+      this.#emit({ dir, event: { type: "checked", index, checked } });
+    });
   }
 
   stop({ sync = false } = {}) {

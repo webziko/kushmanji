@@ -59,7 +59,8 @@ async function chooseAccess(inPage, level) {
   );
   if (level === "full") {
     const asked = "document.querySelector('.access-confirm')?.hidden === false";
-    if (!(await until(() => inPage(asked), { timeoutMs: 5000 }))) throw new Error("Full access was not asked about first.");
+    if (!(await until(() => inPage(asked), { timeoutMs: 5000 })))
+      throw new Error("Allowing anything on this computer was not asked about first.");
     await inPage("document.querySelector('.access-confirm .notice-actions button').click()");
   }
   if (!(await until(() => inPage(`document.body.dataset.access === ${inJs(level)}`), { timeoutMs: 5000 })))
@@ -77,7 +78,7 @@ async function accessStep({ result, inPage, shot }) {
   await chooseAccess(inPage, "tools");
   await shot("access-tools");
 
-  // Full access must ask first, and "Cancel" must leave the level alone.
+  // "Anything on this computer" must ask first, and "Cancel" must leave the level alone.
   await inPage(
     "(() => { const pick = document.querySelector('.access-pick'); pick.value = 'full'; pick.dispatchEvent(new Event('change')); })()",
   );
@@ -88,7 +89,7 @@ async function accessStep({ result, inPage, shot }) {
   await wait(200);
   result.access.cancelKeeps = await inPage("document.body.dataset.access === 'tools' && document.querySelector('.access-confirm').hidden");
   if (!result.access.fullAsksFirst || !result.access.cancelKeeps)
-    throw new Error("Full access was applied without the person confirming it.");
+    throw new Error("Allowing anything on this computer was applied without the person confirming it.");
 
   await chooseAccess(inPage, start);
 }
@@ -142,7 +143,7 @@ async function saveStep({ result, inPage, shot, outDir }) {
   const project = await createProject("save test");
   const index = path.join(project.dir, "index.html");
   fs.writeFileSync(index, fs.readFileSync(index, "utf8").replace(/data-duration="[^"]*"/g, 'data-duration="1"'));
-  await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← Home').click()");
+  await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← My videos').click()");
   if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 10_000 })))
     throw new Error("Could not return Home before the save check.");
   const nativeDialog = dialog.showOpenDialog;
@@ -987,7 +988,7 @@ export async function runSmoke({ win, outDir }) {
     const showDialog = dialog.showOpenDialog;
     try {
       dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [source] });
-      await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === 'Start from footage').click()");
+      await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === 'Choose clips').click()");
       if (!(await until(() => inPage("document.body.dataset.view === 'project'"), { timeoutMs: 120_000 }))) {
         throw new Error("Starting a project from footage never opened the project.");
       }
@@ -1024,7 +1025,7 @@ export async function runSmoke({ win, outDir }) {
     await wait(8000);
     await shot("project");
     result.importDraft = await inPage("document.querySelector('.composer textarea').value");
-    if (!result.importDraft.includes("orientation")) throw new Error("No footage review request was prepared.");
+    if (!result.importDraft.includes("sideways")) throw new Error("No request to look at the new clips was prepared.");
     await playerStep({ win, result, inPage, shot, dir: project.dir, hasAudio: hasFfmpeg });
     result.studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
     await accessStep({ result, inPage, shot });
@@ -1032,7 +1033,7 @@ export async function runSmoke({ win, outDir }) {
     let chatProject = project.dir;
     const realProject = process.env.HFWIN_SMOKE_REAL_PROJECT;
     if (realProject) {
-      await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← Home').click()");
+      await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← My videos').click()");
       if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 10_000 }))) {
         throw new Error("Could not return Home before the real-footage test.");
       }

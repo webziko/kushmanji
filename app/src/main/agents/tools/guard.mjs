@@ -19,8 +19,8 @@ function refuse(reason) {
 }
 
 const ASK =
-  "If this stops what the person asked for, tell them in one plain sentence: they choose the access level in " +
-  "the menu under the chat box.";
+  "If this stops what the person asked for, tell them in one plain sentence: they choose what the assistant may " +
+  "do in the menu under the chat box.";
 
 if (tool !== "ffmpeg" && tool !== "ffprobe") refuse("This helper only runs ffmpeg and ffprobe.");
 
@@ -29,10 +29,10 @@ if (!project) refuse("This copy of it only works from the chat in Kushmanji.");
 
 if (process.env.HFWIN_ACCESS !== "tools") {
   refuse(
-    'This chat is on the "Project only" access level, which does not include FFmpeg. Do not look for another ' +
+    'This chat is on the "Only this video" level, which does not include FFmpeg. Do not look for another ' +
       "way to run it. A clip can still be trimmed inside the video without FFmpeg, by setting where it starts " +
-      'and how long it plays. If the request needs a new media file, tell the person to choose "Editing tools" ' +
-      "in the access menu under the chat box.",
+      'and how long it plays. If the request needs a new media file, tell the person to choose "Also cut my ' +
+      'clips" in the "What may the assistant do" menu under the chat box.',
   );
 }
 

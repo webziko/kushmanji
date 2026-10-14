@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-14, in the night. The app is now called **Kushmanji**._
+_Updated 2026-10-14, morning. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -20,9 +20,12 @@ Two shortcuts are on your Desktop:
       posted anywhere.
 - [ ] **Listen to the music** on the vlog's name card and ending card, and under the shorts. A computer
       checked the pictures; nobody has listened.
-- [ ] **Close Kushmanji and open it again** to get "Save video" and the new arrow keys.
-- [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
-- [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools".
+- [ ] **Close Kushmanji and open it again** to get "Save video", the new arrow keys and smooth moving around.
+      Then open your vlog, wait until the top bar says "Clips are smooth to edit" (a minute or two, once per
+      project), and drag the playhead: tell me if it now follows your hand.
+- [x] **A logo and colours for Kushmanji.** You picked A, "Friendly": the app is now coral and cream with the
+      smiling play-button icon. "unofficial" at the top opens "About Kushmanji"
+- [ ] **Which access level should a new person start on?** Today: "Only this video". My advice: "Also cut my clips".
 - [ ] **Music made on this PC?** Your channel's own notes say no (its licence does not allow earning from
       it), so your videos use YouTube Audio Library tracks. Still open for other people who use Kushmanji.
 
@@ -63,6 +66,59 @@ Claude measured your vlog playing in the real app, picture by picture.
 - Fixed in the app for every future video: Kushmanji now measures how long each clip's picture really lasts
   and tells every assistant never to play a clip past it.
 - Fixed in your vlog: see "Your City Centre vlog" below.
+
+## New on the morning of 14 October: moving around the video is smooth
+
+- [x] **Plain words everywhere.** "My videos", "Add clips", "What may the assistant do: Only this video / Also
+      cut my clips / Anything on this computer", "Ask me first: Just do it / Show me the plan first / Decide
+      with me". Help now explains the arrow keys in "Edit by hand"
+- [x] **When an assistant runs out of its allowance mid-job**, the chat now says so plainly, lists the files it
+      had already changed, says when it can work again, and offers "Carry on with ChatGPT" or "Carry on with
+      Gemini", which prepares the message for you
+- [x] **A new Home screen**: "Carry on" with a picture of the video you last worked on, then "From my clips" and
+      "From an idea", and your videos as pictures (each picture is taken when you leave that video)
+- [x] **"Undo this change"** under every reply that changed your video, and "Bring it back" after
+- [x] **The app checks your video after every change** an assistant makes (free, two seconds) and says if it
+      found mistakes, with "Ask to fix them"
+- [x] **"Test it now"** when an assistant has updated past the version Kushmanji was tried with: one tiny job,
+      and a plain answer such as "Claude works with Kushmanji"
+- [x] **An installer** is now built by GitHub for every change (not tried on your PC yet). To get it: open
+      `github.com/webziko/kushmanji/actions`, choose the newest "Installer" run, and download "Kushmanji-Setup"
+      at the bottom. It installs for you only, needs no administrator, and adds Start Menu and Desktop
+      shortcuts. Windows will warn "unknown publisher" because it is not signed yet: "More info", then "Run anyway"
+- [x] **Saved looks**: in the chat's settings, "Save this look" keeps a video's colours, fonts, titles and ending
+      card under a name (for example "Happy with Shisha"); "Use" gives another video the same look. Next time you
+      make shorts, they can all match
+- [x] **Assistants can now look at the video they made**: a "look at the video" tool returns still pictures at
+      the moments they ask for, and they are told to check before saying "done". Proven with Claude; ChatGPT
+      (Codex) should now be able to look too, which it could not before. To be tried on your PC
+- [x] **A second opinion**: "Ask ChatGPT to check it" under a change, then "Ask Claude to fix these". One round,
+      never a loop
+- [x] **Type `@` in the message box** to name a clip or "this moment"; **drop clips on the chat** to add them
+- [x] **"Make it" asks three quick questions** (how long, which shape, what feel) before it starts
+- [x] **Type while the assistant works**: "Send when done" or "Stop and send now"
+- [x] **The editor's own "Ask agent" buttons** now put their request in the chat box instead of copying it
+- [x] **"Your assistants: tick the ones you have."** In the chat's settings. Someone with only ChatGPT never
+      sees Claude or Gemini offered
+- [x] **Each reply says how much of the allowance it used**: "a little", "some" or "a lot"
+- [x] **Long chats start afresh** after six requests, with a short recap, so each request stays small
+- [x] **"Auto (saves your allowance)"** in the model menu: small changes go to a cheaper model, big jobs to the
+      best one. A model you pick yourself is always used
+
+- [x] **Jumping and dragging no longer lag.** Measured first, on a practice video like your vlog: a jump to a
+      moment took about a third of a second, and dragging the playhead showed only one or two pictures a
+      second. Now Kushmanji makes a lighter copy of each big clip in the background, the way DaVinci Resolve
+      makes "proxies", and plays that copy while you watch and edit. A jump now takes 0.04 to 0.07 seconds, a
+      drag shows 33 pictures a second, and the editor uses about half the memory. "Save video" still uses
+      your full-quality files. The copies sit in a hidden `.cache` folder inside each project (about a sixth
+      of the footage's size) and are remade by themselves when a clip changes
+- [ ] **Not yet measured on your PC.** These numbers come from a cloud computer without a graphics card.
+      Yours should be at least as fast; the next session on your PC measures the real vlog
+- [ ] **Something HyperFrames does that you should know:** the first time a project opens in the editor,
+      HyperFrames keeps a second copy of all its videos for its undo history, in
+      `C:\Users\<you>\.cache\hyperframes\history`. That is extra disk space and a slow first open with big
+      footage. It is HyperFrames' own design; I have written it down to report to them, and a later task will
+      show you how much room it takes and offer to clear it for projects you deleted
 
 ## New in the night of 14 October
 

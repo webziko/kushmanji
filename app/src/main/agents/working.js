@@ -1,28 +1,31 @@
 // How involved the person wants to be. The three ways are upstream's own (docs/guides/general-video.mdx), so a
-// project planned here reads the same to the HyperFrames skills: "Build it for me", "Review the story first",
-// "Co-direct it".
+// project planned here reads the same to the HyperFrames skills (upstream calls them "Build it for me", "Review
+// the story first" and "Co-direct it"). The person sees them in the words of docs/UX.md ("Ask me first"): the
+// ids below are what is stored, and the notes quote the names the person sees, because the assistant is told
+// which one they chose.
 //
 // In the last two the agent plans first and waits for a yes. The wait is an instruction, not a lock: the agent
 // keeps its usual access, so that a small change ("make the title red") needs no ceremony. What makes it
 // trustworthy is the check afterwards: the app looks at which files a planning turn changed, and tells the
 // person if anything but the plan was touched (`strayFiles`).
 
-/** In the order the menu shows them. `about` is the line the person reads under the menu. */
+/** In the order the menu shows them, under the label "Ask me first". `about` is the line under the menu. */
 export const MODES = [
   {
     id: "build",
-    name: "Build it for me",
-    about: "The agent makes the creative choices and shows you a finished first version.",
+    name: "Just do it",
+    about: "The assistant makes the choices and shows you a finished first version.",
   },
   {
     id: "review",
-    name: "Review the story first",
-    about: "The agent shows you its plan and waits for your yes before it builds anything.",
+    name: "Show me the plan first",
+    about: "The assistant shows you its plan and waits for your yes before it builds anything.",
   },
   {
     id: "codirect",
-    name: "Co-direct it",
-    about: "You decide step by step: the story, then the look, then motion and sound. The agent waits for your yes at each.",
+    name: "Decide with me",
+    about: "You decide step by step: the story, then the look, then motion and sound. " +
+      "The assistant waits for your yes each time.",
   },
 ];
 
@@ -44,13 +47,13 @@ const SMALL =
 
 const NOTES = {
   build:
-    'The person chose "Build it for me": make the creative decisions yourself, build, and show a finished ' +
+    'The person chose "Just do it": make the creative decisions yourself, build, and show a finished ' +
     "first version. Do not stop to ask for approval. Still keep the plan files current.",
   review:
-    'The person chose "Review the story first". When a request makes a video, re-cuts footage, or changes the ' +
+    'The person chose "Show me the plan first". When a request makes a video, re-cuts footage, or changes the ' +
     `story or the look as a whole, do not build yet: plan first. ${PLAN}${SMALL}`,
   codirect:
-    'The person chose "Co-direct it": they want to decide with you, one step at a time. For a request that ' +
+    'The person chose "Decide with me": they want to decide with you, one step at a time. For a request that ' +
     "makes or reshapes a video, go in this order and stop after each step: the story, then the look (colours, " +
     "type, the style of titles), then motion, transitions and sound. At each step offer two or three clear " +
     `options where taste matters, with the one you would pick. ${PLAN}Do the same at every later step, and ` +

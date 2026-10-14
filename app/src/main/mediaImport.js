@@ -21,12 +21,12 @@ export async function mediaFilesIn(folder) {
   async function walk(dir) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
       if (++walked > 20_000) {
-        throw new Error("That folder has too many files. Choose a smaller folder of footage.");
+        throw new Error("That folder has too many files. Choose a smaller folder of clips.");
       }
       const file = path.join(dir, entry.name);
       if (entry.isDirectory() && mayHoldFootage(entry.name)) await walk(file);
       else if (entry.isFile() && !entry.name.startsWith(".") && isMedia(entry.name)) {
-        if (files.length >= 200) throw new Error("That folder has too many files. Choose a smaller folder of footage.");
+        if (files.length >= 200) throw new Error("That folder has too many files. Choose a smaller folder of clips.");
         files.push(file);
       }
     }
@@ -41,20 +41,20 @@ export async function importMedia(dir, files) {
     throw new Error("Choose between one and 200 video, sound or picture files.");
   }
   if (!path.isAbsolute(dir) || !(await fs.stat(path.join(dir, "index.html"))).isFile()) {
-    throw new Error("Open a HyperFrames project first.");
+    throw new Error("Open a video first.");
   }
   const selected = [...new Set(files)];
   for (const file of selected) {
     if (typeof file !== "string" || !path.isAbsolute(file) || !isMedia(file)) {
-      throw new Error("Choose video, sound or picture files. Other files cannot be imported.");
+      throw new Error("Choose video, sound or picture files. Other kinds of file cannot be added.");
     }
-    if (!(await fs.lstat(file)).isFile()) throw new Error("A selected file is missing or is a link.");
+    if (!(await fs.lstat(file)).isFile()) throw new Error("One of the chosen files is missing, or is a shortcut.");
   }
   const root = await fs.realpath(dir);
   const assets = path.join(dir, "assets");
   await fs.mkdir(assets, { recursive: true });
   if (!inside(root, await fs.realpath(assets))) {
-    throw new Error("The assets folder leads outside this project. Choose another project.");
+    throw new Error("The assets folder of this video leads outside this video, so nothing was added.");
   }
   const copied = [];
   for (const file of selected) {
@@ -68,7 +68,9 @@ export async function importMedia(dir, files) {
         break;
       } catch (error) {
         if (error.code === "EEXIST") continue;
-        throw new Error(`Could not copy ${parsed.base}. Your originals are unchanged. ${copied.length} files were imported.`);
+        throw new Error(
+          `Could not copy ${parsed.base}. Your own files are not changed. ${copied.length} were added before it.`,
+        );
       }
     }
   }

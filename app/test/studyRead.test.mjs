@@ -50,7 +50,7 @@ test("a project record cannot expose a file outside the saved study", () => {
   fs.writeFileSync(secret, "secret");
   index({ file: "assets/clip.mp4", sheets: [], transcript: { text: "private.txt" } });
   assert.equal(typeof read, "function");
-  assert.throws(() => read(root, "assets/clip.mp4"), /saved footage study/);
+  assert.throws(() => read(root, "assets/clip.mp4"), /cannot show what it saw/);
 });
 test("a link in the study cannot expose a file outside the project", (t) => {
   const elsewhere = path.join(root, "elsewhere");
@@ -60,5 +60,5 @@ test("a link in the study cannot expose a file outside the project", (t) => {
   catch { return t.skip("junction not available"); }
   index({ file: "assets/clip.mp4", sheets: [], transcript: { text: ".hyperframes/study/linked/private.txt" } });
   assert.equal(typeof read, "function");
-  assert.throws(() => read(root, "assets/clip.mp4"), /saved footage study/);
+  assert.throws(() => read(root, "assets/clip.mp4"), /cannot show what it saw/);
 });

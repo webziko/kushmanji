@@ -9,11 +9,23 @@ import { createEditActions } from "./editActions.js";
 
 const api = window.hfwin;
 
+// What each assistant is good for, under "Your assistants" (M15-01). Plain, and true of every plan.
+const GOOD_FOR = {
+  claude: "careful editing and planning a whole video",
+  codex: "editing, and it can make pictures",
+  antigravity: "editing, and watching many clips without using much",
+};
+
+// Said beside an assistant's name in the menu when it cannot be used yet.
 const STATE_NOTES = {
-  "not-installed": "not installed",
-  "not-signed-in": "not signed in",
+  "not-installed": "not on this computer yet",
+  "not-signed-in": "sign in first",
   broken: "will not start",
 };
+
+/** "ChatGPT (Codex)": the plain name first, the maker's own product name beside it so it can be recognised. */
+const menuName = (agent) =>
+  agent.label && agent.product && agent.label !== agent.product ? `${agent.label} (${agent.product})` : agent.name;
 
 /** Inline `code` and **bold**, built as nodes so the agent's text is never parsed as HTML. */
 function formatted(text) {
@@ -45,7 +57,39 @@ function userMessage({ text, pointing, moment }) {
  * `plan` marks a reply that is a plan waiting for a yes; `touched` lists files the agent changed all the same.
  * `actions`, given for the newest such reply only, is the row of buttons that answers it.
  */
-function agentMessage({ name, text, activities, ok, stopped, error, plan, touched, actions }) {
+/** When an assistant says it can work again: a time it gave as a date, or its own words ("3pm", "2 days"). */
+function resetsText(resets) {
+  const date = /^\d{4}-\d\d-\d\dT/.test(resets ?? "") ? new Date(resets) : null;
+  if (date && !Number.isNaN(date.getTime()))
+    return date.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
+  return resets ?? "";
+}
+
+/** The plain account of a turn its assistant's usage limit cut short (M17-06). */
+function limitNote(name, { changed, resets }) {
+  const files = changed ?? [];
+  return [
+    `${name} ran out of its allowance before it finished.`,
+    files.length
+      ? `It had already changed: ${files.slice(0, 6).join(", ")}${files.length > 6 ? ` and ${files.length - 6} more` : ""}. ` +
+        "Nobody has checked those changes yet."
+      : "It had not changed anything yet.",
+    resets ? `${name} says it can work again: ${resetsText(resets)}.` : "",
+  ].filter(Boolean).join(" ");
+}
+
+/** "Used a little of Claude's allowance", with the counts for whoever is curious (M15-05, agents/usage.js). */
+function usageNote(name, usage) {
+  if (!usage?.level) return null;
+  return h("div", { class: "msg-usage muted",
+    title: `About ${usage.tokens.toLocaleString()} tokens: ${usage.fresh.toLocaleString()} read new, ` +
+      `${usage.cached.toLocaleString()} read again, ${usage.written.toLocaleString()} written.` },
+  `Used ${usage.level === "little" ? "a little" : usage.level} of ${name}'s allowance`);
+}
+
+function agentMessage({
+  name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed, undoAction, usage,
+}) {
   const steps = [name, ...(activities ?? [])].filter(Boolean);
   return h(
     "div",
@@ -54,10 +98,21 @@ function agentMessage({ name, text, activities, ok, stopped, error, plan, touche
     text && h("div", { class: "msg-text" }, formatted(text)),
     plan &&
       touched?.length > 0 &&
-      h("div", { class: "msg-note error" }, `Before you said yes, the agent already changed: ${touched.slice(0, 6).join(", ")}.`),
+      h(
+        "div",
+        { class: "msg-note error" },
+        `The assistant changed your video before you said yes. Files it changed: ${touched.slice(0, 6).join(", ")}.`,
+      ),
     plan && actions,
     stopped && h("div", { class: "msg-note" }, "Stopped."),
-    !ok && !stopped && h("div", { class: "msg-note error" }, error || "The agent could not finish this change."),
+    limited && h("div", { class: "msg-note error" }, limitNote(name, { changed, resets })),
+    limited && actions,
+    // The review round's buttons (M13-04) and anything else a settled reply offers.
+    !plan && !limited && actions,
+    !ok && !stopped && !limited &&
+      h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
+    undoAction,
+    usageNote(name, usage),
   );
 }
 
@@ -71,6 +126,8 @@ function liveMessage(name) {
   let frame = 0;
   return {
     el,
+    /** The reply's words so far. */
+    reply: () => text,
     onEvent(event) {
       if (event.type === "activity") {
         steps.textContent = [name, event.label, event.detail].filter(Boolean).join(" · ");
@@ -85,7 +142,9 @@ function liveMessage(name) {
     /** `done.text`, when present, is the reply with the app's own marks taken out. */
     finish(done, actions) {
       cancelAnimationFrame(frame);
-      el.replaceWith(agentMessage({ name, activities, ...done, text: done.text ?? text, actions }));
+      const settled = agentMessage({ name, activities, ...done, text: done.text ?? text, actions });
+      el.replaceWith(settled);
+      return settled;
     },
   };
 }
@@ -102,8 +161,146 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   let moment = null;
 
   const current = () => agents.find((agent) => agent.id === engine);
-  const nameOf = (id) => agents.find((agent) => agent.id === id)?.name ?? "Agent";
+  // The assistants the person ticked under "Your assistants". Older main processes send no `inTeam`: all.
+  const team = () => agents.filter((agent) => agent.inTeam !== false);
+  const nameOf = (id) => {
+    const agent = agents.find((item) => item.id === id);
+    return agent?.label ?? agent?.name ?? "Assistant";
+  };
   const isReady = () => checked && current()?.state === "ready";
+
+  /** Each settled reply by its place in the chat, so the app's check can be added to it when it arrives. */
+  const replies = new Map();
+  /** What was sent last: the request, its purpose, and to which assistant (M13-04). */
+  let sending = null;
+  /** The assistant whose work is being reviewed, while a review runs. */
+  let reviewing = null;
+
+  /**
+   * One review by a different assistant, then one round of fixes, never a loop (M13-04). Under a reply that
+   * changed the video: "Ask ... to check it", one button per other assistant the person has. The reviewer is told
+   * by the main process to change nothing.
+   */
+  function reviewButtons({ engine: author, asked, files = [] }) {
+    const others = team().filter((agent) => agent.id !== author);
+    if (!others.length || !files.length) return null;
+    const ask = `Please check what ${nameOf(author)} just did for my request: “${short(asked ?? "", 300)}”. ` +
+      `Files it changed: ${files.slice(0, 12).join(", ")}.`;
+    return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => {
+        if (live) return;
+        reviewing = author;
+        engine = agent.id;
+        render();
+        void api.agent.choose({ dir, engine }).catch(() => {});
+        void submit(ask, false, "review");
+      },
+    }, `Ask ${agent.label ?? agent.name} to check it`)));
+  }
+
+  /** Under a review: back to the assistant that did the work, with the list. A clean review says so instead. */
+  function fixButton(reviewer, author, review) {
+    if (!author || author === reviewer) return null;
+    if (/^\W*(it |this |everything )?(looks|seems) (right|good|fine)|no (real )?problems/i.test(review.trim())) {
+      return h("p", { class: "muted" }, "Nothing to fix. Watch your video to be sure.");
+    }
+    const ask = `Please fix the problems ${nameOf(reviewer)} found in your last change:\n\n${review.trim().slice(0, 4000)}` +
+      "\n\nThen check your work once and stop.";
+    return h("div", { class: "notice-actions" }, h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => {
+        if (live) return;
+        engine = author;
+        render();
+        void api.agent.choose({ dir, engine }).catch(() => {});
+        void submit(ask, false, "fix");
+      },
+    }, `Ask ${nameOf(author)} to fix these`));
+  }
+
+  /** The buttons that come after a settled reply in the review round, or null. */
+  function roundButtons({ purpose, ok, engine: by, text, files, asked, author }) {
+    if (!ok) return null;
+    if (purpose === "review") return fixButton(by, author, text ?? "");
+    if (purpose === "fix") return null;
+    return reviewButtons({ engine: by, asked, files });
+  }
+
+  /**
+   * What the app's check found after a reply changed the video (M10-03, main/agents/turnCheck.js). Mistakes come
+   * with a button that puts a request to fix them in the message box.
+   */
+  function checkedNote({ errors, mistakes = [] }) {
+    if (!errors) return h("div", { class: "msg-check muted" }, "The app checked your video: no mistakes found.");
+    const listed = mistakes.map((mistake) => `- ${mistake.text}${mistake.where ? ` (${mistake.where})` : ""}`);
+    const more = errors > mistakes.length ? `\n- and ${errors - mistakes.length} more like these` : "";
+    const ask = `Please fix the mistakes the app's check found:\n${listed.join("\n")}${more}`;
+    return h("div", { class: "msg-check" },
+      h("div", { class: "msg-note error" },
+        `The app checked your video and found ${errors === 1 ? "one mistake" : `${errors} mistakes`}.`),
+      h("div", { class: "msg-actions" },
+        h("button", { class: "secondary small", type: "button", onclick: () => {
+          input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
+          input.focus();
+        } }, "Ask to fix them"),
+        // The check's own words are for the assistant; whoever is curious can read them.
+        h("details", { class: "msg-check-details" }, h("summary", {}, "Show them"),
+          ...mistakes.map((mistake) => h("p", {}, mistake.text)))));
+  }
+
+  /**
+   * "Undo this change" under a reply that changed files (M2-10). After undoing it says so, and offers to bring the
+   * change back. The main process does the work with HyperFrames' own history; the page only names the reply.
+   */
+  function undoControl(index, undo) {
+    if (!Number.isInteger(index) || !undo?.id) return null;
+    const note = h("span", { class: "muted", role: "status" });
+    const button = h("button", { class: "ghost small", type: "button" });
+    const show = (state) => {
+      button.textContent = state.undoneBy ? "Bring it back" : "Undo this change";
+      button.title = state.undoneBy
+        ? "Put back what the assistant changed."
+        : `Put these files back as they were before: ${state.files.slice(0, 6).join(", ")}`;
+      note.textContent = state.undoneBy ? "Undone. Your video is back as it was before this change." : "";
+    };
+    show(undo);
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        show(await api.agent.undo({ dir, index }));
+      } catch (error) {
+        note.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+    return h("div", { class: "msg-undo" }, button, note);
+  }
+
+  /**
+   * After a usage limit: one button per other assistant. It switches the chat to that assistant and prepares a
+   * message asking it to check the half-done work and finish it. The person still presses Send.
+   */
+  function carryOnButtons(stoppedEngine, changed = [], limited = true) {
+    const others = team().filter((agent) => agent.id !== stoppedEngine);
+    if (!others.length) return null;
+    const from = nameOf(stoppedEngine);
+    return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => {
+        engine = agent.id;
+        render();
+        void api.agent.choose({ dir, engine }).catch(() => {});
+        const files = changed.length ? `, after changing ${changed.slice(0, 6).join(", ")}` : "";
+        const why = limited ? "ran out of its allowance part-way through" : "could not finish it";
+        const ask = `Please carry on with my last request. ${from} ${why}${files}. ` +
+          "First look at what it changed and check it, then finish the job and check your work.";
+        input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
+        input.focus();
+      },
+    }, `Carry on with ${agent.label ?? agent.name}`)));
+  }
 
   const log = h("div", { class: "chat-log", role: "log" });
   /** How much the agents may do in this project: every level the app offers, and the one in force. */
@@ -145,30 +342,91 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   );
   const picker = h("select", {
     class: "agent-pick",
-    "aria-label": "Agent",
-    title: "The agent that edits your video. A change applies from your next message.",
+    "aria-label": "Assistant",
+    title: "Who changes your video for you. A change starts with your next message.",
   });
+  // A saved look (M10-04, main/kits.js): use one in this video, or keep this video's look under a name.
+  const lookPick = h("select", { class: "agent-pick look-pick", "aria-label": "Saved looks" });
+  const lookUse = h("button", { class: "secondary small", type: "button" }, "Use");
+  const lookName = h("input", { class: "field look-name", type: "text", maxlength: "60", hidden: true,
+    placeholder: "A name, for example your channel", "aria-label": "Name for this look" });
+  const lookSave = h("button", { class: "ghost small", type: "button" }, "Save this look");
+  const lookNote = h("p", { class: "muted look-note", role: "status" });
+  const lookDraft = (text) => {
+    input.value = input.value.trim() ? `${input.value.trim()}\n\n${text}` : text;
+    input.focus();
+  };
+  async function renderLooks() {
+    const got = await api.looks.list(dir).catch(() => null);
+    if (!got) return null;
+    lookPick.replaceChildren(...(got.looks.length
+      ? got.looks.map((look) => h("option", { value: look.name }, look.name))
+      : [h("option", { value: "" }, "No saved looks yet")]));
+    lookPick.disabled = lookUse.disabled = !got.looks.length;
+    return got;
+  }
+  lookUse.addEventListener("click", async () => {
+    const name = lookPick.value;
+    if (!name) return;
+    try {
+      await api.looks.use({ dir, name });
+      lookNote.textContent = `This video now has the look “${name}”. Send the message below to apply it.`;
+      lookDraft("Make this video match the look in STYLE.md: colours, fonts, titles, captions and the ending card.");
+    } catch (error) {
+      lookNote.textContent = error.message;
+    }
+  });
+  lookSave.addEventListener("click", async () => {
+    const got = await renderLooks();
+    if (!got?.written) {
+      lookNote.textContent = "First the assistant writes this video's look down. Send the message below, then press " +
+        "Save this look again.";
+      lookDraft("Write down this video's look in STYLE.md: colours (hex), fonts, title style, caption style, the " +
+        "ending card and any music bed, exactly enough that another video can match it. Change nothing else.");
+      return;
+    }
+    if (lookName.hidden || !lookName.value.trim()) {
+      lookName.hidden = false;
+      lookName.focus();
+      lookNote.textContent = "Name the look, then press Save this look.";
+      return;
+    }
+    try {
+      const saved = await api.looks.save({ dir, name: lookName.value });
+      lookName.hidden = true;
+      lookName.value = "";
+      lookNote.textContent = `Saved as “${saved.name}”. Any of your videos can use it now.`;
+      await renderLooks();
+    } catch (error) {
+      lookNote.textContent = error.message;
+    }
+  });
+  void renderLooks();
+
+  const teamBox = h("fieldset", { class: "chat-team" });
+  const teamNote = h("p", { class: "msg-note error", role: "status" });
   const modelPick = h("select", {
     class: "agent-pick",
-    "aria-label": "Model",
-    title: "The model this agent uses. A change applies from your next message.",
+    "aria-label": "How careful",
+    title: "How careful the assistant is. Not sure? Leave it on Auto. A change starts with your next message.",
     hidden: true,
   });
   const notice = h("div", { class: "chat-notice", hidden: true });
   const studyBar = createStudyBar(dir, { onAsk: (file) => {
     if (!input.value.trim()) input.value =
-      `Review ${file}. Check its picture, speech, sound and orientation. Tell me what needs fixing before editing.`;
+      `Look at ${file}. Tell me what is in it: the picture, what is said, the sound, and whether it is sideways. ` +
+      "Tell me what needs fixing before you change anything.";
     input.focus();
   } });
   const accessPick = h("select", {
     class: "agent-pick access-pick",
-    title: "How much the agent may do on this computer. A change applies from your next message.",
+    title: "What the assistant may do. A change starts with your next message.",
   });
   // The chosen level in a sentence, always on screen: nobody should have to open a menu to learn what is allowed.
   const accessAbout = h("p", { class: "access-about muted" });
   const modePick = h("select", {
     class: "agent-pick mode-pick",
-    title: "How involved you want to be. A change applies from your next message.",
+    title: "When the assistant asks you before it builds. A change starts with your next message.",
   });
   const modeAbout = h("p", { class: "access-about muted" });
   // What is selected in Studio, said back to the person before they send, with a way to leave it out.
@@ -188,7 +446,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       {
         class: "ghost small",
         type: "button",
-        title: "Do not tell the agent about this selection",
+        title: "Do not tell the assistant about this",
         "aria-label": "Do not point at this",
         onclick: () => {
           dismissed = pointing?.key ?? null;
@@ -200,7 +458,32 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   );
   const accessConfirm = h("div", { class: "chat-notice access-confirm", hidden: true });
   // Agents update themselves often. This says so when the installed one is newer than the app was tried with.
-  const versionNote = h("p", { class: "chat-version muted", hidden: true });
+  // A newer assistant than the app was tried with can be tested once here (M12-03, main/agents/checkup.js).
+  const versionText = h("span", {});
+  const testButton = h("button", { class: "secondary small", type: "button" }, "Test it now");
+  const versionNote = h("div", { class: "chat-version muted", hidden: true }, versionText, testButton);
+  testButton.addEventListener("click", async () => {
+    const agent = current();
+    if (!agent || live) return;
+    const name = agent.label ?? agent.name;
+    if (!confirm(`Test ${name} with one small job? It changes one word in a scratch folder and runs one program. ` +
+      "It takes a minute and uses a little of its allowance. Your videos are not touched.")) return;
+    testButton.disabled = true;
+    send.disabled = true;
+    versionText.textContent = `Testing ${name}… this takes about a minute.`;
+    try {
+      const got = await api.agent.checkup(agent.id);
+      agent.untested = !got.ok;
+      agent.checkup = got;
+      versionText.textContent = got.said;
+      testButton.hidden = got.ok;
+    } catch (error) {
+      versionText.textContent = error.message;
+    } finally {
+      testButton.disabled = false;
+      send.disabled = !isReady();
+    }
+  });
 
   /** Follow new text only if the person is already at the bottom; never yank them away from what they scrolled to. */
   const append = (node) => {
@@ -211,10 +494,39 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   };
 
   // `data-agent` is what the styles and the smoke test read.
+  // While an assistant works, the next message waits (M2-09): "Send when done" sends it as soon as the turn ends,
+  // "Stop and send now" stops the turn first. A turn that fails puts the waiting message back in the box instead.
+  let queued = null;
+  const queuedText = h("span", {});
+  const queuedNote = h("div", { class: "composer-note queued", role: "status", hidden: true }, queuedText,
+    h("button", { class: "ghost small", type: "button", onclick: () => { queued = null; renderQueued(); } }, "Cancel"));
+  const short = (text) => (text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text);
+  function renderQueued() {
+    queuedNote.hidden = !queued;
+    const who = nameOf(engine);
+    queuedText.textContent = !queued ? ""
+      : queued.steer ? `Stopping ${who}, then sending “${short(queued.text)}”.`
+        : `“${short(queued.text)}” waits and goes as soon as ${who} has finished.`;
+    later.hidden = now.hidden = !live || Boolean(queued) || !input.value.trim();
+  }
+  function wait(steer) {
+    const text = input.value.trim();
+    if (!text || !live) return;
+    queued = { text, steer };
+    input.value = "";
+    if (steer) api.agent.stop().catch(() => {});
+    renderQueued();
+  }
+  const later = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(false) }, "Send when done");
+  const now = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(true) },
+    "Stop and send now");
+  input.addEventListener("input", renderQueued);
+
   const setRunning = (running) => {
     document.body.dataset.agent = running ? "running" : "idle";
     send.hidden = running;
     stop.hidden = !running;
+    renderQueued();
     picker.disabled = running;
     modelPick.disabled = running;
     accessPick.disabled = running;
@@ -316,24 +628,26 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     accessPick.value = access ?? "";
     accessConfirm.hidden = false;
     accessConfirm.replaceChildren(
-      h("p", {}, h("strong", {}, "Turn on full access for this project?")),
+      h("p", {}, h("strong", {}, "Let the assistant do anything on this computer?")),
       h(
         "p",
         {},
-        "The agent will be able to run any program and change or delete any file on this computer, without " +
-          "asking first. Only do this for a project you made yourself or trust.",
+        "The assistant will be able to open any program and change or delete any file on this computer, " +
+          "without asking you first. Only do this for a video you made yourself or one you trust.",
       ),
       h(
         "div",
         { class: "notice-actions" },
-        h("button", { class: "secondary small", type: "button", onclick: () => setAccess("full") }, "Turn on full access"),
+        h("button", { class: "secondary small", type: "button", onclick: () => setAccess("full") },
+          "Yes, allow anything"),
         h("button", { class: "ghost small", type: "button", onclick: () => (accessConfirm.hidden = true) }, "Cancel"),
       ),
     );
   });
 
-  async function submit(text, includeMoment = true) {
+  async function submit(text, includeMoment = true, purpose = null) {
     if (live) return;
+    sending = { text, purpose, engine };
     const about = pointed();
     planActions?.remove();
     planActions = null;
@@ -344,7 +658,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     append(live.el);
     setRunning(true);
     try {
-      const accepted = await api.agent.send({ dir, text, pointing: Boolean(about), moment: Boolean(watched) });
+      const accepted = await api.agent.send({ dir, text, pointing: Boolean(about), moment: Boolean(watched), purpose });
       sent.replaceWith(userMessage({ text, pointing: about, moment: accepted?.moment }));
     } catch (error) {
       live.finish({ ok: false, error: error.message });
@@ -357,12 +671,13 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   function onSubmit(event) {
     event.preventDefault();
     const text = input.value.trim();
-    if (!text || live || !isReady()) return;
+    if (live) return void wait(false);
+    if (!text || !isReady()) return;
     input.value = "";
     void submit(text);
   }
 
-  /** The card that says why the chosen agent cannot be used yet, with the commands that fix it. */
+  /** The card that says why the chosen assistant cannot be used yet, with the lines that fix it. */
   function showFix(agent) {
     const commands =
       agent.state === "not-installed"
@@ -370,15 +685,19 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         : agent.state === "not-signed-in"
           ? (agent.signIn ?? [])
           : [];
+    const who = menuName(agent);
     const text =
       agent.state === "not-installed"
-        ? `${agent.name} is not installed. Open PowerShell and run this, then sign in:`
+        ? `${who} is not on this computer yet. To add it, open PowerShell (search for it in the Start menu), ` +
+          "paste each line below and press Enter after each one. The last line signs you in:"
         : agent.state === "not-signed-in"
-          ? `${agent.name} is not signed in. Open PowerShell and run:`
-          : agent.detail || `${agent.name} is installed, but it will not start.`;
+          ? `${who} needs you to sign in first. Open PowerShell (search for it in the Start menu), ` +
+            "paste the line below and press Enter:"
+          : `${who} is on this computer, but it will not start.`;
     notice.hidden = false;
     notice.replaceChildren(
       h("p", {}, text),
+      agent.state === "broken" && agent.detail && h("p", { class: "muted" }, agent.detail),
       ...commands.map((command) =>
         h(
           "div",
@@ -396,10 +715,16 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   }
 
   function render() {
+    // The chat's assistant was unticked: carry on with the first one the person has.
+    if (agents.length && !team().some((agent) => agent.id === engine) && team()[0]) {
+      engine = team()[0].id;
+      void api.agent.choose({ dir, engine }).catch(() => {});
+    }
+    renderTeam();
     picker.replaceChildren(
-      ...agents.map((agent) => {
+      ...team().map((agent) => {
         const note = STATE_NOTES[agent.state];
-        return h("option", { value: agent.id }, note ? `${agent.name} · ${note}` : agent.name);
+        return h("option", { value: agent.id }, note ? `${menuName(agent)} · ${note}` : menuName(agent));
       }),
     );
     picker.value = engine;
@@ -409,13 +734,18 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const models = agent?.models ?? [];
     modelPick.hidden = models.length === 0;
     modelPick.replaceChildren(
+      // "Auto": the app sends small changes to a smaller model (main/agents/sizing.js).
+      h("option", { value: "auto" }, "Auto (saves your allowance)"),
       h("option", { value: "" }, "Default"),
       ...models.map((model) => h("option", { value: model.id }, model.name)),
     );
     modelPick.value = agent?.model ?? "";
     versionNote.hidden = !agent?.untested;
-    versionNote.textContent = agent?.untested
-      ? `${agent.name} ${agent.version} is newer than the ${agent.tested} this app was tried with. It should work; if it does not, that is why.`
+    testButton.hidden = !agent?.untested;
+    versionText.textContent = agent?.untested
+      ? `Your copy of ${agent.product ?? agent.name} (version ${agent.version}) is newer than the one this app was ` +
+        `tested with (${agent.tested}). It should still work. ` +
+        (agent.checkup?.version === agent.version ? `Last test: ${agent.checkup.said} ` : "")
       : "";
     if (!checked || !agent || agent.state === "ready") notice.hidden = true;
     else showFix(agent);
@@ -425,6 +755,35 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       input.value = "";
       void submit(text, false);
     }
+  }
+
+  /** "Your assistants": one box per assistant. At least one stays ticked. */
+  function renderTeam() {
+    teamBox.replaceChildren(
+      h("legend", {}, "Your assistants: tick the ones you have"),
+      ...agents.map((agent) => {
+        const box = h("input", { type: "checkbox", checked: agent.inTeam !== false });
+        box.addEventListener("change", async () => {
+          const ticked = agents.filter((item) => (item === agent ? box.checked : item.inTeam !== false));
+          if (!ticked.length) {
+            box.checked = true;
+            teamNote.textContent = "Keep at least one assistant ticked.";
+            return;
+          }
+          teamNote.textContent = "";
+          try {
+            await api.agent.setTeam(ticked.map((item) => item.id));
+            for (const item of agents) item.inTeam = ticked.includes(item);
+          } catch (error) {
+            teamNote.textContent = error.message;
+          }
+          render();
+        });
+        return h("label", { class: "team-member" }, box,
+          h("span", {}, menuName(agent), h("span", { class: "muted" }, ` · ${GOOD_FOR[agent.id] ?? ""}`)));
+      }),
+      teamNote,
+    );
   }
 
   /** Ask the main process which agents are installed and signed in. It starts each tool, so it takes seconds. */
@@ -453,16 +812,314 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     log.replaceChildren(empty);
   }
 
+  // The editor's own "Ask agent" buttons land here (M3-02, main/askAgent.js): the request goes in the message box,
+  // and the person presses Send. Only a message from the editor's own frame on the local server is taken.
+  const askNote = h("p", { class: "composer-note muted", role: "status", hidden: true });
+  const fromEditor = (event) => {
+    const studio = document.querySelector('iframe[title="HyperFrames Studio"]');
+    if (!studio || event.source !== studio.contentWindow || !/^http:\/\/127\.0\.0\.1:\d+$/.test(event.origin)) return;
+    const { source, type, text } = event.data ?? {};
+    if (source !== "kushmanji-studio" || type !== "ask-agent" || typeof text !== "string" || !text.trim()) return;
+    input.value = input.value.trim() ? `${input.value.trim()}\n\n${text.trim()}` : text.trim();
+    askNote.hidden = false;
+    askNote.textContent = "The editor's request is in your message. Add anything you want, then press Send.";
+    input.focus();
+  };
+  window.addEventListener("message", fromEditor);
+
+  // "@" in the message box (M3-03): a list of the video's clips, sounds, pictures and scenes, and the moment
+  // the video is at. Choosing one writes a plain `@name` into the text. Nothing else is attached: the
+  // assistant reads the file itself. The names come from the main process (main/mentions.js), asked for again
+  // each time a new "@" is typed.
+  const MENTION_GROUPS = [["video", "Clips"], ["audio", "Sounds"], ["image", "Pictures"], ["scene", "Scenes"]];
+  const MENTION_ROWS = 40;
+  const mentionList = h("div", { class: "mention-list", id: "chat-mentions", role: "listbox", hidden: true,
+    "aria-label": "Things you can mention" });
+  /** What the list can offer: the files the main process last named. */
+  let mentionable = [];
+  let mentionsLoaded = false;
+  let mentionAsk = 0;
+  /** The "@" being completed: where it starts, where the caret is, what was typed, and what is offered. */
+  let mention = null;
+  /** The "@" the person closed with Escape. It stays closed until they start another one. */
+  let mentionClosed = null;
+  /** The "@" the files were last asked for, so one "@" asks once however much is typed after it. */
+  let mentionAskedAt = null;
+  let mentionDrawn = "";
+  const dropNote = h("p", { class: "composer-note muted", role: "status", hidden: true });
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-controls", "chat-mentions");
+  input.setAttribute("aria-expanded", "false");
+
+  /** The words after an "@" must read back as one word, so a name with spaces goes in quotes. */
+  const mentionText = (name) => `@${/\s/.test(name) ? `"${name}"` : name}`;
+
+  /** Where the caret is inside an "@" that starts a word, or null. An address like a@b.com is not one. */
+  function mentionTrigger() {
+    if (input.selectionStart !== input.selectionEnd) return null;
+    const caret = input.selectionStart;
+    const typed = /(^|\s)@([^\s@]*)$/u.exec(input.value.slice(0, caret));
+    return typed ? { start: caret - typed[2].length - 1, caret, query: typed[2].replace(/^"/, "") } : null;
+  }
+
+  /** Everything that fits what was typed, in the order shown: this moment, clips, sounds, pictures, scenes. */
+  function mentionChoices(query, at) {
+    const wanted = query.toLowerCase();
+    const choices = [];
+    if (at && ["this moment", "moment", "now", at.when].some((word) => word.startsWith(wanted))) {
+      choices.push({ group: "In the video", id: "moment", label: "This moment", detail: `At ${at.when}`,
+        insert: `@${at.when}` });
+    }
+    for (const [kind, title] of MENTION_GROUPS) {
+      const ranked = mentionable
+        .filter((file) => file.kind === kind)
+        .map((file) => {
+          const name = file.name.toLowerCase();
+          return { file, rank: name.startsWith(wanted) ? 0 : name.includes(wanted) ? 1
+            : file.path.toLowerCase().includes(wanted) ? 2 : 3 };
+        })
+        .filter((found) => found.rank < 3)
+        .sort((a, b) => a.rank - b.rank);
+      for (const { file } of ranked) {
+        const folder = file.path.slice(0, file.path.length - file.name.length).replace(/\/$/, "");
+        choices.push({ group: title, id: file.path, label: file.name, detail: folder,
+          insert: mentionText(file.mention ?? file.name) });
+      }
+    }
+    return choices;
+  }
+
+  function closeMentions() {
+    if (!mention) return;
+    mention = null;
+    mentionDrawn = "";
+    mentionList.hidden = true;
+    mentionList.replaceChildren();
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  }
+
+  function paintMentionChoice() {
+    const rows = [...mentionList.querySelectorAll('[role="option"]')];
+    rows.forEach((row, i) => {
+      const on = i === mention?.active;
+      row.setAttribute("aria-selected", String(on));
+      row.classList.toggle("active", on);
+      if (on) {
+        input.setAttribute("aria-activedescendant", row.id);
+        row.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }
+
+  function drawMentions() {
+    const shown = mention.choices.slice(0, MENTION_ROWS);
+    // The same list again (a refresh that found nothing new) is left alone: a click needs the row it hit.
+    const key = `${mention.query}\n${shown.map((choice) => choice.id).join("\n")}\n${mention.choices.length}`;
+    mentionList.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    if (key !== mentionDrawn) {
+      mentionDrawn = key;
+      const groups = [];
+      shown.forEach((choice, i) => {
+        if (groups.at(-1)?.title !== choice.group) groups.push({ title: choice.group, rows: [] });
+        groups.at(-1).rows.push(h("div", {
+          class: "mention-item", role: "option", id: `chat-mention-${i}`, "aria-selected": "false",
+          onclick: () => chooseMention(i),
+          onmousemove: () => {
+            if (mention && mention.active !== i) {
+              mention.active = i;
+              paintMentionChoice();
+            }
+          },
+        }, h("span", { class: "mention-name" }, choice.label),
+        choice.detail && h("span", { class: "mention-detail" }, choice.detail)));
+      });
+      const note = !mention.choices.length ? "Nothing to mention yet. Drop clips onto this chat to add them."
+        : mention.choices.length > shown.length ? "Keep typing to see the others." : "";
+      mentionList.replaceChildren(
+        ...groups.map((group) => h("div", { class: "mention-group", role: "group", "aria-label": group.title },
+          h("div", { class: "mention-title", "aria-hidden": "true" }, group.title), ...group.rows)),
+        ...(note ? [h("div", { class: "mention-note" }, note)] : []),
+      );
+    }
+    paintMentionChoice();
+  }
+
+  /** Open, narrow or close the list to match the "@" at the caret. `refresh` keeps the row that was chosen. */
+  function updateMentions(refresh = false) {
+    const trigger = mentionTrigger();
+    if (!trigger) {
+      mentionClosed = null;
+      mentionAskedAt = null;
+      return closeMentions();
+    }
+    // A new "@" asks again which files there are, so a clip the assistant just made is on the list.
+    if (mentionAskedAt !== trigger.start) {
+      mentionAskedAt = trigger.start;
+      void refreshMentionable();
+    }
+    if (mentionClosed === trigger.start) return closeMentions();
+    const opening = !mention;
+    // The moment is taken when the list opens and kept, so the rows do not change under a pointer.
+    const at = opening ? (!editor && moment) || null : mention.at;
+    const choices = mentionChoices(trigger.query, at);
+    // Nothing fits what was typed: no list. With nothing typed yet, say why it is empty, once that is known.
+    if (!choices.length && (trigger.query || !mentionsLoaded)) return closeMentions();
+    const same = !opening && mention.start === trigger.start && mention.query === trigger.query;
+    const kept = refresh && same ? Math.min(mention.active, Math.max(0, choices.length - 1)) : 0;
+    mention = { ...trigger, at, choices, active: kept };
+    drawMentions();
+  }
+
+  async function refreshMentionable() {
+    const ask = ++mentionAsk;
+    try {
+      const found = await api.mentions.list(dir);
+      if (ask !== mentionAsk) return;
+      mentionable = Array.isArray(found) ? found : [];
+    } catch {
+      // Not readable just now: the list keeps what it had.
+    }
+    mentionsLoaded = true;
+    if (document.activeElement === input) updateMentions(true);
+  }
+
+  function chooseMention(index) {
+    const picked = mention?.choices[index];
+    if (!picked) return;
+    const { start, caret } = mention;
+    const spaced = /^\s/.test(input.value.slice(caret));
+    mentionClosed = null;
+    closeMentions();
+    input.focus();
+    input.setSelectionRange(start, caret);
+    // Typed in, so the box's own undo still works. The fallback is for a page that refuses.
+    const text = spaced ? picked.insert : `${picked.insert} `;
+    if (!document.execCommand("insertText", false, text)) {
+      input.setRangeText(text, start, caret, "end");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (spaced) input.setSelectionRange(start + text.length + 1, start + text.length + 1);
+  }
+
+  /** The keys the open list takes. True when it took the key, so the box does not also act on it. */
+  function mentionKey(event) {
+    if (!mention || event.isComposing) return false;
+    if (event.key === "Escape") {
+      mentionClosed = mention.start;
+      closeMentions();
+      event.stopPropagation();
+    } else if (!mention.choices.length) {
+      return false;
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const count = Math.min(mention.choices.length, MENTION_ROWS);
+      mention.active = (mention.active + (event.key === "ArrowDown" ? 1 : count - 1)) % count;
+      paintMentionChoice();
+    } else if ((event.key === "Enter" && !event.shiftKey) || (event.key === "Tab" && !event.shiftKey)) {
+      chooseMention(mention.active);
+    } else {
+      return false;
+    }
+    event.preventDefault();
+    return true;
+  }
+
+  // The list never takes the pointer's focus away from the box, so choosing a row does not close it first.
+  mentionList.addEventListener("mousedown", (event) => event.preventDefault());
+  input.addEventListener("input", (event) => {
+    askNote.hidden = true;
+    dropNote.hidden = true;
+    // Typing an "@" starts a new mention, whatever was closed or asked before at the same place in the text.
+    if (event.data === "@") mentionClosed = mentionAskedAt = null;
+    updateMentions();
+  });
+  input.addEventListener("click", () => updateMentions());
+  input.addEventListener("keyup", (event) => {
+    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) updateMentions();
+  });
+  input.addEventListener("blur", closeMentions);
+
+  // Clips dropped from File Explorer onto the chat (M3-03). Each is copied into the video's own files, so the
+  // original stays where it was, and the message box gets an "@" for each. The preload reads which path each
+  // dropped file really has (files.pathOf); the main process checks every one again before it copies anything.
+  const dropHint = h("div", { class: "drop-hint", hidden: true, "aria-hidden": "true" },
+    h("p", {}, "Drop clips to add them to this video"));
+  const say = (text, problem = false) => {
+    dropNote.hidden = !text;
+    dropNote.textContent = text;
+    dropNote.classList.toggle("problem", problem);
+  };
+  const carriesFiles = (event) => [...(event.dataTransfer?.types ?? [])].includes("Files");
+  // Enter and leave come in pairs for the panel and everything in it; the hint goes when they balance. A drag
+  // that is called off (Escape, or let go outside the window) may not say so, so the hint also goes when the
+  // page has heard nothing of the drag for a moment: a drag over the panel is heard from every few dozen
+  // milliseconds, held still or not.
+  let overChat = 0;
+  let hintTimer = 0;
+  const hideHint = () => {
+    clearTimeout(hintTimer);
+    overChat = 0;
+    dropHint.hidden = true;
+  };
+  const dragOver = (event) => {
+    if (!carriesFiles(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    dropHint.hidden = false;
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(hideHint, 1500);
+  };
+  const dragIn = (event) => {
+    if (carriesFiles(event)) overChat++;
+    dragOver(event);
+  };
+  const dragOut = () => {
+    overChat = Math.max(0, overChat - 1);
+    if (overChat === 0) hideHint();
+  };
+
+  const clipCount = (n) => `${n} ${n === 1 ? "clip" : "clips"}`;
+
+  async function addDropped(paths, dropped) {
+    if (live) return say("The assistant is still working. Wait for it to finish before adding clips.", true);
+    if (!paths.length || paths.length < dropped) {
+      return say("Only files from File Explorer can be added here, so nothing was added.", true);
+    }
+    say("Adding clips…");
+    try {
+      const added = await api.projects.addDropped({ dir, paths });
+      await refreshMentionable();
+      const byPath = new Map(mentionable.map((file) => [file.path, file]));
+      const called = (file) => byPath.get(file)?.mention ?? file.split("/").pop();
+      const tokens = added.files.map((file) => mentionText(called(file)));
+      const before = input.value.trimEnd();
+      input.value = `${before}${before ? " " : ""}${tokens.join(" ")} `;
+      input.dispatchEvent(new Event("input"));
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      say(`Added ${clipCount(added.count)} to this video.`);
+    } catch (error) {
+      say(error.message, true);
+    }
+  }
+
   const form = h(
     "form",
     { class: "composer", onsubmit: onSubmit },
+    askNote,
+    dropNote,
+    queuedNote,
     pointingChip,
     h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, "Your message"), momentChip),
-    input,
+    h("div", { class: "composer-field" }, mentionList, input),
     h(
       "div",
       { class: "composer-row" },
       h("span", { class: "spacer" }),
+      later,
+      now,
       stop,
       send,
     ),
@@ -481,7 +1138,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         {
           class: "ghost small",
           type: "button",
-          title: "Clear this chat and start a new conversation. Your video is not changed.",
+          title: "Start a new conversation. Your video is not changed.",
           onclick: reset,
         },
         "Start over",
@@ -489,10 +1146,15 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     ),
     h("details", { class: "chat-settings" },
       h("summary", {}, "Assistant and clip settings"),
+      teamBox,
       h("div", { class: "chat-head" }, h("label", {}, "Assistant", picker), modelPick),
       h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Ask me first", modePick)),
       modeAbout,
-      h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Allowed tools", accessPick)),
+      h("div", { class: "chat-setting-row" },
+        h("label", { class: "access muted" }, "What may the assistant do", accessPick)),
+      h("div", { class: "chat-setting-row look-row" },
+        h("label", { class: "access muted" }, "Look", lookPick), lookUse, lookSave, lookName),
+      lookNote,
       versionNote,
       studyBar.element,
     ),
@@ -501,9 +1163,22 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     notice,
     accessConfirm,
     form,
+    dropHint,
   );
+  element.addEventListener("dragenter", dragIn);
+  element.addEventListener("dragover", dragOver);
+  element.addEventListener("dragleave", dragOut);
+  element.addEventListener("drop", (event) => {
+    if (!carriesFiles(event)) return;
+    event.preventDefault();
+    hideHint();
+    // Read at once: the list of dropped files is only valid while the event is being handled.
+    const dropped = [...event.dataTransfer.files];
+    void addDropped(dropped.map((file) => api.files.pathOf(file)).filter(Boolean), dropped.length);
+  });
 
   input.addEventListener("keydown", (event) => {
+    if (mentionKey(event)) return;
     // isComposing: Enter that confirms an IME word (Hindi, Telugu, Japanese...) must not send the message.
     if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
     event.preventDefault();
@@ -511,13 +1186,37 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   });
 
   const stopListening = api.on("agent:event", ({ dir: eventDir, event }) => {
-    if (eventDir !== dir || !live) return;
+    if (eventDir !== dir) return;
+    // The app's own check of a finished reply arrives a moment after it (M10-03).
+    if (event.type === "checked") {
+      const reply = replies.get(event.index);
+      reply?.querySelector(".msg-check")?.remove();
+      reply?.append(checkedNote(event.checked));
+      return;
+    }
+    if (!live) return;
     if (event.type !== "done") return live.onEvent(event);
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
-    live.finish(event, event.plan ? planButtons() : null);
+    // A reply that failed, for whatever reason, offers the person's other assistants (M12-04).
+    const failed = event.limited || (!event.ok && !event.stopped);
+    const round = roundButtons({ purpose: sending?.purpose, ok: event.ok && !event.plan, engine,
+      text: event.text ?? live.reply(), files: event.undo?.files, asked: sending?.text, author: reviewing });
+    if (sending?.purpose !== "review") reviewing = null;
+    const settled = live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
+      event.plan ? planButtons() : failed ? carryOnButtons(engine, event.changed ?? event.undo?.files, event.limited) : round);
+    if (Number.isInteger(event.index)) replies.set(event.index, settled);
     live = null;
     setRunning(false);
     if (pinned) log.scrollTop = log.scrollHeight;
+    if (queued) {
+      const { text, steer } = queued;
+      queued = null;
+      renderQueued();
+      // It goes after a turn that finished, or one stopped to make room for it. After a failure it waits in the
+      // box, where the person can send it to another assistant.
+      if (event.ok || (steer && event.stopped)) void submit(text);
+      else input.value = input.value.trim() ? `${input.value.trim()}\n\n${text}` : text;
+    }
   });
 
   log.append(empty);
@@ -537,12 +1236,27 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       for (const [i, message] of saved.messages.entries()) {
         // A plan still waiting for its answer, when it is the last thing said, keeps its buttons.
         const waitingPlan = message.plan && i === saved.messages.length - 1 && !saved.running;
-        append(
-          message.role === "user"
-            ? userMessage(message)
-            : // Replies saved before there was a choice of agent were all Claude Code's.
-              agentMessage({ ...message, name: nameOf(message.engine ?? "claude"), actions: waitingPlan ? planButtons() : null }),
-        );
+        const last = i === saved.messages.length - 1 && !saved.running;
+        if (message.role === "user") {
+          append(userMessage(message));
+          continue;
+        }
+        // Replies saved before there was a choice of agent were all Claude Code's.
+        // The review round's buttons stay on the last reply (M13-04).
+        const asked = saved.messages[i - 1];
+        const author = asked?.purpose === "review" ? saved.messages[i - 2]?.engine : null;
+        const reply = agentMessage({ ...message, name: nameOf(message.engine ?? "claude"),
+          undoAction: undoControl(i, message.undo),
+          actions: waitingPlan ? planButtons()
+            : (message.limited || (!message.ok && !message.stopped)) && last
+              ? carryOnButtons(message.engine ?? "claude", message.changed ?? message.undo?.files, message.limited)
+              : last ? roundButtons({ purpose: message.purpose, ok: message.ok && !message.plan,
+                engine: message.engine ?? "claude", text: message.text, files: message.undo?.files,
+                asked: asked?.text, author })
+                : null });
+        replies.set(i, reply);
+        if (message.checked) reply.append(checkedNote(message.checked));
+        append(reply);
       }
       log.scrollTop = log.scrollHeight;
       render();
@@ -579,7 +1293,10 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       input.value = text;
     },
     destroy() {
+      mentionAsk++;
+      clearTimeout(hintTimer);
       stopListening();
+      window.removeEventListener("message", fromEditor);
       clearInterval(watchPointing);
       studyBar.destroy();
       editActions.destroy();

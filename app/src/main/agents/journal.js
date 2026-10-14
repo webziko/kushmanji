@@ -107,3 +107,23 @@ export function handoverNote(dir, engine, names) {
     "The full log is .hyperframes/app-history.jsonl. The files are the truth, not this summary: read them before you change anything."
   );
 }
+
+/**
+ * A recap for a fresh conversation (M15-04): the last few turns on this video, whoever took them. A conversation
+ * that is resumed sends everything said in it again with each request; starting afresh with this is far smaller.
+ */
+export function recapNote(dir, names, { max = 6 } = {}) {
+  const turns = readTurns(dir).slice(-max);
+  if (turns.length === 0) return "";
+  const lines = turns.map((turn) => {
+    const who = names[turn.engine] ?? "An assistant";
+    const files = turn.files?.length ? ` Files changed: ${turn.files.slice(0, 12).join(", ")}.` : "";
+    return `- ${who} was asked: "${quote(turn.asked)}". It reported: "${quote(turn.did)}".${files}`;
+  });
+  return (
+    "This is a fresh conversation about the same video, started to keep each request small. The latest work on " +
+    `it, oldest first:\n${lines.join("\n")}\n` +
+    "The full log is .hyperframes/app-history.jsonl, and the plan lives in the project's own files. The files are " +
+    "the truth, not this summary: read them before you change anything."
+  );
+}
