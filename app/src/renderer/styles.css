@@ -982,3 +982,5 @@ h2 {
 /* "Undo this change" under a reply (M2-10). */
 .msg-undo { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; }
 .composer-note { margin: 0 0 6px; font-size: 12px; }
+.composer-note.queued { display: flex; align-items: center; gap: 8px; }
+.composer-note.queued[hidden] { display: none; }

@@ -77,6 +77,7 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **A new Home screen**: "Carry on" with a picture of the video you last worked on, then "From my clips" and
       "From an idea", and your videos as pictures (each picture is taken when you leave that video)
 - [x] **"Undo this change"** under every reply that changed your video, and "Bring it back" after
+- [x] **Type while the assistant works**: "Send when done" or "Stop and send now"
 - [x] **The editor's own "Ask agent" buttons** now put their request in the chat box instead of copying it
 - [x] **"Your assistants: tick the ones you have."** In the chat's settings. Someone with only ChatGPT never
       sees Claude or Gemini offered

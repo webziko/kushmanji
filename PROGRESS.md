@@ -101,7 +101,11 @@ Do not build them.
 - [~] M2-07 Home prompt box: describe a video, the app makes the project and asks the agent (Claude).
       Built. The "Make it" button's path has not been run end to end yet
 - [ ] M2-08 Install and refresh HyperFrames skills for the agent (project creation skips them for speed)
-- [ ] M2-09 While the agent works: queue the next message, or steer (stop and restart with it)
+- [x] M2-09 While the agent works: queue the next message, or steer (stop and restart with it) (Claude,
+      2026-10-14). While a reply is being written the person can type on: "Send when done" (also Enter) keeps
+      the message and sends it as soon as the turn ends; "Stop and send now" stops the turn first. A note shows
+      what waits, with Cancel. After a failed turn the waiting message goes back in the box instead. Tried in
+      the real app with a slowed stand-in assistant: both orders came out right
 - [x] M2-10 Undo for each agent run (Claude, 2026-10-14). Each turn is a history "window" on the open
       project's preview server (the CLI's `history` commands are refused while Studio runs: "This project is
       open in another app"), so everything the assistant writes is one entry in HyperFrames' own history. A
@@ -357,7 +361,9 @@ stopped running commands (M2-22). The owner asked for a bigger answer than fixin
 - [ ] M12-03 "Test this agent" when the installed version is newer than the one this app was tried with: one
       small real turn in a scratch folder (change a file, run a command), the result said in plain words and
       remembered for that version, so it is asked once
-- [ ] M12-04 When the chosen agent is down, one tap carries on with another. Shared memory already carries the story
+- [x] M12-04 When the chosen agent is down, one tap carries on with another. Shared memory already carries the story
+      (Claude, 2026-10-14): any failed reply, not only a usage limit, offers "Carry on with ..." for the person's
+      other assistants (with M17-06 and M15-01)
 - [ ] M12-05 Known problems in one place per agent: what the agent prints, what the app does about it (try
       another way, or say it plainly), and the version it was seen on. Tested against recorded real output
 - [ ] M12-06 For whoever maintains the app: one command that runs all three agents' tests against what is

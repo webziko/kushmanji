@@ -186,7 +186,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
    * After a usage limit: one button per other assistant. It switches the chat to that assistant and prepares a
    * message asking it to check the half-done work and finish it. The person still presses Send.
    */
-  function carryOnButtons(stoppedEngine, changed = []) {
+  function carryOnButtons(stoppedEngine, changed = [], limited = true) {
     const others = team().filter((agent) => agent.id !== stoppedEngine);
     if (!others.length) return null;
     const from = nameOf(stoppedEngine);
@@ -197,7 +197,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         render();
         void api.agent.choose({ dir, engine }).catch(() => {});
         const files = changed.length ? `, after changing ${changed.slice(0, 6).join(", ")}` : "";
-        const ask = `Please carry on with my last request. ${from} ran out of its allowance part-way through${files}. ` +
+        const why = limited ? "ran out of its allowance part-way through" : "could not finish it";
+        const ask = `Please carry on with my last request. ${from} ${why}${files}. ` +
           "First look at what it changed and check it, then finish the job and check your work.";
         input.value = input.value.trim() ? `${input.value.trim()}\n\n${ask}` : ask;
         input.focus();
@@ -314,10 +315,39 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   };
 
   // `data-agent` is what the styles and the smoke test read.
+  // While an assistant works, the next message waits (M2-09): "Send when done" sends it as soon as the turn ends,
+  // "Stop and send now" stops the turn first. A turn that fails puts the waiting message back in the box instead.
+  let queued = null;
+  const queuedText = h("span", {});
+  const queuedNote = h("div", { class: "composer-note queued", role: "status", hidden: true }, queuedText,
+    h("button", { class: "ghost small", type: "button", onclick: () => { queued = null; renderQueued(); } }, "Cancel"));
+  const short = (text) => (text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text);
+  function renderQueued() {
+    queuedNote.hidden = !queued;
+    const who = nameOf(engine);
+    queuedText.textContent = !queued ? ""
+      : queued.steer ? `Stopping ${who}, then sending “${short(queued.text)}”.`
+        : `“${short(queued.text)}” waits and goes as soon as ${who} has finished.`;
+    later.hidden = now.hidden = !live || Boolean(queued) || !input.value.trim();
+  }
+  function wait(steer) {
+    const text = input.value.trim();
+    if (!text || !live) return;
+    queued = { text, steer };
+    input.value = "";
+    if (steer) api.agent.stop().catch(() => {});
+    renderQueued();
+  }
+  const later = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(false) }, "Send when done");
+  const now = h("button", { class: "secondary", type: "button", hidden: true, onclick: () => wait(true) },
+    "Stop and send now");
+  input.addEventListener("input", renderQueued);
+
   const setRunning = (running) => {
     document.body.dataset.agent = running ? "running" : "idle";
     send.hidden = running;
     stop.hidden = !running;
+    renderQueued();
     picker.disabled = running;
     modelPick.disabled = running;
     accessPick.disabled = running;
@@ -461,7 +491,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   function onSubmit(event) {
     event.preventDefault();
     const text = input.value.trim();
-    if (!text || live || !isReady()) return;
+    if (live) return void wait(false);
+    if (!text || !isReady()) return;
     input.value = "";
     void submit(text);
   }
@@ -619,6 +650,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     "form",
     { class: "composer", onsubmit: onSubmit },
     askNote,
+    queuedNote,
     pointingChip,
     h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, "Your message"), momentChip),
     input,
@@ -626,6 +658,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       "div",
       { class: "composer-row" },
       h("span", { class: "spacer" }),
+      later,
+      now,
       stop,
       send,
     ),
@@ -679,11 +713,22 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     if (eventDir !== dir || !live) return;
     if (event.type !== "done") return live.onEvent(event);
     const pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+    // A reply that failed, for whatever reason, offers the person's other assistants (M12-04).
+    const failed = event.limited || (!event.ok && !event.stopped);
     live.finish({ ...event, undoAction: undoControl(event.index, event.undo) },
-      event.plan ? planButtons() : event.limited ? carryOnButtons(engine, event.changed) : null);
+      event.plan ? planButtons() : failed ? carryOnButtons(engine, event.changed ?? event.undo?.files, event.limited) : null);
     live = null;
     setRunning(false);
     if (pinned) log.scrollTop = log.scrollHeight;
+    if (queued) {
+      const { text, steer } = queued;
+      queued = null;
+      renderQueued();
+      // It goes after a turn that finished, or one stopped to make room for it. After a failure it waits in the
+      // box, where the person can send it to another assistant.
+      if (event.ok || (steer && event.stopped)) void submit(text);
+      else input.value = input.value.trim() ? `${input.value.trim()}\n\n${text}` : text;
+    }
   });
 
   log.append(empty);
@@ -710,7 +755,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
             : // Replies saved before there was a choice of agent were all Claude Code's.
               agentMessage({ ...message, name: nameOf(message.engine ?? "claude"), undoAction: undoControl(i, message.undo),
                 actions: waitingPlan ? planButtons()
-                  : message.limited && last ? carryOnButtons(message.engine ?? "claude", message.changed) : null }),
+                  : (message.limited || (!message.ok && !message.stopped)) && last
+                    ? carryOnButtons(message.engine ?? "claude", message.changed ?? message.undo?.files, message.limited)
+                    : null }),
         );
       }
       log.scrollTop = log.scrollHeight;
