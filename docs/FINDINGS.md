@@ -225,3 +225,30 @@ rewrite of `rmSync` in Node 23). No error is raised, so a temporary file or fold
 `fs.unlinkSync` and `fs.promises.rm` work. Electron 44's own Node (24.21.0) is fixed, so the app is not affected,
 but `npm test` ran on the owner's Node 24.11.1 and four tests failed. `npm test` now runs on Electron's Node
 (`app/scripts/test.mjs`), the same one the app ships with.
+
+## The lighter copies on the owner's PC (measured 2026-10-14, M16-08)
+
+The owner's laptop: AMD Ryzen 7 4800H (8 cores), AMD Radeon built-in graphics and an NVIDIA RTX 3050. The real
+City Centre vlog (4 min 13 s, 19 phone clips). The app made the 19 copies in about two minutes the first time
+the project opened (198 MB). The playback measurement, with the copies made and the project opened before:
+
+| | Watching screen | Editor |
+| --- | --- | --- |
+| Jump to a moment (middle of 8 / slowest) | 54 / 79 ms | 133 / 366 ms |
+| Pictures seen while dragging the playhead for one second | 31 | 30 |
+| Last picture after the hand stops | 19 ms | 32 ms |
+| Pictures dropped while playing (45 s + 30 s) | 9 + 4 of about 2,200 | 13 + 4 |
+| Opening (the video / the editor) | 2.6 s | 1.3 s |
+
+- The 2.6 s with nothing playing at 0:10 is the "Happy with Shisha" name card, not a stall.
+- **More keyframes do not help.** A Sonnet helper built three copies of the project (hard links, nothing copied)
+  with copies keyed every 0.5 s (today's), every 0.2 s (+14% size) and on every picture (+51%), and measured
+  each four times: once warm, the three were the same within the scatter between repeats (editor jumps, middle
+  of 24: 311, 304 and 292 ms). Decoding is no longer what a jump waits for, so `copyArgs` stays as it is. The
+  editor's extra time is Studio's own work around a seek.
+- **The editor's first open of a project is slow for a minute or two:** jumps of 1 to 5 s while Studio makes
+  its filmstrips, thumbnails and sound pictures for the first time (and the footage study listens to every clip
+  in a new project). Run 1 of each copy showed it; runs 2 to 4 did not. Those three runs were also slower than
+  the real project's (about 300 against 133 ms) because the study was still transcribing the copied projects.
+- The first measurement run stopped once because the video's frame reloaded itself in the middle of a stretch;
+  no project file had changed. Not seen again in 13 runs.

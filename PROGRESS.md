@@ -504,6 +504,9 @@ now comes first**: it changes what every later feature looks like. The review it
       shadows, one focus ring, hover lift, chat bubbles, a raised player bar, one dialog look with a blurred
       backdrop, reduced motion respected. Contrast checked at 4.5:1 or better. No layout or words changed.
       A before-and-after picture was sent to the owner; not yet seen on a Windows screen
+- [ ] M14-14 HyperFrames' own face still shows (owner, 2026-10-14, on their PC: "still hyperframes logo ... dint
+      go"): "Edit by hand" shows the HeyGen HyperFrames logo and Studio's green Export, and the taskbar shows
+      Electron's atom instead of Kushmanji's icon when the app is started with `npm start`
 - [ ] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
       use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
       one list per language (`docs/UX.md` is the English one). The assistants already answer in the language
@@ -582,10 +585,14 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       The measurement now also times jumps, a drag, opening the editor and memory, and
       `scripts/test-vlog.mjs` makes a practice project. Measured in the cloud on a practice vlog, not yet on
       the owner's PC: see M16-08. Numbers: `docs/FINDINGS.md`, last section
-- [ ] M16-08 Measure the lighter copies on the owner's PC with the real vlog (`CONTRIBUTING.md`, playback
-      measurement, `HFWIN_SMOKE_PLAYBACK_AT=none` for jumps only) and ask the owner whether moving around now
-      feels smooth. If it is still not smooth enough there: a keyframe on every picture (`-g 1`, files about
-      four times bigger) or 540p
+- [x] M16-08 Measure the lighter copies on the owner's PC with the real vlog (Claude, 2026-10-14). Watching: a
+      jump shows its picture in 54 ms (slowest 79), a drag shows 31 pictures a second. Editor: 133 ms (slowest
+      366), 30 a second. Opening: 2.6 s, the editor 1.3 s. More keyframes were tried by a helper (every 0.2 s,
+      every picture) and made no difference, so the copies stay as they are. Numbers: `docs/FINDINGS.md`, last
+      sections. Not yet asked: whether it now feels smooth to the owner
+- [ ] M16-10 The editor's first open of a project: for a minute or two jumps take 1 to 5 s, while Studio makes
+      its filmstrips, thumbnails and sound pictures and the footage study listens to every clip (measured on
+      the owner's PC, M16-08). Say so on screen ("Getting the editor ready"), or start that work earlier
 - [x] M16-09 (Claude, 2026-10-14; done as below) HyperFrames keeps a second full copy of every video in its undo history
       (`%USERPROFILE%\.cache\hyperframes\history`, see UP-02). Show the owner how much room it takes, and offer
       to clear the history of projects that are gone (upstream has `pruneGoneProjectHistories`). Done: Home's foot says "Undo copies of your videos take 666 MB on this computer", and when
