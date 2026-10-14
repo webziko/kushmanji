@@ -522,7 +522,7 @@ now comes first**: it changes what every later feature looks like. The review it
       hides the logo and gives its accent Kushmanji's coral (Studio itself is not changed; a test reads Studio's
       built files so an update that renames either fails). The app sets its own Windows app id (the installer's),
       so the taskbar takes its icon, and the owner's two Desktop shortcuts got the Kushmanji icon
-- [ ] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
+- [~] M14-12 (Claude) The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
       use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
       one list per language (`docs/UX.md` is the English one). The assistants already answer in the language
       they are written to; the footage study's speech is M10-11
@@ -672,7 +672,9 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       on with Gemini": each switches the chat and prepares a message asking that assistant to check the half
       done work and finish it (the person presses Send). Tried in the real app with a stand-in Claude that
       prints the limit message; not yet with a real limit
-- [~] M17-07 (Claude, 2026-10-14: the means are built, Codex not yet tried) Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
+- [x] M17-07 (Claude, 2026-10-14; Codex proven on the owner's PC: with `default_tools_approval_mode="approve"` on
+      the server it called look_at_video and described the frame; without it `codex exec` refused every call,
+      "required unavailable approval") Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
       ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
       good short that way, with two faults a look would have caught (lips not matching the words, a strip
       across the top). Find a way for Codex to take still frames inside its sandbox (with M2-21)

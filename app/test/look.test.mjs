@@ -47,7 +47,9 @@ test("Claude and Codex are each told about the same server, with paths that keep
   assert.equal(claude[0], "--mcp-config");
   assert.deepEqual(JSON.parse(claude[1]).mcpServers.kushmanji.args.at(-1), dir);
   const codex = codexLookArgs(dir, options);
-  assert.equal(codex.filter((arg) => arg === "-c").length, 3);
+  assert.equal(codex.filter((arg) => arg === "-c").length, 4);
+  // `codex exec` cannot ask, so the tool must be approved up front or every call is refused.
+  assert.ok(codex.includes('mcp_servers.kushmanji.default_tools_approval_mode="approve"'));
   assert.equal(codex[1], 'mcp_servers.kushmanji.command="C:\\\\Program Files\\\\Kushmanji\\\\Kushmanji.exe"');
   assert.ok(codex[3].endsWith('"C:\\\\Users\\\\José Müller\\\\Videos\\\\My vlog"]'));
 });

@@ -30,5 +30,8 @@ export function codexLookArgs(dir, options) {
     "-c", `mcp_servers.kushmanji.command=${toml(server.command)}`,
     "-c", `mcp_servers.kushmanji.args=[${server.args.map(toml).join(", ")}]`,
     "-c", 'mcp_servers.kushmanji.env={ ELECTRON_RUN_AS_NODE = "1" }',
+    // `codex exec` cannot stop to ask, so without this every call was refused ("required unavailable approval",
+    // seen 2026-10-14). The tool only draws pictures of this one project; Codex 0.162 accepts the setting.
+    "-c", 'mcp_servers.kushmanji.default_tools_approval_mode="approve"',
   ];
 }
