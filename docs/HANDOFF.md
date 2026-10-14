@@ -5,6 +5,35 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-14 (afternoon) · Claude · Full review with tests, and a premium look (M14-13), in the cloud
+
+The owner asked to merge the branch into `main` (done for the morning's work: PR #1, merge `b13a496`), to review
+everything with tests, and said the screens did not feel premium. Three Sonnet helpers did the reading; the
+fixes were checked and committed here.
+
+- **Main process review** (`f6c7852`): 93 new tests in ten files (`runner-paths`, `lightCopies-run`,
+  `storage-clean`, `health-run`, `kits-edge`, `look-server`, `covers-save`, `ask-catcher`, `journal-robust`,
+  `rules-static`). Each bug they found was fixed in the same commit, so none is left as a `todo`. The ones
+  that matter on Windows: the check-up's scratch folder is removed in the background with retries (the
+  assistant reports done before it exits, and Windows will not remove a folder a process is in); light
+  copies end in "unavailable" instead of hanging when the folder cannot be written. `rules-static.test.mjs`
+  greps the sources for the AGENTS Windows rules (killTree, windowsHide, no shell strings, 127.0.0.1).
+- **Chat trimmed at 200 messages** (`1b2d7ec`): a reply's place is now counted after trimming, Undo finds the
+  reply by its history entry id (the page sends `id` with `agent:undo`), the check-up by its time.
+- **Usage limit on an ok turn** now needs the plan-spent wording (`SPENT` in `limits.js`); "rate limit" alone
+  only counts on a failed turn.
+- **Screens review** (`f7437e6`) and **premium look** (`843cb10`, M14-13): `styles.css` was rewritten by a
+  helper (tokens at the top: type scale, spacing, radii, shadows, motion). No JavaScript or words changed,
+  except "Save the video" became "Save video" everywhere (`29761f5`; `smoke.js` follows).
+- **M1-11** (`8b59bf0`) project folder names keep Kannada and other scripts; **M1-12** (`94524e1`) the window
+  reopens where it was.
+
+**Not done, still open:** M9-06's recorded-output bridge tests (ChatGPT's), M14-12 the app in Kannada and Hindi
+(stopped to save the owner's allowance), M17-04 shorts, M16-08 and M10-11 on the owner's PC. The self-test
+still stops at the editor's arrow-key step on Linux only; CI on Windows runs check and the unit tests.
+
+---
+
 ## 2026-10-14 · Claude · Smooth jumping and dragging: lighter copies (M16-07), in the cloud
 
 This sitting ran in a Claude Code cloud container (Linux, 4 cores, no graphics card), not on the owner's PC:
