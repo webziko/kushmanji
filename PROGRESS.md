@@ -485,6 +485,10 @@ now comes first**: it changes what every later feature looks like. The review it
       last video's picture, "From my clips" and "From an idea" cards, then "My videos" as pictures. The picture
       is taken from the player as the person leaves a video (`covers.js`; nearly black frames are skipped)
 - [ ] M14-08 Try it on someone who has never seen it, and fix what they stumble on
+- [ ] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
+      use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
+      one list per language (`docs/UX.md` is the English one). The assistants already answer in the language
+      they are written to; the footage study's speech is M10-11
 
 ## M15 · Spend less: smaller models, and a team you choose
 
