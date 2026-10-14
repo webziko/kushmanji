@@ -23,18 +23,27 @@ const SECTIONS = [
   { id: "home", name: "Starting out", parts: [
     ["Carry on", "Open the video you changed last, just where you left it. It shows once you have a video."],
     ["From my clips", "Press Choose clips to copy your clips into a new video. Your own files are not changed."],
-    ["From an idea", "Say what you want and press Make it. This way of starting is still being tested."],
+    ["From an idea", "Say what you want and press Make it, then pick how long, which shape and what feel."],
     ["Blank video", "Start an empty video, then add clips or ask for a title."],
     ["Open a folder", "Open a video that is saved in a folder, from Kushmanji or HyperFrames."],
     ["My videos", "Open a video you have already worked on."],
+    ["Before you start", "Shows only when this computer still needs something, with how to get it."],
+    ["unofficial", "Press it to read what Kushmanji is and whose engine it runs on."],
   ] },
   { id: "watch", name: "Watching and asking for changes", parts: [
     ["Your video", "Press Play to watch, or drag the bar to a moment you want to change."],
     ["The chat", "Tell the assistant what to change in your own words, then press Send."],
     ["At 0:42", "The moment beside your message tells the assistant which part you mean."],
+    ["@", "Type @ to name a clip, a picture or this moment. You can also drop clips from your folders onto the chat."],
+    ["While it works", "Keep typing: Send when done waits for the assistant, Stop and send now changes course."],
+    ["Undo this change", "Puts back everything the assistant changed in that reply. Bring it back undoes the undo."],
+    ["Ask ... to check it", "Another of your assistants looks the change over and lists what is wrong, once."],
+    ["Checked for mistakes", "After every change the app looks for mistakes itself, for free, and says what it found."],
     ["Editing buttons", "See what an action can do, then prepare a message you can check before sending."],
-    ["Assistant and clip settings", "Choose your assistant, what it may do, and when it asks you first. " +
-      "You can also look at what the app saw in your clips."],
+    ["Assistant and clip settings", "Tick the assistants you have, choose one, what it may do, and when it asks " +
+      "you first. Auto picks a smaller model for small changes to save your allowance. Look saves this video's " +
+      "colours, fonts and titles under a name, or gives it a saved look. You can also see what the app saw in " +
+      "your clips."],
     ["Start over", "Start a new conversation with the assistant. Your video is not changed."],
     ["Edit by hand", "Open the full editor to make changes yourself."],
     ["Save video", "Make a video file in your Downloads folder. A long video takes a while; the count shows how far it is."],

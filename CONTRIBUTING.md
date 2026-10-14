@@ -85,6 +85,12 @@ app/src/main/            the main process (Node): the only code with file and pr
   editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
   exporter.js            "Save video": the video file, made into the Downloads folder
   lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them
+  covers.js              Home's picture of each video, captured from the player
+  storage.js             Home's "Undo copies take ..." and "Free up space" (upstream's `hyperframes clean`)
+  health.js              Home's "Before you start": what this computer still needs (`hyperframes doctor`)
+  kits.js                saved looks: a video's STYLE.md kept under a name and used again
+  mentions.js            the "@" list in the message box, and clips dropped on the chat
+  askAgent.js            the editor's own "Ask agent" buttons go to the chat box
   loudness.js            the saved video's sound, brought to the loudness YouTube and Instagram play at
   smoke.js               the self-test's steps
   playbackProbe.js       the self-test's playback measurement on a real project
@@ -99,8 +105,15 @@ app/src/main/            the main process (Node): the only code with file and pr
     access.js            the three access levels and which one a project is on
     working.js           the three ways of working, and the plan that waits for a yes
     craft.js             the editing guide written into every project
+    limits.js            recognises an assistant stopped by its usage limit
+    sizing.js            "Auto": a smaller model for a small change
+    turnHistory.js       "Undo this change": each turn is one entry in HyperFrames' history
+    turnCheck.js         the app's check for mistakes after each change
+    checkup.js           "Test it now" for an assistant newer than the app was tried with
+    lookTool.js          how each assistant is given the "look at the video" tool
     mediaTools.js        puts the FFmpeg check on an agent's PATH
-    tools/               the check itself: rules.js (what is allowed), guard.mjs, and bin/ (the stand-ins)
+    tools/               the check itself: rules.js (what is allowed), guard.mjs, and bin/ (the stand-ins);
+                         look.mjs, the "look at the video" tool server
     claude.js  codex.js  antigravity.js     one bridge per agent
 app/src/preload/         preload.cjs: the only bridge between page and main process
 app/src/renderer/        the page: Home, the project view, the chat (plain DOM, no build step)

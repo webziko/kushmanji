@@ -65,6 +65,12 @@ never put the copies in a video).
   the pre-installed Chromium (`--screenshot`) and shrunk with ImageMagick.
 - **M15-04, half** (`f8df8d1`): a fresh conversation after six requests, with `recapNote`.
 - **M13-04, main half** (`a2bb9d0`): `send({ purpose: "review" | "fix" })`; the chat's buttons are next.
+- **M5-01 installer** (`2ccd03d`): `Installer` workflow builds `Kushmanji-Setup-<version>.exe` (137 MB) on
+  windows-latest for every push, in about two minutes; `asar: false` on purpose. **M5-04** (`3004b29`): Home's
+  "Before you start" from `hyperframes doctor`.
+- **M17-07 "look_at_video"** (`b06eb1a`): an MCP server per turn for Claude Code (`--mcp-config`, a variadic
+  option: the next argument must start with `--`) and Codex (`-c mcp_servers...`). Proven with one real Claude
+  Code turn on Haiku. Codex and Gemini not tried; Gemini is not given it yet.
 - **CI on GitHub runs on Windows for every push and passed** for this sitting's commits: the seven unit tests that
   fail on Linux pass there. Read it with the GitHub tools after pushing from a cloud session.
 - In this container `killTree` leaves preview servers running (it is written for Windows): 24 were found after
