@@ -32,7 +32,7 @@ function runner({ state = {}, history, bridgeRun, check } = {}) {
     accessFor: () => "project", accessNote: () => "Project only.",
     LEVELS: [], withAccess() {},
     DEFAULT_MODE: "build", knownMode: (value) => value, modeNote: () => "", MODES: [],
-    handoverNote: () => "", recordTurn: (_dir, turn) => turns.push(turn),
+    handoverNote: () => "", recapNote: () => "RECAP of the latest work", recordTurn: (_dir, turn) => turns.push(turn),
     usageLimit, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
     fs, cliVersion: "0.8.149", CHECK_REQUEST, judge, makeScratch, testedOk,
     claude: bridge, codex: bridge, antigravity: bridge,
@@ -221,4 +221,20 @@ test("a reply that changed the video is checked once, and what was found is kept
   assert.equal(agent.history("video").messages.at(-1).checked.errors, 1);
   assert.equal(events.at(-1).type, "checked");
   assert.equal(events.at(-1).index, 1);
+});
+
+test("after six requests in one conversation the assistant starts afresh, with a recap instead of the old words", async () => {
+  const { agent, requests } = runner();
+  for (let i = 0; i < 7; i++) {
+    agent.send({ dir: "video", text: `Change number ${i + 1}.` });
+    await settled();
+    requests[i].onEvent({ type: "session", id: "talk-1" });
+    requests[i].onEvent({ type: "done", ok: true });
+  }
+  assert.equal(requests[1].sessionId, "talk-1", "the second request carries on the conversation");
+  assert.equal(requests[5].sessionId, "talk-1");
+  assert.equal(requests[6].sessionId, null, "the seventh starts a fresh one");
+  assert.match(requests[6].text, /RECAP of the latest work/);
+  assert.doesNotMatch(requests[5].text, /RECAP/);
+  assert.ok(agent.history("video").messages.at(-1).activities.some((step) => /fresh conversation/.test(step)));
 });

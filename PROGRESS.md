@@ -480,8 +480,11 @@ subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each jo
       Sonnet in the real app with a stand-in Claude; not yet tried with a real assistant
 - [ ] M15-03 Heavy looking and listening goes to the assistant that does it cheapest (today Gemini: it listened
       to 20 clips), and comes back as a short note the others read, instead of each one studying the footage
-- [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
-      conversation when a job is done, carrying a short summary forward
+- [~] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
+      conversation when a job is done, carrying a short summary forward. Half done (Claude, 2026-10-14): after
+      six requests in one conversation the assistant starts a fresh one, with a recap of the latest six turns
+      from the shared record (`recapNote` in `journal.js`); the steps line says "A fresh conversation, to save
+      your allowance". Open: the study's summary; measuring what it saves (M15-05)
 - [ ] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13)
 - [x] M15-06 A smaller model through the chat's model menu (Claude, 2026-10-13). Sonnet was picked in the menu
       and did the whole vlog repair (M16-02) in one request of about 17 minutes, without reaching the limit.

@@ -8,7 +8,7 @@ import * as antigravity from "./antigravity.js";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "./checkup.js";
 import * as claude from "./claude.js";
 import * as codex from "./codex.js";
-import { filesChangedSince, handoverNote, recordTurn } from "./journal.js";
+import { filesChangedSince, handoverNote, recapNote, recordTurn } from "./journal.js";
 import { usageLimit } from "./limits.js";
 import { AUTO, sizeModel } from "./sizing.js";
 import { isNewer } from "./versions.js";
@@ -21,6 +21,8 @@ const DEFAULT_ENGINE = "claude";
 const MAX_MESSAGES = 200;
 // Longer than any real request; it stops a runaway paste from becoming a runaway bill.
 const MAX_REQUEST = 20_000;
+// After this many requests in one conversation an assistant starts a fresh one with a recap (M15-04).
+const FRESH_AFTER = 6;
 
 const NAMES = Object.fromEntries(Object.entries(BRIDGES).map(([id, bridge]) => [id, bridge.about.name]));
 
@@ -46,6 +48,8 @@ const chosenModel = (models, engine) => (models && Object.hasOwn(models, engine)
 const emptyChat = () => ({
   engine: knownEngine(readState().agent) ?? DEFAULT_ENGINE,
   sessions: {},
+  // How many requests each assistant's current conversation has had: a long one starts afresh (M15-04).
+  turns: {},
   // How involved the person wants to be in this project: see working.js.
   mode: DEFAULT_MODE,
   // What each agent's conversation was last told about its access and the way of working, so a change is said
@@ -60,7 +64,10 @@ function readChat(dir) {
   const engine = knownEngine(chat.engine) ?? DEFAULT_ENGINE;
   // Each agent keeps its own conversation. Chats saved before there was a choice had one `sessionId`.
   const sessions = chat.sessions ?? (chat.sessionId ? { [engine]: chat.sessionId } : {});
-  return { engine, sessions, mode: knownMode(chat.mode) ?? DEFAULT_MODE, told: chat.told ?? {}, messages: chat.messages };
+  const turns = chat.turns && typeof chat.turns === "object" ? chat.turns : {};
+  return {
+    engine, sessions, turns, mode: knownMode(chat.mode) ?? DEFAULT_MODE, told: chat.told ?? {}, messages: chat.messages,
+  };
 }
 
 function writeChat(dir, chat) {
@@ -270,6 +277,15 @@ export class AgentRunner {
     const chat = readChat(dir);
     const { engine } = chat;
     if (!teamOf(readState()).includes(engine)) throw new Error("Choose one of your assistants first.");
+    // Every request in a resumed conversation sends all of it again, so a long one spends the person's allowance
+    // on old words. After a few requests the assistant starts afresh, with a recap from the shared record (M15-04).
+    const sofar = chat.turns?.[engine] ?? 0;
+    const fresh = Boolean(chat.sessions[engine]) && sofar >= FRESH_AFTER;
+    if (fresh) {
+      delete chat.sessions[engine];
+      delete chat.told[engine];
+    }
+    chat.turns = { ...chat.turns, [engine]: fresh ? 1 : sofar + 1 };
     // Read from the app's own settings here, never taken from the page or from the project folder.
     const access = accessFor(readState().access, dir);
     // The agent hears its limits and the way of working at the start of a conversation, and again whenever the
@@ -286,7 +302,8 @@ export class AgentRunner {
     writeChat(dir, chat);
 
     // What other agents did since this one last worked here, so it does not act on a stale picture.
-    const handover = handoverNote(dir, engine, { ...NAMES, person: "The person, by hand" });
+    const names = { ...NAMES, person: "The person, by hand" };
+    const handover = fresh ? recapNote(dir, names) : handoverNote(dir, engine, names);
     const preface = [handover, limits, pointing?.note, moment?.note].filter(Boolean).join("\n\n");
     const turn = {
       dir,
@@ -301,6 +318,7 @@ export class AgentRunner {
       handle: null,
     };
     this.#active = turn;
+    if (fresh) this.#onEvent(turn, { type: "activity", label: "A fresh conversation, to save your allowance" });
     const start = async () => {
       let model = chosenModel(readState().models, engine);
       if (model === AUTO) {

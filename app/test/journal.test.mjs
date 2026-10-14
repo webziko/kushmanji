@@ -76,3 +76,18 @@ test("hidden folders and outputs do not count as changed files", () => {
 test("a project that cannot be written to does not throw", () => {
   assert.doesNotThrow(() => recordTurn(path.join(dir, "missing", "\0bad"), { engine: "codex", asked: "a", did: "b", startedAt: 0 }));
 });
+
+test("a fresh conversation's recap holds the latest turns of every assistant and the person", async (t) => {
+  const { recapNote, recordTurn } = await import("../src/main/agents/journal.js");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hfwin recap é "));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  assert.equal(recapNote(dir, {}), "");
+  for (let i = 1; i <= 8; i++) {
+    recordTurn(dir, { engine: i % 2 ? "claude" : "codex", asked: `Request ${i}`, did: `Done ${i}`, startedAt: Date.now() });
+  }
+  const recap = recapNote(dir, { claude: "Claude", codex: "Codex" });
+  assert.match(recap, /fresh conversation/);
+  assert.doesNotMatch(recap, /Request 2"/, "only the latest six");
+  assert.match(recap, /Codex was asked: "Request 8"/);
+  assert.match(recap, /Claude was asked: "Request 3"/);
+});
