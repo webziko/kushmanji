@@ -17,6 +17,9 @@ export const HOUSE_PROMPT =
   "Read FOOTAGE_REVIEW.md when it exists: it may contain a verified orientation and sound review. A portrait " +
   "file can contain a sideways landscape picture: inspect its frames before cropping or adding side fills. " +
   "Correct rotation first. Preserve the originals and make separate prepared files for sound or picture fixes. " +
+  "When you have the look_at_video tool, use it before you say a change is done: ask for the moments you changed " +
+  "and look at the pictures (titles cut off, faces cropped, captions over faces, black frames). Fix what is wrong " +
+  "once, then say what you checked. " +
   "When STYLE.md exists it is this video's look (colours, fonts, titles, captions, ending card): follow it, and keep " +
   "it true when the person changes the look. Asked to write the look down, write STYLE.md with exact colours (hex), " +
   "fonts, sizes, positions and timings, so another video can match it. " +

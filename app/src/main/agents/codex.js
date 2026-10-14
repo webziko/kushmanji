@@ -4,6 +4,7 @@ import path from "node:path";
 import { collect, killTree } from "../proc.js";
 import { withHouseNote } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
+import { codexLookArgs } from "./lookTool.js";
 import { mediaToolsEnv } from "./mediaTools.js";
 
 // The Codex bridge (ChatGPT's coding agent). Same contract as claude.js; see docs/ARCHITECTURE.md.
@@ -165,6 +166,8 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
       "--json",
       "--skip-git-repo-check",
       ...(model ? ["-m", model] : []),
+      // The app's own "look at the video" (lookTool.js), started by Codex outside its sandbox.
+      ...codexLookArgs(dir),
       ...(ACCESS[access] ?? ACCESS.project)(),
       ...(plain && access !== "full" ? SANDBOX_FALLBACK : []),
     ];

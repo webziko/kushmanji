@@ -622,7 +622,7 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       on with Gemini": each switches the chat and prepares a message asking that assistant to check the half
       done work and finish it (the person presses Send). Tried in the real app with a stand-in Claude that
       prints the limit message; not yet with a real limit
-- [ ] M17-07 Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
+- [~] M17-07 (Claude, 2026-10-14: the means are built, Codex not yet tried) Codex cannot look at what it made: at "Editing tools" its own still-frame check is refused
       ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
       good short that way, with two faults a look would have caught (lips not matching the words, a strip
       across the top). Find a way for Codex to take still frames inside its sandbox (with M2-21)
@@ -630,7 +630,12 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
 ## Upstream
 
 Windows bugs found in heygen-com/hyperframes itself. Each becomes a pull request there, not a patch here.
-
+. Built: `look_at_video`, a tiny MCP server
+      (`agents/tools/look.mjs`) the assistant starts itself, outside its sandbox, that renders still pictures of
+      its own project at the moments it asks for with HyperFrames' snapshot and returns them as images. Claude Code
+      gets it with `--mcp-config`, Codex with `-c mcp_servers...` (`agents/lookTool.js`); every assistant is told
+      to look before saying a change is done. Proven with a real Claude Code (Haiku, half a cent): it called the
+      tool at 5 s and described the picture correctly. Not yet tried with Codex or Gemini
 - [ ] UP-01 `hyperframes transcribe --engine whisper` cannot set itself up on Windows. It only builds
       whisper.cpp from source (needs git, cmake and a C compiler), and even after a build it looks for
       `build/bin/whisper-cli` with no `.exe`, which Windows never produces. Found by reading

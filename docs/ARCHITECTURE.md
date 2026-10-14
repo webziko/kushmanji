@@ -82,6 +82,14 @@ first five mistakes with that reply, and sends a `checked` event; the chat adds 
 under the reply, with a button that puts a request to fix them in the message box. Notes (warnings) are only
 counted: some are expected.
 
+**Assistants can look at the video** (M17-07, `agents/tools/look.mjs`, `agents/lookTool.js`). Each Claude Code and
+Codex turn is given a small MCP server, run by the app's own Electron as Node, with one tool, `look_at_video`: up
+to six moments in seconds, answered with PNG pictures made by `hyperframes snapshot` into the project's
+`.cache/kushmanji-look` (the newest three looks are kept). The assistant starts it itself, so it runs outside
+Codex's sandbox, which refuses the browser a snapshot needs. Claude Code takes it with `--mcp-config` (that option
+takes a list, so the next argument must start with `--`) and `mcp__kushmanji__look_at_video` in its allowed
+tools; Codex with three `-c mcp_servers.kushmanji...` settings. Gemini (Antigravity) is not given it yet.
+
 **The editor's "Ask agent" buttons** (M3-02, `main/askAgent.js`). Studio's buttons that hand something to an
 assistant only copy a prompt. When Studio's page loads directly inside the app's page, the main process wraps
 `Clipboard.prototype.writeText` there: a text that begins like one of Studio's prompts is posted to the app's page

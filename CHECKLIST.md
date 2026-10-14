@@ -89,6 +89,9 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **Saved looks**: in the chat's settings, "Save this look" keeps a video's colours, fonts, titles and ending
       card under a name (for example "Happy with Shisha"); "Use" gives another video the same look. Next time you
       make shorts, they can all match
+- [x] **Assistants can now look at the video they made**: a "look at the video" tool returns still pictures at
+      the moments they ask for, and they are told to check before saying "done". Proven with Claude; ChatGPT
+      (Codex) should now be able to look too, which it could not before. To be tried on your PC
 - [x] **A second opinion**: "Ask ChatGPT to check it" under a change, then "Ask Claude to fix these". One round,
       never a loop
 - [x] **Type `@` in the message box** to name a clip or "this moment"; **drop clips on the chat** to add them

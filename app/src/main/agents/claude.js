@@ -3,6 +3,7 @@ import path from "node:path";
 import { collect, killTree } from "../proc.js";
 import { HOUSE_PROMPT } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
+import { CLAUDE_LOOK_TOOL, claudeLookArgs } from "./lookTool.js";
 import { mediaToolsEnv } from "./mediaTools.js";
 
 // The Claude Code bridge, and the reference for the agent bridge contract in docs/ARCHITECTURE.md.
@@ -52,6 +53,8 @@ const limited = (...commands) => [
   "acceptEdits",
   "--allowedTools",
   ...commands,
+  // The app's own "look at the video" (lookTool.js): it only draws this project.
+  CLAUDE_LOOK_TOOL,
   "WebFetch",
   "WebSearch",
   "Skill",
@@ -155,6 +158,7 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
       HOUSE_PROMPT,
       ...(sessionId ? ["--resume", sessionId] : []),
       ...(model ? ["--model", model] : []),
+      ...claudeLookArgs(dir),
       ...(ACCESS[access] ?? ACCESS.project),
     ],
     { cwd: dir, env: mediaToolsEnv(agentEnv(), { dir, access }) },
