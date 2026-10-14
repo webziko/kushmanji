@@ -4,12 +4,14 @@
 import { createChat } from "./chat.js";
 import { h } from "./dom.js";
 import { createPlayer } from "./player.js";
+import { createAbout } from "./about.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
 const help = createHelp();
+const about = createAbout(() => info);
 
 const folderName = (dir) => dir.split(/[\\/]/).filter(Boolean).pop() ?? dir;
 
@@ -320,10 +322,10 @@ function showHome() {
     h(
       "header",
       { class: "topbar" },
-      h("span", { class: "brand" }, h("span", { class: "brand-mark", "aria-hidden": "true" }), "Kushmanji"),
-      h("span", { class: "tag" }, "built on HyperFrames · unofficial"),
+      h("img", { class: "brand-wordmark", src: "brand/wordmark.svg", alt: "Kushmanji" }),
+      // "Unofficial" stays in sight (AGENTS.md); the credit to HyperFrames and the versions are in About.
+      h("button", { class: "tag", type: "button", title: "About Kushmanji", onclick: () => about.show() }, "unofficial"),
       h("span", { class: "spacer" }),
-      h("span", { class: "muted" }, info ? `App ${info.appVersion} · HyperFrames ${info.cliVersion}` : ""),
       help.button,
     ),
     home.main,

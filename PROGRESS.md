@@ -448,8 +448,13 @@ now comes first**: it changes what every later feature looks like. The review it
       Decide with me"; the model menu is "How careful"; the clips bar and review box, editing buttons, Help
       (with the editor's arrow keys) and the main process's errors rewritten. The list is `docs/UX.md`, "The
       words". Left for M14-06: "built on HyperFrames" in the header. Not yet looked at on the owner's PC
-- [ ] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
-      HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames"
+- [x] M14-06 Kushmanji's own logo and icon (with M5-02), its own colours, and an About box that credits
+      HyperFrames and says plainly it is not HeyGen's. The header stops saying "built on HyperFrames" (Claude,
+      2026-10-14). The owner picked direction A, "Friendly", from `docs/brand/choices.png`: coral on cream
+      with cocoa text, a smiling play-button icon, a rounded wordmark. Colours in `styles.css` `:root`, errors
+      in crimson so they never look like the brand. The header shows the wordmark and an "unofficial" tag that
+      opens "About Kushmanji" (the credit to HyperFrames, not HeyGen's, the versions). The window has the icon;
+      `app/build/icon.ico` (16 to 256 px) is ready for the installer (M5-02)
 - [x] M14-07 (Claude, 2026-10-14; page by a Sonnet helper, reviewed) The Home screen as a place to start, not a list: "Make a video from my clips", "Make a video from
       an idea", "Carry on with ..." with a picture of each video. Built: a "Carry on" card with the
       last video's picture, "From my clips" and "From an idea" cards, then "My videos" as pictures. The picture

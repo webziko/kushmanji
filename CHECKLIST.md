@@ -23,7 +23,8 @@ Two shortcuts are on your Desktop:
 - [ ] **Close Kushmanji and open it again** to get "Save video", the new arrow keys and smooth moving around.
       Then open your vlog, wait until the top bar says "Clips are smooth to edit" (a minute or two, once per
       project), and drag the playhead: tell me if it now follows your hand.
-- [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
+- [x] **A logo and colours for Kushmanji.** You picked A, "Friendly": the app is now coral and cream with the
+      smiling play-button icon. "unofficial" at the top opens "About Kushmanji"
 - [ ] **Which access level should a new person start on?** Today: "Only this video". My advice: "Also cut my clips".
 - [ ] **Music made on this PC?** Your channel's own notes say no (its licence does not allow earning from
       it), so your videos use YouTube Audio Library tracks. Still open for other people who use Kushmanji.

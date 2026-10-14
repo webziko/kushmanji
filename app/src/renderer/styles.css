@@ -4,24 +4,27 @@
 
 :root {
   color-scheme: light;
-  --bg: oklch(0.955 0.005 70);
-  --surface: oklch(0.987 0.005 70);
-  --raised: oklch(1 0 70);
-  --text: oklch(0.205 0.003 70);
-  --text-2: oklch(0.403 0.003 70);
-  --muted: oklch(0.503 0.003 70);
+  /* Kushmanji's own colours, "Friendly" (owner's pick, 2026-10-14): coral on cream with cocoa text. Every text
+     pair passes WCAG AA; the ratios are in docs/brand/README.md. */
+  --bg: #fff4e9;
+  --surface: #fffaf4;
+  --raised: #fffdfa;
+  --text: #3a2420;
+  --text-2: #6b4a42;
+  --muted: #7d5c52;
   --border: color-mix(in oklab, var(--text) 8%, transparent);
   --border-strong: color-mix(in oklab, var(--text) 15%, transparent);
   --hover: color-mix(in oklab, var(--text) 5.5%, transparent);
   --press: color-mix(in oklab, var(--text) 9.5%, transparent);
-  --accent: oklch(0.536 0.114 164);
-  --accent-hover: oklch(0.486 0.103 164);
-  --accent-ink: oklch(0.45 0.096 164);
+  --accent: #ce4630;
+  --accent-hover: #b53a26;
+  --accent-ink: #a02f1b;
   --accent-wash: color-mix(in oklab, var(--accent) 13%, transparent);
   --on-accent: oklch(1 0 0);
-  --danger-ink: oklch(0.45 0.17 25);
-  --danger-wash: color-mix(in oklab, oklch(0.56 0.19 25) 10%, transparent);
-  --radius: 10px;
+  /* Crimson, not the coral of the brand, so "you must do something" never looks like a button. */
+  --danger-ink: #a3122a;
+  --danger-wash: color-mix(in oklab, #a3122a 9%, transparent);
+  --radius: 14px;
   --topbar: 44px;
 }
 
@@ -152,15 +155,13 @@ button:disabled {
   font-weight: 650;
 }
 
-/* A plain play mark. Deliberately not HeyGen's logo: this build is unofficial and must not pass for theirs. */
-.brand-mark {
-  width: 0;
-  height: 0;
-  border-block: 7px solid transparent;
-  border-inline-start: 12px solid var(--accent);
-}
+/* Kushmanji's own mark and lettering (docs/brand, direction A). Never HeyGen's or HyperFrames' logo. */
+.brand-wordmark { height: 24px; width: auto; display: block; }
 
 .tag {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
   padding: 1px 8px;
   border-radius: 999px;
   background: var(--accent-wash);
@@ -991,3 +992,9 @@ h2 {
 .msg-check .msg-actions { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
 .msg-check-details summary { cursor: pointer; color: var(--text-2); padding: 4px 0; }
 .msg-check-details p { margin: 4px 0; color: var(--text-2); }
+
+/* About Kushmanji (M14-06). */
+.about-dialog { max-width: 440px; text-align: center; }
+.about-dialog .about-wordmark { height: 44px; width: auto; display: block; margin: 8px auto 4px; }
+.about-dialog .notice-actions { justify-content: center; }
+.foot.space button { text-decoration: underline; color: var(--accent-ink); }

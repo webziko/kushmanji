@@ -147,7 +147,9 @@ function createWindow() {
     minWidth: 960,
     minHeight: 600,
     show: false,
-    backgroundColor: "#f3f1ee",
+    backgroundColor: "#fff4e9",
+    // Kushmanji's own icon (M14-06); the installer's comes from build/icon.ico.
+    icon: path.join(here, "..", "renderer", "brand", "icon.png"),
     autoHideMenuBar: true,
     title: "Kushmanji",
     webPreferences: {
