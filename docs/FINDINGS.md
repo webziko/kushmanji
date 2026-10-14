@@ -177,3 +177,43 @@ own per-picture callback, on the watching screen and in the editor. How to run i
   when it is shorter than the file, and the editing guide tells every assistant never to play a clip past it.
 - **Two measuring runs were spoiled by real mouse clicks** landing in the test window (twelve were counted;
   the playhead was dragged). The measuring run now keeps the mouse out of its window.
+
+## Why jumping and dragging felt laggy, and the lighter copies (measured 2026-10-14)
+
+The owner still felt lag after M16-05, "opening the editor and all", and asked for editing as smooth as
+DaVinci Resolve. Playing inside a clip was already smooth; moving around was not measured. The playback
+measurement now also times eight jumps to a moment (from the jump to that moment's picture on screen), a drag
+of the playhead (thirty small jumps in one second, as a hand moves it), opening the editor, and memory.
+
+Measured on a practice project shaped like the owner's vlog (`app/scripts/test-vlog.mjs`: 19 clips, 1080p
+H.264 at 16 Mbps, a keyframe every second, 4 min 32 s), in the cloud on a 4-core Linux machine without a
+graphics card, so every picture is decoded by the processor. Absolute numbers on a Windows PC with a graphics
+card will be lower; the before-and-after difference is the point.
+
+| | Full 1080p files | 720p copies |
+| --- | --- | --- |
+| Jump to a moment, watching screen (middle of 8 / slowest) | 282 / 481 ms | 44 / 68 ms |
+| Jump to a moment, editor | 389 / 548 ms | 70 / 133 ms |
+| Pictures seen while dragging the playhead for one second | 1 to 2 | 32 to 33 |
+| Last picture after the hand stops | 300 to 350 ms | 20 to 30 ms |
+| App memory with the editor open (page processes) | 1,268 MB | 719 MB |
+| Processor, page processes, editor | 27% | 14% |
+
+- **Why:** a jump has to decode every picture from the last keyframe to the moment asked for: up to 29
+  full-size pictures. A drag asks for a new moment every 33 ms, each jump cancels the one before, and none
+  finishes until the hand stops. The copies have a keyframe every half second, no B-frames and a quarter of the
+  pixels.
+- **The copies' cost:** 83 MB for 553 MB of footage (15%), made in 80 seconds on this machine (about 3.5 times
+  faster than the footage plays). Playing while they were being made dropped 5 to 6 pictures in 604, the same
+  as without, because FFmpeg runs below normal priority.
+- **Opening the editor** took about one second to its first picture in every run here, the first time and
+  again. What was not measured here is a project's very first open on the owner's PC: HyperFrames then copies
+  every video over 1 MB into its undo history (`~/.cache/hyperframes/history`; 636 MB after these runs, a second
+  copy of all the footage), decodes every clip's whole sound for the waveforms, and decodes 32 pictures per clip
+  for the filmstrips. The copies make the filmstrips lighter (they read the same address); the history copy is
+  upstream's and has no switch (`PROGRESS.md`, Upstream).
+- **Research behind the recipe:** Resolve, Premiere, Final Cut and CapCut all edit from proxies (half or
+  quarter size, intra or short-GOP) and render from the originals. A Premiere user measured H.264 proxies with a
+  keyframe on every frame scrubbing as well as ProRes Proxy at a tenth of the size; `-tune fastdecode` drops
+  CABAC and the deblocking filter. Sources: workflow.frame.io/guide/resolve-proxies,
+  community.adobe.com (questions-729, "Are H.264 proxy files really that bad anymore"), support.apple.com/kb/PH12702.

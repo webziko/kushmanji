@@ -44,6 +44,11 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
 2. Change the version in `app/package.json`, run `npm install`.
 3. `npm run check && npm test && npm run smoke`, then one agent test.
 4. Check `preview --json` still prints the ready line `preview.js` waits for.
+5. The lighter copies (`lightCopies.js`) lean on three upstream facts: the preview route
+   `/api/projects/:id/preview/<path>` serves any project file outside `.hyperframes` with Range requests, and
+   Studio's file watcher (`WATCHER_EXCLUDED_DIRS`) and undo history (`isHistoryPath`) skip `.cache`. If one of
+   them changes, the copies stop being used or start reloading the editor. Check with the playback measurement
+   (`CONTRIBUTING.md`): `pictureShortSides` must read `[720]` once the copies are made.
 
 ## Electron updates (every eight weeks)
 

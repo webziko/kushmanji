@@ -333,6 +333,20 @@ async function openProject(dir, { request } = {}) {
       project.fail("failed", "The editor opened, but the video's picture did not finish loading. Try again.");
   });
   const mediaStatus = h("span", { class: "muted", role: "status" });
+  // The app makes lighter copies of big clips for smooth watching and editing (main/lightCopies.js).
+  const smooth = h("span", { class: "muted", role: "status" });
+  let smoothTimer;
+  const unwatchSmooth = api.on("preview:copies", ({ dir: changed, status }) => {
+    if (changed !== dir || open !== project) return;
+    clearTimeout(smoothTimer);
+    if (status.state === "making") smooth.textContent = `Making clips smooth to edit (${status.done} of ${status.total})`;
+    else if (status.state === "ready" && status.total > 0) {
+      smooth.textContent = "Clips are smooth to edit";
+      smoothTimer = setTimeout(() => { smooth.textContent = ""; }, 6000);
+    } else smooth.textContent = "";
+  });
+  const destroy = project.destroy;
+  project.destroy = () => { unwatchSmooth(); clearTimeout(smoothTimer); destroy(); };
   const addMedia = h("button", {
     class: "ghost", title: "Copy footage into this project; keep the originals.",
     onclick: async () => {
@@ -355,6 +369,7 @@ async function openProject(dir, { request } = {}) {
       h("button", { class: "ghost", onclick: goHome, title: "Back to your projects" }, "← Home"),
       h("span", { class: "project-name", title: dir }, project.name),
       mediaStatus,
+      smooth,
       save.status,
       h("span", { class: "spacer" }),
       save.show,

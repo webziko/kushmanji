@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-14, in the night. The app is now called **Kushmanji**._
+_Updated 2026-10-14, morning. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -20,7 +20,9 @@ Two shortcuts are on your Desktop:
       posted anywhere.
 - [ ] **Listen to the music** on the vlog's name card and ending card, and under the shorts. A computer
       checked the pictures; nobody has listened.
-- [ ] **Close Kushmanji and open it again** to get "Save video" and the new arrow keys.
+- [ ] **Close Kushmanji and open it again** to get "Save video", the new arrow keys and smooth moving around.
+      Then open your vlog, wait until the top bar says "Clips are smooth to edit" (a minute or two, once per
+      project), and drag the playhead: tell me if it now follows your hand.
 - [ ] **A logo and colours for Kushmanji.** I will show you a few to choose from; nothing to do until then.
 - [ ] **Which access level should a new person start on?** Today: "Project only". My advice: "Editing tools".
 - [ ] **Music made on this PC?** Your channel's own notes say no (its licence does not allow earning from
@@ -63,6 +65,23 @@ Claude measured your vlog playing in the real app, picture by picture.
 - Fixed in the app for every future video: Kushmanji now measures how long each clip's picture really lasts
   and tells every assistant never to play a clip past it.
 - Fixed in your vlog: see "Your City Centre vlog" below.
+
+## New on the morning of 14 October: moving around the video is smooth
+
+- [x] **Jumping and dragging no longer lag.** Measured first, on a practice video like your vlog: a jump to a
+      moment took about a third of a second, and dragging the playhead showed only one or two pictures a
+      second. Now Kushmanji makes a lighter copy of each big clip in the background, the way DaVinci Resolve
+      makes "proxies", and plays that copy while you watch and edit. A jump now takes 0.04 to 0.07 seconds, a
+      drag shows 33 pictures a second, and the editor uses about half the memory. "Save video" still uses
+      your full-quality files. The copies sit in a hidden `.cache` folder inside each project (about a sixth
+      of the footage's size) and are remade by themselves when a clip changes
+- [ ] **Not yet measured on your PC.** These numbers come from a cloud computer without a graphics card.
+      Yours should be at least as fast; the next session on your PC measures the real vlog
+- [ ] **Something HyperFrames does that you should know:** the first time a project opens in the editor,
+      HyperFrames keeps a second copy of all its videos for its undo history, in
+      `C:\Users\<you>\.cache\hyperframes\history`. That is extra disk space and a slow first open with big
+      footage. It is HyperFrames' own design; I have written it down to report to them, and a later task will
+      show you how much room it takes and offer to clear it for projects you deleted
 
 ## New in the night of 14 October
 

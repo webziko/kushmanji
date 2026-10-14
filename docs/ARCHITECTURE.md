@@ -51,6 +51,21 @@ the keyboard is in the chat box, and when the editor's focus is on anything that
 box, a slider, a menu, an open dialog). Whether a key is ours has to be answered at once, so what the editor
 is doing is asked four times a second while an editor is on screen. Nothing is added to the editor's page.
 
+**Lighter copies for watching and editing** (M16-07, `main/lightCopies.js`). Phone footage (1080p, about 16
+Mbps, a keyframe every second) made every jump to a moment decode up to a second of full-size pictures. A few
+seconds after a project opens, the main process makes a 720p copy of each heavy video the project's pages use
+(short side over 720, over 5 Mbps, or a codec other than H.264, VP8 or VP9): a keyframe every half second, no
+B-frames, the sound copied, timestamps kept. One FFmpeg at a time, below normal priority, into
+`<project>/.cache/kushmanji-preview/`, named after the original's path, size and modified time, so a changed
+original never uses an old copy. HyperFrames' file watcher and undo history both skip `.cache`, and its preview
+server still serves it. The session's `onBeforeRequest` answers a GET to the open project's
+`/api/projects/:id/preview/<video>` with a redirect to its copy when the copy exists; Studio, its filmstrips and
+the watching screen never know. A clip already loaded keeps its original until the runtime loads it again (it
+unloads clips a few seconds away from the playhead), so the copies take over without a reload. "Save video"
+renders with the CLI in its own browser and always reads the full files. The top bar says "Making clips smooth
+to edit (5 of 19)" while it works. Without FFmpeg nothing is made and the originals play. Measured: a jump went
+from 0.28 to 0.04 seconds, and a dragged playhead from 1 or 2 pictures a second to 33 (`docs/FINDINGS.md`).
+
 The preview manager watches source and media with a short quiet period, ignores hidden journals, saved
 versions, dependencies and exports, and emits `preview:changed`. The player reloads at its last position and
 playback state. On folders Windows cannot watch it also refreshes after an assistant's turn ends. Timers,

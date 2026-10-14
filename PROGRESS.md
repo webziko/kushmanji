@@ -8,7 +8,7 @@ The owner's short version is `CHECKLIST.md`.
 
 ## Where things stand
 
-_Updated 2026-10-14, in the night, by Claude; existing tasks keep their original ownership._
+_Updated 2026-10-14, morning, by Claude; existing tasks keep their original ownership._
 
 **The app is called Kushmanji** (owner, 2026-10-13), is public at `github.com/webziko/kushmanji` under
 Apache-2.0, and has its first commits. The owner wants every feature of the official app, one by one: the order
@@ -46,6 +46,9 @@ before most joins, because the clips' pictures are 0.2 seconds shorter than thei
 **New on 2026-10-14:** "Save video" makes the file in the Downloads folder in one press, with a count; in "Edit
 by hand" the arrow keys skip ten seconds while the video plays instead of pausing it; the owner's vlog has its
 fourth version (the channel's name, an ending card, a little music) and three upright shorts (M17).
+
+**New on the morning of 2026-10-14:** jumping and dragging in the video are smooth: the app plays 720p copies of
+big clips while watching and editing (M16-07), measured in the cloud on a practice vlog; not yet on the owner's PC.
 
 **Not there yet:** an installer (today it starts with `npm start`), drawing on the picture, updates.
 
@@ -476,9 +479,22 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       pause. Probably not visible. Open only so that someone watches a plain cut with the owner before closing
       it; if it does show, it is upstream's media sync (`packages/core/src/runtime/media.ts`) and goes under
       "Upstream" with these numbers
-- [ ] M16-07 "Still laggy" (owner, 2026-10-14, not sure where). Measure jumping to a moment and the editor's
-      own controls on the real vlog, then fix; likely lighter copies for watching and editing only. Plan in
-      `docs/HANDOFF.md`, top entry
+- [x] M16-07 "Still laggy": lighter copies for watching and editing (Claude, 2026-10-14). Measured first: a
+      jump to a moment took 0.28 s (watching) and 0.39 s (editor), and a dragged playhead showed 1 or 2
+      pictures a second. A few seconds after a project opens, the app now makes a 720p copy of every heavy clip
+      (keyframe every half second, no B-frames) in `.cache/kushmanji-preview`, below normal priority, and
+      redirects the preview's requests to it; "Save video" still renders the full files (`lightCopies.js`).
+      After: jumps 0.04 and 0.07 s, a drag shows 33 pictures a second, the editor uses 719 MB instead of 1,268.
+      The measurement now also times jumps, a drag, opening the editor and memory, and
+      `scripts/test-vlog.mjs` makes a practice project. Measured in the cloud on a practice vlog, not yet on
+      the owner's PC: see M16-08. Numbers: `docs/FINDINGS.md`, last section
+- [ ] M16-08 Measure the lighter copies on the owner's PC with the real vlog (`CONTRIBUTING.md`, playback
+      measurement, `HFWIN_SMOKE_PLAYBACK_AT=none` for jumps only) and ask the owner whether moving around now
+      feels smooth. If it is still not smooth enough there: a keyframe on every picture (`-g 1`, files about
+      four times bigger) or 540p
+- [ ] M16-09 HyperFrames keeps a second full copy of every video in its undo history
+      (`%USERPROFILE%\.cache\hyperframes\history`, see UP-02). Show the owner how much room it takes, and offer
+      to clear the history of projects that are gone (upstream has `pruneGoneProjectHistories`)
 - [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,
@@ -541,7 +557,14 @@ Windows bugs found in heygen-com/hyperframes itself. Each becomes a pull request
       PC has no cmake. Seen for real: `transcribe -l hi --json` answers `whisper_unavailable`. A fix upstream:
       download whisper.cpp's own Windows release, and look for the `.exe`
 
-Template: `- [ ] UP-02 What breaks · how to reproduce · upstream file · issue or PR link`
+- [ ] UP-02 Studio's undo history copies every video over 1 MB into `~/.cache/hyperframes/history` on a
+      project's first open (`adoptMediaInBackground`, `packages/cli` history code; a full copy on NTFS, which
+      has no reflink), then hashes it. 553 MB of footage became 636 MB of history in the measuring runs of
+      M16-07. Not Windows-only, but it hurts most there and with big footage. Reproduce: open a project with a
+      few large videos in Studio, then look at that folder. A fix upstream: reference media by hash in place,
+      or an option to keep media out of history
+
+Template: `- [ ] UP-03 What breaks · how to reproduce · upstream file · issue or PR link`
 
 ## Questions for the owner
 

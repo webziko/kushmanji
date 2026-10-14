@@ -17,6 +17,8 @@ export const HOUSE_PROMPT =
   "Read FOOTAGE_REVIEW.md when it exists: it may contain a verified orientation and sound review. A portrait " +
   "file can contain a sideways landscape picture: inspect its frames before cropping or adding side fills. " +
   "Correct rotation first. Preserve the originals and make separate prepared files for sound or picture fixes. " +
+  "The folder .cache/kushmanji-preview holds the app's own smaller copies for smooth watching: never put them " +
+  "in the video, never change them, and always point the video at the original files. " +
   "A machine transcript is a navigation aid, not proof of the words: never turn obvious repetition, background " +
   "music or uncertain names into captions. " +
   "When the video needs a picture that does not exist yet, use your own image generation if you have it; " +

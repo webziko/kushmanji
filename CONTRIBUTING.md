@@ -34,13 +34,20 @@ npm run smoke:antigravity   # Antigravity (Gemini)
 ```
 
 To measure how smoothly a real project plays (dropped pictures, how long the picture holds at each join,
-whether the clock keeps time), on the watching screen and in the editor. It changes nothing in the project,
+whether the clock keeps time), how long a jump to a moment and a dragged playhead take to show their picture,
+how long the editor takes to open, and the app's memory, on the watching screen and in the editor. It changes nothing in the project,
 spends no usage, and keeps the mouse out of its window while it runs. Set both, then `npm run smoke`:
 
 ```
 HFWIN_SMOKE_PLAYBACK=1                       # or "watch" or "edit" for one screen
 HFWIN_SMOKE_REAL_PROJECT=<the project folder>
+HFWIN_SMOKE_PLAYBACK_AT=40:20                # optional: "start:seconds" stretches to play; "none" for jumps only
 ```
+
+No footage of your own to measure with? `node scripts/test-vlog.mjs <folder>` makes a practice project shaped
+like a phone vlog (19 clips of 1080p at 16 Mbps, about four and a half minutes; needs FFmpeg, takes a few
+minutes). `pictureShortSides` in the result says whether the lighter copies were played (`[720]`) or the
+originals (`[1080]`).
 
 The numbers land in `app/.smoke/result.json` under `playback`; how to read them is at the top of
 `app/src/main/playbackProbe.js`.
@@ -76,6 +83,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   selection.js           what is selected in the editor, for the chat's "Pointing at"
   editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
   exporter.js            "Save video": the video file, made into the Downloads folder
+  lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them
   loudness.js            the saved video's sound, brought to the loudness YouTube and Instagram play at
   smoke.js               the self-test's steps
   playbackProbe.js       the self-test's playback measurement on a real project
@@ -95,7 +103,7 @@ app/src/main/            the main process (Node): the only code with file and pr
     claude.js  codex.js  antigravity.js     one bridge per agent
 app/src/preload/         preload.cjs: the only bridge between page and main process
 app/src/renderer/        the page: Home, the project view, the chat (plain DOM, no build step)
-app/scripts/             check.mjs, smoke.mjs
+app/scripts/             check.mjs, smoke.mjs, test-vlog.mjs (a practice project for measuring)
 app/test/                unit tests (Node's built-in test runner)
 docs/                    ARCHITECTURE, FINDINGS, MAINTENANCE, HANDOFF
 ```

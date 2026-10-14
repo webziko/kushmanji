@@ -5,6 +5,42 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-14 · Claude · Smooth jumping and dragging: lighter copies (M16-07), in the cloud
+
+This sitting ran in a Claude Code cloud container (Linux, 4 cores, no graphics card), not on the owner's PC:
+no real vlog, no Codex, no Windows. Everything was measured on a practice vlog made by
+`app/scripts/test-vlog.mjs` (19 clips of 1080p at 16 Mbps, a keyframe a second, 4:32).
+
+**Done: M16-07.** Measured first (the playback measurement now times jumps, a drag, opening the editor and
+memory): a jump took 0.28 s watching and 0.39 s in the editor, a dragged playhead showed 1 or 2 pictures a
+second. Fix: `main/lightCopies.js` makes 720p copies (keyframe every half second, no B-frames, sound copied)
+of every heavy clip the project's pages use, below normal priority, into `<project>/.cache/kushmanji-preview`,
+and the session's `onBeforeRequest` redirects the preview's requests to them. After: 0.04 and 0.07 s, 33
+pictures a second, 719 MB instead of 1,268. Numbers and research: `docs/FINDINGS.md`, last section.
+
+**What would surprise you**
+- Why `.cache`: HyperFrames' own watcher (`WATCHER_EXCLUDED_DIRS`) and undo history (`isHistoryPath`) skip it,
+  and its preview route serves it. A copy in any other hidden folder would make Studio re-read the whole file
+  on every write; under `.hyperframes` the route answers 404. `docs/MAINTENANCE.md` says what to recheck when
+  the CLI is bumped.
+- HyperFrames' undo history copies every video over 1 MB into `~/.cache/hyperframes/history` on a project's
+  first open (UP-02, M16-09). That is probably part of "opening the editor feels slow" with big footage.
+- `onBeforeRequest` allows one listener per session: it lives in `lockDownSession` in `main.js`; share it.
+- Running the app in a Linux container: `npm install` did not fetch Electron (run `node install.js` in
+  `node_modules/electron`), Electron needs `--disable-gpu` under Xvfb (or `capturePage` fails with
+  UnknownVizError) and `ELECTRON_DISABLE_SANDBOX=1` as root. The copy maker and the exporter only find
+  `ffmpeg.exe`; set `HYPERFRAMES_FFMPEG_PATH` and `HYPERFRAMES_FFPROBE_PATH` there. Seven unit tests are
+  Windows-only and fail on Linux; the full self-test stops at the editor's arrow-key step there, with or
+  without this change. CI (Windows) runs check and the unit tests.
+
+**Shared files touched:** `main.js` (the copy maker, the redirect, `realTool`), `preload.cjs` (one event,
+`preview:copies`), `app.js` (the top bar's "Making clips smooth to edit" line), `agents/house.js` (one sentence:
+never put the copies in a video).
+
+**Next:** M16-08 (measure on the owner's PC with the real vlog), then the plan below from item 2.
+
+---
+
 ## For Claude's next sitting (written 2026-10-14, morning, at the owner's request)
 
 The owner starts a fresh chat and wants about 18 hours of continuous work while their usage lasts. Their words:
@@ -24,7 +60,7 @@ The owner starts a fresh chat and wants about 18 hours of continuous work while 
   this file true as you go, not only at the end. Send screenshots of visible results with SendUserFile.
 
 **The order**
-1. **"Laggy" (new task M16-07).** The owner still feels lag in the preview and is not sure where. Measured so
+1. **Done in the cloud, see the entry above.** ~~"Laggy" (new task M16-07).~~ The owner still feels lag in the preview and is not sure where. Measured so
    far: playing inside a clip is smooth (M16-05). Not measured: jumping to a moment (dragging the bar, clicking
    the timeline), and the editor's own controls with 19 clips and their filmstrips. Extend
    `app/src/main/playbackProbe.js` with seek times (from the seek to the first new picture) and long tasks in

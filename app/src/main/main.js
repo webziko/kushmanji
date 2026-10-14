@@ -7,6 +7,7 @@ import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
+import { LightCopies } from "./lightCopies.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
@@ -56,6 +57,12 @@ function lockDownSession() {
     respond(allowed(permission, details.requestingUrl)),
   );
   session.defaultSession.setPermissionCheckHandler((_contents, permission, origin) => allowed(permission, origin));
+  // A video Studio's preview asks for is answered with its lighter copy when one is ready (lightCopies.js).
+  // Electron keeps one listener per event: anything else that needs onBeforeRequest has to share this one.
+  session.defaultSession.webRequest.onBeforeRequest({ urls: ["http://127.0.0.1/api/projects/*"] }, (details, respond) => {
+    const redirectURL = details.method === "GET" ? lightCopies.redirect(details.url, preview.current) : null;
+    respond(redirectURL ? { redirectURL } : {});
+  });
 }
 
 /** Studio's own server. Anything else that asks for a window is the web and goes to the person's browser. */
@@ -64,7 +71,21 @@ const isLocal = (url) => /^http:\/\/127\.0\.0\.1(:\d+)?(\/|$)/.test(url);
 let win = null;
 const preview = new PreviewManager({
   onExit: (dir, code) => win?.webContents.send("preview:exit", { dir, code }),
-  onChange: (dir) => win?.webContents.send("preview:changed", { dir }),
+  onChange: (dir) => {
+    win?.webContents.send("preview:changed", { dir });
+    lightCopies.refresh(dir);
+  },
+});
+/** The real programs, never the stand-ins the assistants are given below "Full access" (those are .cmd files). */
+const realTool = (name, override) =>
+  override?.trim() || (whereAll(name).find((file) => /\.exe$/i.test(file)) ?? null);
+// Lighter copies of the open project's videos, for smooth watching and editing; "Save video" never uses them.
+const lightCopies = new LightCopies({
+  tools: () => ({
+    ffmpeg: realTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
+    ffprobe: realTool("ffprobe", process.env.HYPERFRAMES_FFPROBE_PATH),
+  }),
+  emit: (payload) => win?.webContents.send("preview:copies", payload),
 });
 /** Set while a chat turn waits for the footage study, so the chat can show which clip is being studied. */
 let studyStep = null;
@@ -93,8 +114,7 @@ const agent = new AgentRunner({
 // Saving a video: the file goes to the person's Downloads folder, and the taskbar button shows how far it is.
 const exporter = new ExportManager({
   folder: () => app.getPath("downloads"),
-  // The real program, never the stand-in the assistants are given below "Full access" (that one is a .cmd).
-  ffmpeg: () => process.env.HYPERFRAMES_FFMPEG_PATH?.trim() || (whereAll("ffmpeg").find((file) => /\.exe$/i.test(file)) ?? null),
+  ffmpeg: () => realTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
   emit: (payload) => {
     win?.setProgressBar(payload.status.state === "saving" ? Math.max(0.02, payload.status.percent / 100) : -1);
     win?.webContents.send("save:event", payload);
@@ -220,11 +240,13 @@ function registerIpc() {
     const started = await preview.start(dir);
     // After Studio is up, so the two do not compete while the person is waiting for the editor.
     study.open(dir);
+    lightCopies.start(dir);
     return started;
   });
   handle("projects:close", () => {
     agent.stop();
     study.close();
+    lightCopies.stop();
     preview.stop();
   });
   handle("projects:ready", async (dir) => {
@@ -354,6 +376,7 @@ if (!app.requestSingleInstanceLock()) {
     agent.stop({ sync: true });
     exporter.stop({ sync: true });
     study.close({ sync: true });
+    lightCopies.stop({ sync: true });
     preview.stop({ sync: true });
   });
 

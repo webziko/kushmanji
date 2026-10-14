@@ -10,7 +10,7 @@ const call =
     return reply.value;
   };
 
-const EVENTS = new Set(["app:open-project", "preview:exit", "preview:changed", "agent:event", "study:event", "save:event"]);
+const EVENTS = new Set(["app:open-project", "preview:exit", "preview:changed", "preview:copies", "agent:event", "study:event", "save:event"]);
 
 contextBridge.exposeInMainWorld("hfwin", {
   app: { info: call("app:info") },
