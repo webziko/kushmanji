@@ -12,8 +12,9 @@ const MAX_KITS = 100;
 /** A kit's file name from the name the person gave it: letters (with their marks, which Kannada and Hindi need),
  * digits, spaces and dashes only. */
 export function kitFileName(name) {
-  const clean = String(name ?? "").normalize("NFC").replace(/[^\p{L}\p{M}\p{N} _-]+/gu, "").replace(/\s+/g, " ")
-    .slice(0, 60).trim();
+  // Cut by letters, not UTF-16 units, so a letter outside the basic plane is never split in half.
+  const kept = String(name ?? "").normalize("NFC").replace(/[^\p{L}\p{M}\p{N} _-]+/gu, "").replace(/\s+/g, " ");
+  const clean = Array.from(kept).slice(0, 60).join("").trim();
   if (!clean) throw new Error("Give the look a name, for example the name of your channel.");
   // Windows keeps a few names for devices; a file cannot have one.
   return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(clean) ? `${clean} look.md` : `${clean}.md`;
