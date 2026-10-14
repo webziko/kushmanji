@@ -339,7 +339,7 @@ function registerIpc() {
     if (agent.busy) throw new Error("The assistant is still working. Change the look when it has finished.");
     return useKit(looks(), dir, String(name ?? ""));
   });
-  handle("health:check", () => checkHealth());
+  handle("health:check", (options) => checkHealth({ again: options?.again === true }));
   handle("health:getBrowser", () => getBrowser());
   handle("storage:status", () => storageStatus());
   handle("storage:free", () => freeUpSpace());

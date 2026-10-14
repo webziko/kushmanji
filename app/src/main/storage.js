@@ -58,12 +58,20 @@ async function clean(dryRun) {
   }
 }
 
+// Counting the history and asking `clean` take seconds; Home asks often. Kept a while, and dropped after freeing.
+const KEEP_MS = 10 * 60_000;
+let kept = null;
+
 export async function storageStatus() {
+  if (kept && Date.now() - kept.at < KEEP_MS) return kept.value;
   const [historyBytes, freeableBytes] = await Promise.all([folderBytes(historyRoot()), clean(true)]);
-  return { historyBytes, freeableBytes, history: sizeText(historyBytes), freeable: sizeText(freeableBytes) };
+  const value = { historyBytes, freeableBytes, history: sizeText(historyBytes), freeable: sizeText(freeableBytes) };
+  kept = { at: Date.now(), value };
+  return value;
 }
 
 export async function freeUpSpace() {
+  kept = null;
   const freedBytes = await clean(false);
   return { freedBytes, freed: sizeText(freedBytes) };
 }

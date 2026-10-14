@@ -14,7 +14,7 @@ export function createAbout(info) {
     h("p", {}, "It is built on HyperFrames, the open-source video engine made by HeyGen, used under its Apache 2.0 " +
       "licence. Kushmanji is not made by HeyGen and is not an official HeyGen app."),
     h("p", {}, "The assistants are your own: Claude, ChatGPT and Gemini, each with its own sign-in. Kushmanji keeps " +
-      "no passwords and sends nothing anywhere by itself."),
+      "no passwords and adds no tracking of its own."),
     versions,
     h("div", { class: "notice-actions" }, close));
   close.addEventListener("click", () => dialog.close());

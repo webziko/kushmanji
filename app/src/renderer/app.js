@@ -92,6 +92,7 @@ function projectCard(project) {
       {
         class: "ghost small",
         title: "Show this video's folder in File Explorer",
+        "aria-label": `Show the folder of ${project.name}`,
         onclick: () => api.projects.reveal(project.dir).catch((error) => showError(error.message)),
       },
       "Show folder",
@@ -201,7 +202,7 @@ async function startFromFootage() {
     await openProject(project.dir);
     if (open?.dir !== project.dir) return;
     open.chat.draft(
-      `Look at the ${project.imported.count} clips I just added (they are in the assets folder). Tell me what ` +
+      `Look at the ${project.imported.count === 1 ? "clip" : `${project.imported.count} clips`} I just added (they are in the assets folder). Tell me what ` +
       "happens in each one, what is said, how the sound is, and whether any picture is sideways. If a picture is " +
       "sideways, say whether it can just be turned round instead of cut. Keep my own files as they are. " +
       "Tell me what you suggest before you change anything.",
@@ -218,8 +219,8 @@ async function startFromFootage() {
  * What this computer still needs (M5-04, main/health.js): shown on Home only when something is missing, with the
  * command that fixes it, or a button when Kushmanji can fetch it itself.
  */
-async function showHealth(box) {
-  const health = await api.health.check().catch(() => null);
+async function showHealth(box, { again = false } = {}) {
+  const health = await api.health.check({ again }).catch(() => null);
   if (!health?.checked || !box.isConnected) return;
   if (!health.items.length) {
     box.replaceChildren(h("p", { class: "muted" }, "Kushmanji has everything it needs on this computer."));
@@ -242,8 +243,9 @@ async function showHealth(box) {
         get.disabled = true;
         get.textContent = "Getting it…";
         const done = await api.health.getBrowser().catch(() => false);
-        get.textContent = done ? "Done" : "That did not work. Check the internet connection and try again.";
-        if (!done) get.disabled = false;
+        if (done) return void showHealth(box, { again: true });
+        get.textContent = "That did not work. Check the internet connection and try again.";
+        get.disabled = false;
       });
       row.append(get);
     }
@@ -252,7 +254,11 @@ async function showHealth(box) {
   box.replaceChildren(
     h("h2", {}, health.ready ? "Good to know" : "Before you start"),
     h("ul", { class: "health-list" }, ...rows),
-    h("button", { class: "ghost small", type: "button", onclick: () => void showHealth(box) }, "Check again"));
+    h("button", { class: "ghost small", type: "button", onclick: (event) => {
+      event.currentTarget.disabled = true;
+      event.currentTarget.textContent = "Checking…";
+      void showHealth(box, { again: true });
+    } }, "Check again"));
   box.hidden = false;
 }
 
@@ -265,15 +271,15 @@ async function showSpace(line) {
   if (!status?.historyBytes || !line.isConnected) return;
   const free = h("button", { class: "ghost small", type: "button" }, `Free up ${status.freeable}`);
   free.addEventListener("click", async () => {
-    if (!confirm(`Remove the undo copies of videos you have deleted (${status.freeable})? ` +
-      "Videos you still have keep theirs.")) return;
+    if (!confirm(`Free up to ${status.freeable}? This removes the undo copies of videos you have deleted and ` +
+      "old picture caches. Videos you still have keep theirs.")) return;
     free.disabled = true;
     const done = await api.storage.free().catch(() => null);
-    line.textContent = done ? `Freed ${done.freed}.` : "Nothing could be freed just now.";
+    line.textContent = done?.freedBytes > 0 ? `Freed ${done.freed}.` : "Nothing could be freed just now.";
   });
   line.replaceChildren(
     `Undo copies of your videos take ${status.history} on this computer.`,
-    ...(status.freeableBytes > 0 ? [` ${status.freeable} of that is for videos you have deleted. `, free] : []),
+    ...(status.freeableBytes > 0 ? [` Up to ${status.freeable} can be freed (deleted videos, old caches). `, free] : []),
   );
 }
 
@@ -371,7 +377,8 @@ function showHome() {
       { class: "topbar" },
       h("img", { class: "brand-wordmark", src: "brand/wordmark.svg", alt: "Kushmanji" }),
       // "Unofficial" stays in sight (AGENTS.md); the credit to HyperFrames and the versions are in About.
-      h("button", { class: "tag", type: "button", title: "About Kushmanji", onclick: () => about.show() }, "unofficial"),
+      h("button", { class: "tag", type: "button", title: "About Kushmanji", "aria-label": "About Kushmanji (unofficial)",
+        onclick: () => about.show() }, "unofficial"),
       h("span", { class: "spacer" }),
       help.button,
     ),
@@ -453,7 +460,9 @@ async function openProject(dir, { request } = {}) {
     hidden: true,
   });
   const status = h("p", { class: "overlay-text" }, "Opening your video…");
-  const retry = h("button", { class: "primary", hidden: true, onclick: () => openProject(dir) }, "Try again");
+  // A "Make it" idea that never reached the assistant because the editor failed to start is not lost on retry.
+  const retry = h("button", { class: "primary", hidden: true,
+    onclick: () => openProject(dir, { request: initialRequest ?? undefined }) }, "Try again");
   const overlay = h("div", { class: "overlay" }, h("div", { class: "spinner", "aria-hidden": "true" }), status, retry);
   let initialRequest = request;
   let viewGeneration = 0;
@@ -549,7 +558,7 @@ async function openProject(dir, { request } = {}) {
       try {
         const imported = await api.projects.addMedia(dir);
         if (imported && open === project) {
-          mediaStatus.textContent = `${imported.count} files added`;
+          mediaStatus.textContent = imported.count === 1 ? "1 file added" : `${imported.count} files added`;
           project.chat.draft("Look at the clips I just added (they are in the assets folder). Check the sound " +
             "and whether any picture is sideways before you change anything.");
         }
