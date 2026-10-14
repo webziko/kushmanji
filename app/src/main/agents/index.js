@@ -23,6 +23,14 @@ const MAX_MESSAGES = 200;
 const MAX_REQUEST = 20_000;
 // After this many requests in one conversation an assistant starts a fresh one with a recap (M15-04).
 const FRESH_AFTER = 6;
+// One review by a different assistant, then one round of fixes (M13-04). The page names the purpose; what the
+// reviewer is told about it comes from here.
+const PURPOSES = new Set(["review", "fix"]);
+const REVIEW_NOTE =
+  "This request is a review of another assistant's work. Look, do not change: do not edit, create, move or delete " +
+  "any file. Read the files it changed and, if you can, look at still frames of the moments it changed. Then reply " +
+  "with a short numbered list of the real problems, most important first, each with where it is (a time or a " +
+  "file). If it looks right, say so in one line. Your list goes back to the assistant that did the work.";
 
 const NAMES = Object.fromEntries(Object.entries(BRIDGES).map(([id, bridge]) => [id, bridge.about.name]));
 
@@ -268,8 +276,9 @@ export class AgentRunner {
    * `{ name, kind, when, note }`: what the chat shows beside their message, and what the agent is told.
    * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
    */
-  send({ dir, text, pointing = null, moment = null }) {
+  send({ dir, text, pointing = null, moment = null, purpose = null }) {
     if (this.#active) throw new Error("The assistant is still working. Press Stop, or wait for it to finish.");
+    if (purpose !== null && !PURPOSES.has(purpose)) throw new Error("That kind of request is not known to this app.");
     const message = String(text ?? "").trim();
     if (!message) throw new Error("Type what you want to change first.");
     if (message.length > MAX_REQUEST) throw new Error("That message is too long. Shorten it and send again.");
@@ -298,18 +307,20 @@ export class AgentRunner {
     const pointed = pointing ? { name: pointing.name, kind: pointing.kind, when: pointing.when } : null;
     const watched = moment ? { seconds: moment.seconds, when: moment.when } : null;
     chat.messages.push({ role: "user", text: message, ...(pointed ? { pointing: pointed } : {}),
-      ...(watched ? { moment: watched } : {}), at: Date.now() });
+      ...(watched ? { moment: watched } : {}), ...(purpose ? { purpose } : {}), at: Date.now() });
     writeChat(dir, chat);
 
     // What other agents did since this one last worked here, so it does not act on a stale picture.
     const names = { ...NAMES, person: "The person, by hand" };
     const handover = fresh ? recapNote(dir, names) : handoverNote(dir, engine, names);
-    const preface = [handover, limits, pointing?.note, moment?.note].filter(Boolean).join("\n\n");
+    const preface = [handover, limits, purpose === "review" ? REVIEW_NOTE : "", pointing?.note, moment?.note]
+      .filter(Boolean).join("\n\n");
     const turn = {
       dir,
       engine,
       asked: watched ? `At ${watched.when} (${watched.seconds}s into the video): ${message}` : message,
       mode,
+      purpose,
       startedAt: Date.now(),
       text: "",
       activities: [],
@@ -410,7 +421,10 @@ export class AgentRunner {
     }
     // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
     // and the names of any files the agent changed that are not the plan: it was told to change none.
-    const read = turn.mode === "build" || !event.ok ? { text: turn.text, plan: false } : readPlan(turn.text);
+    const read = turn.mode === "build" || turn.purpose || !event.ok
+      ? { text: turn.text, plan: false } : readPlan(turn.text);
+    // A reviewer was told to change nothing; whatever it changed anyway is named to the person.
+    if (turn.purpose === "review") event = { ...event, touched: filesChangedSince(turn.dir, turn.startedAt) };
     if (read.plan) {
       turn.text = read.text;
       event = { ...event, plan: true, text: read.text, touched: strayFiles(filesChangedSince(turn.dir, turn.startedAt)) };
@@ -424,6 +438,7 @@ export class AgentRunner {
       stopped: Boolean(event.stopped),
       error: event.error ?? null,
       ...(read.plan ? { plan: true, touched: event.touched } : {}),
+      ...(turn.purpose ? { purpose: turn.purpose, ...(event.touched?.length ? { touched: event.touched } : {}) } : {}),
       ...(limit ? { limited: true, resets: limit.resets, changed: event.changed } : {}),
       // Only a turn that changed something can be undone.
       ...(entry?.files.length ? { undo: { id: entry.id, files: entry.files.slice(0, 200) } } : {}),

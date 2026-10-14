@@ -238,3 +238,15 @@ test("after six requests in one conversation the assistant starts afresh, with a
   assert.doesNotMatch(requests[5].text, /RECAP/);
   assert.ok(agent.history("video").messages.at(-1).activities.some((step) => /fresh conversation/.test(step)));
 });
+
+test("a review is told to change nothing, and what it changed anyway is named", async () => {
+  const { agent, requests } = runner();
+  agent.send({ dir: "video", text: "Please check what Claude just changed.", purpose: "review" });
+  await settled();
+  assert.match(requests[0].text, /Look, do not change/);
+  requests[0].onEvent({ type: "done", ok: true });
+  const reply = agent.history("video").messages.at(-1);
+  assert.equal(reply.purpose, "review");
+  assert.deepEqual([...reply.touched], ["index.html", "subtitles.json"]);
+  assert.throws(() => agent.send({ dir: "video", text: "Hm.", purpose: "something" }), /not known/);
+});
