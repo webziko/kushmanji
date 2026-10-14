@@ -208,6 +208,27 @@ async function startFromFootage() {
   }
 }
 
+/**
+ * How much room HyperFrames' undo copies take (M16-09, main/storage.js), and a button that frees what belongs to
+ * videos that were deleted. Asked after Home is drawn: counting takes a few seconds.
+ */
+async function showSpace(line) {
+  const status = await api.storage.status().catch(() => null);
+  if (!status?.historyBytes || !line.isConnected) return;
+  const free = h("button", { class: "ghost small", type: "button" }, `Free up ${status.freeable}`);
+  free.addEventListener("click", async () => {
+    if (!confirm(`Remove the undo copies of videos you have deleted (${status.freeable})? ` +
+      "Videos you still have keep theirs.")) return;
+    free.disabled = true;
+    const done = await api.storage.free().catch(() => null);
+    line.textContent = done ? `Freed ${done.freed}.` : "Nothing could be freed just now.";
+  });
+  line.replaceChildren(
+    `Undo copies of your videos take ${status.history} on this computer.`,
+    ...(status.freeableBytes > 0 ? [` ${status.freeable} of that is for videos you have deleted. `, free] : []),
+  );
+}
+
 function showHome() {
   open?.destroy();
   open = null;
@@ -292,6 +313,7 @@ function showHome() {
     home.grid,
     home.empty,
     h("p", { class: "muted foot" }, info ? `New videos are kept in this folder: ${info.projectsRoot}` : ""),
+    home.space = h("p", { class: "muted foot space", role: "status" }),
   );
 
   app.replaceChildren(
@@ -307,6 +329,7 @@ function showHome() {
     home.main,
   );
   const main = home.main;
+  void showSpace(home.space);
   refreshProjects()
     .then((projects) => {
       // With videos, "Carry on" is the thing to press, so the text box does not grab the keyboard. Nothing is

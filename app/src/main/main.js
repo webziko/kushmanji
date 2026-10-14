@@ -11,6 +11,7 @@ import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
+import { freeUpSpace, storageStatus } from "./storage.js";
 import { LightCopies } from "./lightCopies.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
@@ -298,6 +299,8 @@ function registerIpc() {
     return true;
   });
   handle("preview:log", () => preview.log);
+  handle("storage:status", () => storageStatus());
+  handle("storage:free", () => freeUpSpace());
   handle("player:command", ({ dir, action, value } = {}) => {
     requireProject(dir);
     const current = preview.current;

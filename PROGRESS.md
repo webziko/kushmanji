@@ -527,9 +527,11 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       measurement, `HFWIN_SMOKE_PLAYBACK_AT=none` for jumps only) and ask the owner whether moving around now
       feels smooth. If it is still not smooth enough there: a keyframe on every picture (`-g 1`, files about
       four times bigger) or 540p
-- [ ] M16-09 HyperFrames keeps a second full copy of every video in its undo history
+- [x] M16-09 (Claude, 2026-10-14; done as below) HyperFrames keeps a second full copy of every video in its undo history
       (`%USERPROFILE%\.cache\hyperframes\history`, see UP-02). Show the owner how much room it takes, and offer
-      to clear the history of projects that are gone (upstream has `pruneGoneProjectHistories`)
+      to clear the history of projects that are gone (upstream has `pruneGoneProjectHistories`). Done: Home's foot says "Undo copies of your videos take 666 MB on this computer", and when
+      some belong to deleted videos, "174 MB of that is for videos you have deleted. Free up 174 MB", which runs
+      upstream's own `hyperframes clean` after asking (`main/storage.js`)
 - [ ] M16-03 Research: what open-source projects and guides teach about editing and motion design that an
       assistant can use (licences checked; nothing AGPL copied in). Write what is worth keeping into the guide
 - [ ] M16-04 A small library of ready moves an assistant can drop in: soft cross-fade, push-in on a face,
