@@ -5,6 +5,7 @@ import { createChat } from "./chat.js";
 import { h } from "./dom.js";
 import { createPlayer } from "./player.js";
 import { createAbout } from "./about.js";
+import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
 
@@ -168,12 +169,15 @@ async function createProject(name, request) {
   }
 }
 
-function makeFromPrompt(event) {
+async function makeFromPrompt(event) {
   event.preventDefault();
-  const request = home.prompt.value.trim();
+  const idea = home.prompt.value.trim();
+  if (!idea) return home.prompt.focus();
+  // Three quick choices first (M7-02); closing the box changes nothing.
+  const request = await askGuided(idea);
   if (!request) return home.prompt.focus();
   // The folder is named after the first few words; the whole description goes to the agent.
-  void createProject(request.split(/\s+/).slice(0, 5).join(" "), request);
+  void createProject(idea.split(/\s+/).slice(0, 5).join(" "), request);
 }
 
 async function pickFolder() {
