@@ -156,8 +156,10 @@ and the caller in `renderer/`.
 | `agent.send({ dir, text, pointing, moment })` | Starts one chat turn. `moment: true` reads the active root player at Send and returns the captured `{ seconds, when }` for the message. Otherwise `pointing: true` reads Studio's selection. Refused while another turn is running |
 | `agent.chooseMode({ dir, mode })` | How involved the person wants to be in this project: `build`, `review` or `codirect`. Kept with the project's chat |
 | `agent.chooseAccess({ dir, level })` | How much the agents may do in this project, from the next message. Only `project`, `tools` or `full` is accepted. Kept in the app's settings, not in the project |
-| `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message |
-| `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default. Only an id from that agent's `models()` is accepted |
+| `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message. Refused for an agent the person has not ticked |
+| `agent.setTeam(engines)` | Which assistants the person has ("Your assistants", M15-01): known ids only, at least one. Kept in the app's settings; `status()` and `history()` mark each agent `inTeam` |
+| `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default, `"auto"` (also the value when nothing was chosen) sizes each request (`agents/sizing.js`). Otherwise only an id from that agent's `models()` is accepted |
+| event `preview:copies` | `{ dir, status: { state, done, total, failed } }`: the lighter copies for watching and editing (`lightCopies.js`) |
 | `agent.stop()` / `agent.reset(dir)` | Stop the run / forget the conversation (project files untouched) |
 | `save.start(dir)` | Make the project's video file with the CLI's own `render`, in the person's Downloads folder, named after the project and the time. Its sound is then brought to about -14 LUFS (`loudness.js`; the picture is copied). One at a time; refused while an assistant works. Returns the status below |
 | `save.stop()` / `save.status(dir)` / `save.show()` | Stop saving (no half-made file is kept) / `{ state: idle, saving, busy, saved, stopped or failed, percent?, name?, megabytes?, message? }` / show the file this app last finished in File Explorer |
