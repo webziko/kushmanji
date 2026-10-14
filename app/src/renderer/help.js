@@ -21,11 +21,12 @@ const EDITOR_WORDS = [
 
 const SECTIONS = [
   { id: "home", name: "Starting out", parts: [
-    ["Start from my clips", "Copy your clips into a new video. Your own files are not changed."],
-    ["My videos", "Open a video you have already worked on."],
+    ["Carry on", "Open the video you changed last, just where you left it. It shows once you have a video."],
+    ["From my clips", "Press Choose clips to copy your clips into a new video. Your own files are not changed."],
+    ["From an idea", "Say what you want and press Make it. This way of starting is still being tested."],
     ["Blank video", "Start an empty video, then add clips or ask for a title."],
     ["Open a folder", "Open a video that is saved in a folder, from Kushmanji or HyperFrames."],
-    ["Make it", "Ask an assistant to turn your idea into a video. This way of starting is still being tested."],
+    ["My videos", "Open a video you have already worked on."],
   ] },
   { id: "watch", name: "Watching and asking for changes", parts: [
     ["Your video", "Press Play to watch, or drag the bar to a moment you want to change."],
@@ -47,7 +48,7 @@ const SECTIONS = [
 
 const WALK = [
   ["Start with your clips",
-    "At the start, press Start from my clips to copy your clips in, or open a video you already have."],
+    "At the start, press Choose clips to copy your clips in, or open a video you already have."],
   ["Watch, then ask for a change",
     "Move to the moment you mean, write what you want in the chat, and press Send when you are ready."],
   ["Check the result",

@@ -988,7 +988,7 @@ export async function runSmoke({ win, outDir }) {
     const showDialog = dialog.showOpenDialog;
     try {
       dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [source] });
-      await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === 'Start from my clips').click()");
+      await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === 'Choose clips').click()");
       if (!(await until(() => inPage("document.body.dataset.view === 'project'"), { timeoutMs: 120_000 }))) {
         throw new Error("Starting a project from footage never opened the project.");
       }

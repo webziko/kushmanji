@@ -35,7 +35,9 @@ words" below, in the pages, the chat, the menus and the messages from the main p
 box, "Start over" and the install and sign-in cards now speak the same way. Words that go only to an assistant
 (its notes, the guide it reads) were left alone, except where they quote a menu name the person will see.
 
-Branding (M14-06) and the new Home screen (M14-07) remain planned.
+**Built on 2026-10-14 (M14-07, Claude):** Home is now a place to start (see "Home" below). The video's last
+picture is kept when the person leaves the watching screen, and "Carry on" opens the video changed last.
+Branding (M14-06) remains planned.
 
 ## What a new person meets today
 
@@ -106,6 +108,25 @@ notices, which is what its licence asks, and the workshop says whose editor it i
 7. When something the app knows will break the video (a clip removed with labels still pointing at it), it says
    so and offers to fix it.
 
+## Home
+
+Top to bottom: "What do you want to make?", then **one** main thing. With at least one video that is the large
+"Carry on" card for the video changed last (its picture, its name, "Changed 2 hours ago", a green button), and the
+two start cards below it are quiet. With no video the two start cards are the main thing and their buttons are green:
+"From my clips" (button "Choose clips") and "From an idea" (a box and "Make it"). Under them a quiet row: "Or",
+"Blank video", "Open a folder". Then "My videos": every video as a card with its picture (or its first letter on a
+soft surface) and when it last changed.
+
+- **The picture** is taken from the app's own window as the person leaves the watching screen (the "My videos"
+  button, or opening another video), so it shows the video as they last saw it. It is kept inside the video's hidden
+  `.cache` folder and nothing is rendered for it. If the capture is slow, fails or is nearly black, Home simply
+  shows the letter instead; going Home never waits more than about a second and a half for it.
+- **Time** is said in plain words ("just now", "5 minutes ago", "yesterday", "3 days ago", then weeks, months, years)
+  by `since()` in `app.js`, from when the video's `index.html` last changed.
+- **Hold-back:** the page is invisible for the moment it takes to list the videos, so the Carry on card does not
+  push the start cards down after the person has seen them.
+- A video with no picture yet must look as good as one with a picture; the self-test has no pictures at all.
+
 ## The words
 
 Use the plain word everywhere the app speaks. In the workshop, where HyperFrames' own word is on screen, show
@@ -140,7 +161,7 @@ each assistant's own names (plus "Auto" and "Default"); Quick, Balanced and Best
 | transcript | What is said |
 | timeline | timeline (kept: people know it), with "your clips in order" the first time |
 | New chat | Start over (your video is not changed) |
-| footage ("Add footage", "Start from footage") | clips ("Add clips", "Start from my clips") |
+| footage ("Add footage", "Start from footage") | clips ("Add clips", the "From my clips" card with its "Choose clips" button) |
 | Home (the way back, the first screen) | My videos |
 | Allowed tools, access level | What may the assistant do |
 | Project only / Editing tools / Full access | Only this video / Also cut my clips / Anything on this computer |

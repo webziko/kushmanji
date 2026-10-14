@@ -13,18 +13,22 @@ const help = createHelp();
 
 const folderName = (dir) => dir.split(/[\\/]/).filter(Boolean).pop() ?? dir;
 
-function ago(ms) {
+/** How long ago, in the plain words the app uses: "just now", "5 minutes ago", "yesterday", "3 days ago". */
+function since(ms) {
   if (!ms) return "";
-  const format = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-  const diff = ms - Date.now();
-  for (const [unit, size] of [
-    ["day", 86_400_000],
-    ["hour", 3_600_000],
-    ["minute", 60_000],
-  ]) {
-    if (Math.abs(diff) >= size) return format.format(Math.round(diff / size), unit);
-  }
-  return "just now";
+  const minutes = Math.floor((Date.now() - ms) / 60_000);
+  // Also covers a file stamped a moment ahead of this computer's clock.
+  if (minutes < 1) return "just now";
+  const ago = (count, unit) => `${count} ${unit}${count === 1 ? "" : "s"} ago`;
+  if (minutes < 60) return ago(minutes, "minute");
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return ago(hours, "hour");
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 14) return ago(days, "day");
+  if (days < 60) return ago(Math.floor(days / 7), "week");
+  if (days < 365) return ago(Math.floor(days / 30), "month");
+  return ago(Math.floor(days / 365), "year");
 }
 
 let info = null;
@@ -39,6 +43,41 @@ function showError(message) {
   if (!home.error) return;
   home.error.hidden = !message;
   home.errorText.textContent = message ?? "";
+  // The banner sits under the start cards; in a small window that can be below the fold.
+  if (message) home.error.scrollIntoView({ block: "nearest" });
+}
+
+/** A video's picture, or its first letter on a soft surface when it has none yet or the picture will not load. */
+function cover(project) {
+  const letter = () => h("span", { class: "cover-letter" }, [...project.name][0]?.toUpperCase() ?? "");
+  const picture = project.cover && h("img", {
+    src: project.cover, alt: "", draggable: "false", decoding: "async",
+    onerror: (event) => event.target.replaceWith(letter()),
+  });
+  return h("span", { class: "cover", "aria-hidden": "true" }, picture || letter());
+}
+
+/**
+ * The hero when there is a video: the one changed last. The whole card opens it, through the button's stretched
+ * ::after (a button inside a button is not allowed), so a click anywhere and the keyboard do the same thing.
+ */
+function carryOnCard(project) {
+  const when = since(project.modifiedAt);
+  return h(
+    "div",
+    { class: "carry" },
+    cover(project),
+    h(
+      "div",
+      { class: "carry-text" },
+      h("p", { class: "carry-name" }, project.name),
+      when && h("p", { class: "carry-when" }, `Changed ${when}`),
+      h("button", {
+        class: "primary carry-go", type: "button", "aria-label": `Carry on with ${project.name}`,
+        onclick: () => openProject(project.dir),
+      }, "Carry on"),
+    ),
+  );
 }
 
 function projectCard(project) {
@@ -74,23 +113,38 @@ function projectCard(project) {
     h(
       "button",
       { class: "card-open", onclick: () => openProject(project.dir), title: project.dir },
-      h("span", { class: "card-thumb", "aria-hidden": "true" }, project.name.slice(0, 1).toUpperCase()),
+      cover(project),
       h("span", { class: "card-name" }, project.name),
       h(
         "span",
         { class: "card-meta" },
-        [ago(project.modifiedAt), project.external && "opened from a folder"].filter(Boolean).join(" · "),
+        [since(project.modifiedAt), project.external && "opened from a folder"].filter(Boolean).join(" · "),
       ),
     ),
     actions,
   );
 }
 
+function showProjects(projects) {
+  // Newest first, so the first is the one to carry on with. The grid lists every video, that one too.
+  const latest = projects[0];
+  home.carry.replaceChildren(...(latest ? [carryOnCard(latest)] : []));
+  home.carry.hidden = !latest;
+  home.grid.replaceChildren(...projects.map(projectCard));
+  home.empty.hidden = projects.length > 0;
+  // One main thing on the screen: the Carry on card when there is one, otherwise the two ways to start.
+  home.main.toggleAttribute("data-carry", Boolean(latest));
+  for (const button of [home.make, home.footage]) {
+    button.classList.toggle("primary", !latest);
+    button.classList.toggle("secondary", Boolean(latest));
+  }
+}
+
 async function refreshProjects() {
   const projects = await api.projects.list();
   if (!home.grid) return;
-  home.grid.replaceChildren(...projects.map(projectCard));
-  home.empty.hidden = projects.length > 0;
+  showProjects(projects);
+  return projects;
 }
 
 /** Make a project. With `request`, the agent is asked to build it as soon as the project opens. */
@@ -167,9 +221,10 @@ function showHome() {
     class: "field",
     type: "text",
     maxlength: "600",
-    placeholder: "Describe the video you want, for example a 15 second intro for my bakery",
+    placeholder: "A 15 second intro for my bakery",
     "aria-label": "Describe the video you want",
   });
+  // Primary or secondary is decided once the list of videos is known (showProjects).
   home.make = h("button", { class: "primary", type: "submit" }, "Make it");
   home.blank = h(
     "button",
@@ -177,9 +232,9 @@ function showHome() {
     "Blank video",
   );
   home.footage = h("button", {
-    class: "secondary", type: "button", onclick: startFromFootage,
+    class: "primary", type: "button", onclick: startFromFootage,
     title: "Copy a folder of clips into a new video. Your own files are not changed.",
-  }, "Start from my clips");
+  }, "Choose clips");
   home.errorText = h("span", {});
   home.error = h(
     "div",
@@ -187,11 +242,56 @@ function showHome() {
     home.errorText,
     h("button", { class: "ghost small", onclick: () => showError("") }, "Close"),
   );
+  home.carry = h("section", { class: "carry-slot", hidden: true });
   home.grid = h("ul", { class: "grid" });
   home.empty = h(
     "p",
     { class: "empty", hidden: true },
     "No videos yet. Describe one above, or open the folder of a video you already have.",
+  );
+  // Held back for a moment, so the page does not jump when the videos arrive and the Carry on card appears.
+  home.main = h(
+    "main",
+    { class: "home", "data-loading": true },
+    h("h1", {}, "What do you want to make?"),
+    home.carry,
+    h(
+      "div",
+      { class: "starts" },
+      h(
+        "section",
+        { class: "start" },
+        h("h2", { class: "start-title" }, "From my clips"),
+        h(
+          "p",
+          { class: "start-about" },
+          "Pick the clips from your phone or camera. The assistant puts them together.",
+        ),
+        h("div", { class: "start-action" }, home.footage),
+      ),
+      h(
+        "section",
+        { class: "start" },
+        h("h2", { class: "start-title" }, "From an idea"),
+        h("p", { class: "start-about" }, "Say what you want. The assistant makes it."),
+        h("form", { class: "start-action", onsubmit: makeFromPrompt }, home.prompt, home.make),
+      ),
+    ),
+    h(
+      "div",
+      { class: "start-more" },
+      h("span", { class: "muted" }, "Or"),
+      home.blank,
+      h("button", {
+        class: "secondary", type: "button", onclick: pickFolder,
+        title: "Open a video that is already in a folder on your computer.",
+      }, "Open a folder"),
+    ),
+    home.error,
+    h("h2", { class: "my-videos" }, "My videos"),
+    home.grid,
+    home.empty,
+    h("p", { class: "muted foot" }, info ? `New videos are kept in this folder: ${info.projectsRoot}` : ""),
   );
 
   app.replaceChildren(
@@ -204,37 +304,52 @@ function showHome() {
       h("span", { class: "muted" }, info ? `App ${info.appVersion} · HyperFrames ${info.cliVersion}` : ""),
       help.button,
     ),
-    h(
-      "main",
-      { class: "home" },
-      h("h1", {}, "What do you want to make?"),
-      h("form", { class: "create", onsubmit: makeFromPrompt }, home.prompt, home.make),
-      h(
-        "div",
-        { class: "create-more" },
-        h("span", { class: "muted" }, "Or start from"),
-        home.blank,
-        home.footage,
-        h("button", {
-          class: "secondary", type: "button", onclick: pickFolder,
-          title: "Open a video that is already in a folder on your computer.",
-        }, "Open a folder"),
-      ),
-      home.error,
-      h("h2", {}, "My videos"),
-      home.grid,
-      home.empty,
-      h("p", { class: "muted foot" }, info ? `New videos are kept in this folder: ${info.projectsRoot}` : ""),
-    ),
+    home.main,
   );
-  home.prompt.focus();
-  refreshProjects().catch((error) => showError(error.message));
+  const main = home.main;
+  refreshProjects()
+    .then((projects) => {
+      // With videos, "Carry on" is the thing to press, so the text box does not grab the keyboard. Nothing is
+      // taken from the person if they have already clicked somewhere, or the welcome guide is open.
+      const idle = main.isConnected && document.activeElement === document.body;
+      if (idle && !projects?.length) home.prompt.focus();
+    })
+    .catch((error) => showError(error.message))
+    .finally(() => main.removeAttribute("data-loading"));
+  // Never leave the page invisible, whatever happens to the list.
+  setTimeout(() => main.removeAttribute("data-loading"), 3000);
   help.firstTime();
 }
 
 // ---------------------------------------------------------------- Project
 
+/**
+ * Keep what the open video looks like right now as its picture on Home. Only from the watching screen with the
+ * picture loaded (in the editor the player is hidden), and only for a moment: Home and the next video matter
+ * more than their pictures, so a slow or failed save is simply dropped.
+ */
+async function keepPicture() {
+  const current = open;
+  const { screen, studio } = document.body.dataset;
+  if (!current || screen !== "watch" || studio !== "loaded") return;
+  let timer;
+  try {
+    const box = document.querySelector(".player-screen")?.getBoundingClientRect();
+    if (!box) return;
+    const rect = { x: box.x, y: box.y, width: box.width, height: box.height };
+    await Promise.race([
+      api.projects.saveCover({ dir: current.dir, rect }).catch(() => false),
+      new Promise((resolve) => { timer = setTimeout(resolve, 1500); }),
+    ]);
+  } catch {
+    // The picture is a nicety.
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function goHome() {
+  await keepPicture();
   await api.projects.close().catch(() => {});
   showHome();
 }
@@ -247,6 +362,8 @@ function setStudio(state, error = "") {
 }
 
 async function openProject(dir, { request } = {}) {
+  // Moving to another video from an open one: keep the picture of the one being left first.
+  if (open) await keepPicture();
   open?.destroy();
   const project = { dir, name: folderName(dir) };
   const save = createSaveVideo(dir);
