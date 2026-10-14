@@ -1078,3 +1078,13 @@ h2 {
 .look-row .look-name { flex: 1 1 160px; min-width: 0; }
 .look-note { margin: 0; padding: 0 12px 8px; font-size: 12px; }
 .look-note:empty { display: none; }
+
+/* What this computer still needs (M5-04). */
+.health { margin: 16px 0 0; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--raised); }
+.health h2 { margin: 0 0 6px; font-size: 15px; }
+.health > p { margin: 0; }
+.health-list { margin: 0 0 8px; padding-left: 18px; display: grid; gap: 10px; }
+.health-list p { margin: 0 0 4px; }
+.health-fix { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.health-fix code { padding: 3px 8px; border-radius: 6px; background: var(--hover); font-size: 12px; }

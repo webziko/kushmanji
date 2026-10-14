@@ -11,6 +11,7 @@ import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
+import { checkHealth, getBrowser } from "./health.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
@@ -323,6 +324,8 @@ function registerIpc() {
     if (agent.busy) throw new Error("The assistant is still working. Change the look when it has finished.");
     return useKit(looks(), dir, String(name ?? ""));
   });
+  handle("health:check", () => checkHealth());
+  handle("health:getBrowser", () => getBrowser());
   handle("storage:status", () => storageStatus());
   handle("storage:free", () => freeUpSpace());
   handle("player:command", ({ dir, action, value } = {}) => {

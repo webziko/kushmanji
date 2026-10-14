@@ -215,6 +215,48 @@ async function startFromFootage() {
 }
 
 /**
+ * What this computer still needs (M5-04, main/health.js): shown on Home only when something is missing, with the
+ * command that fixes it, or a button when Kushmanji can fetch it itself.
+ */
+async function showHealth(box) {
+  const health = await api.health.check().catch(() => null);
+  if (!health?.checked || !box.isConnected) return;
+  if (!health.items.length) {
+    box.replaceChildren(h("p", { class: "muted" }, "Kushmanji has everything it needs on this computer."));
+    box.hidden = false;
+    return;
+  }
+  const rows = health.items.map((item) => {
+    const row = h("li", {}, h("p", {}, item.said));
+    if (item.fix) {
+      const copy = h("button", { class: "ghost small", type: "button" }, "Copy");
+      copy.addEventListener("click", () =>
+        navigator.clipboard.writeText(item.fix).then(() => { copy.textContent = "Copied"; }).catch(() => {}));
+      row.append(h("div", { class: "health-fix" }, h("code", {}, item.fix), copy),
+        h("p", { class: "muted" }, "Open PowerShell (search for it in the Start menu), paste this, press Enter, then " +
+          "close and open Kushmanji again."));
+    }
+    if (item.get) {
+      const get = h("button", { class: "secondary small", type: "button" }, "Get it now (about 100 MB)");
+      get.addEventListener("click", async () => {
+        get.disabled = true;
+        get.textContent = "Getting it…";
+        const done = await api.health.getBrowser().catch(() => false);
+        get.textContent = done ? "Done" : "That did not work. Check the internet connection and try again.";
+        if (!done) get.disabled = false;
+      });
+      row.append(get);
+    }
+    return row;
+  });
+  box.replaceChildren(
+    h("h2", {}, health.ready ? "Good to know" : "Before you start"),
+    h("ul", { class: "health-list" }, ...rows),
+    h("button", { class: "ghost small", type: "button", onclick: () => void showHealth(box) }, "Check again"));
+  box.hidden = false;
+}
+
+/**
  * How much room HyperFrames' undo copies take (M16-09, main/storage.js), and a button that frees what belongs to
  * videos that were deleted. Asked after Home is drawn: counting takes a few seconds.
  */
@@ -315,6 +357,7 @@ function showHome() {
       }, "Open a folder"),
     ),
     home.error,
+    home.health = h("section", { class: "health", hidden: true, role: "status" }),
     h("h2", { class: "my-videos" }, "My videos"),
     home.grid,
     home.empty,
@@ -336,6 +379,7 @@ function showHome() {
   );
   const main = home.main;
   void showSpace(home.space);
+  void showHealth(home.health);
   refreshProjects()
     .then((projects) => {
       // With videos, "Carry on" is the thing to press, so the text box does not grab the keyboard. Nothing is

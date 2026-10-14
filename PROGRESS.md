@@ -180,7 +180,10 @@ Do not build them.
 - [~] M5-02 App icon; Start Menu and Desktop shortcuts (Claude, 2026-10-14): the icon (M14-06) and both shortcuts
       are in the installer; to be seen on the owner's PC
 - [ ] M5-03 Machines without FFmpeg or Chrome: fetch them on first run
-- [ ] M5-04 First-run health check built on `hyperframes doctor`
+- [x] M5-04 First-run health check built on `hyperframes doctor` (Claude, 2026-10-14): Home shows "Before you
+      start" only when something is missing: FFmpeg (with the `winget` line to copy and how to run it), the
+      browser for saving videos (Kushmanji fetches it with one press), little disk space or memory. Otherwise
+      "Kushmanji has everything it needs on this computer". `main/health.js`. Not yet seen on a fresh Windows PC
 - [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version
 - [ ] M5-06 Work with no system Node installed (the CLI calls `npx` for a few things)
 - [ ] M5-07 Windows on ARM build
