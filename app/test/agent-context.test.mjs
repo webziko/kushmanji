@@ -4,6 +4,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { test } from "node:test";
 import { usageLimit } from "../src/main/agents/limits.js";
+import { plainProblem } from "../src/main/agents/problems.js";
 import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "../src/main/agents/checkup.js";
 
@@ -33,7 +34,7 @@ function runner({ state = {}, history, bridgeRun, check } = {}) {
     LEVELS: [], withAccess() {},
     DEFAULT_MODE: "build", knownMode: (value) => value, modeNote: () => "", MODES: [],
     handoverNote: () => "", recapNote: () => "RECAP of the latest work", recordTurn: (_dir, turn) => turns.push(turn),
-    usageLimit, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
+    usageLimit, plainProblem, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
     fs, cliVersion: "0.8.149", CHECK_REQUEST, judge, makeScratch, testedOk,
     claude: bridge, codex: bridge, antigravity: bridge,
   });
@@ -249,4 +250,13 @@ test("a review is told to change nothing, and what it changed anyway is named", 
   assert.equal(reply.purpose, "review");
   assert.deepEqual([...reply.touched], ["index.html", "subtitles.json"]);
   assert.throws(() => agent.send({ dir: "video", text: "Hm.", purpose: "something" }), /not known/);
+});
+
+test("a sign-out in the middle of a turn is said plainly, with how to sign in again", async () => {
+  const { agent, requests } = runner();
+  agent.send({ dir: "video", text: "Trim the first clip." });
+  await settled();
+  requests[0].onEvent({ type: "done", ok: false, error: "API Error: 401 authentication_error: OAuth token has expired" });
+  const saved = agent.history("video").messages.at(-1);
+  assert.match(saved.error, /Test assistant is signed out/);
 });

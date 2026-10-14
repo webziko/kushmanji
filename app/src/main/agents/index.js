@@ -10,6 +10,7 @@ import * as claude from "./claude.js";
 import * as codex from "./codex.js";
 import { filesChangedSince, handoverNote, recapNote, recordTurn } from "./journal.js";
 import { usageLimit } from "./limits.js";
+import { plainProblem } from "./problems.js";
 import { AUTO, sizeModel } from "./sizing.js";
 import { isNewer } from "./versions.js";
 import { DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles } from "./working.js";
@@ -419,6 +420,12 @@ export class AgentRunner {
       event = { ...event, ok: false, limited: true, resets: limit.resets,
         changed: filesChangedSince(turn.dir, turn.startedAt).slice(0, 50) };
     }
+    // Signed out or offline part-way through (M2-12): one plain sentence instead of the assistant's own lines.
+    const problem = !event.ok && !event.stopped && !limit ? plainProblem(event, {
+      name: BRIDGES[turn.engine].about.label ?? NAMES[turn.engine],
+      signIn: BRIDGES[turn.engine].about.signIn?.[0] ?? "",
+    }) : null;
+    if (problem) event = { ...event, error: problem.said, problem: problem.kind };
     // A reply that ends with the mark is a plan waiting for a yes. The page gets the reply without the mark,
     // and the names of any files the agent changed that are not the plan: it was told to change none.
     const read = turn.mode === "build" || turn.purpose || !event.ok

@@ -114,7 +114,11 @@ Do not build them.
       minutes ends its window early (the server's limit); later writes stay in history but outside its undo
 - [x] M2-11 Write chat turns where `hyperframes catch-up` reads them: `.hyperframes/app-history.jsonl`, in
       upstream's own format (Claude, 2026-10-12)
-- [ ] M2-12 Plain messages for: usage limit reached, signed out mid-run, no internet
+- [x] M2-12 Plain messages for: usage limit reached, signed out mid-run, no internet (Claude, 2026-10-14). The
+      limit is M17-06; a sign-out ("Claude is signed out, so it stopped. Sign in again (open PowerShell and run:
+      claude auth login)...") and a lost connection are recognised in any assistant's error and said in one
+      sentence, with what was changed still in the video and Undo working (`agents/problems.js`). Main-process
+      words are English only for now (M14-12)
 - [ ] M2-13 Show what a run cost or how much of the plan's limit is used (the agent reports both)
 - [x] M2-14 Antigravity bridge for Gemini models: `agents/antigravity.js` (Claude, 2026-10-12). `agy` installed,
       already signed in through the Antigravity IDE. Proven with `npm run smoke:antigravity`
@@ -277,7 +281,8 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       study. English and the other 24 Parakeet languages work. **Not proven: any other language** (Hindi,
       Telugu, Japanese...). They need Whisper, which HyperFrames cannot get on Windows by itself (UP-01); the
       app says so in plain words instead of writing a wrong transcript. See M10-11 and M10-12
-- [ ] M10-11 Whisper on Windows, so the study covers every language: with the person's yes, fetch the official
+- [ ] M10-11 (to do on the owner's PC: github.com releases and huggingface.co are both refused from the cloud
+      machine) Whisper on Windows, so the study covers every language: with the person's yes, fetch the official
       whisper.cpp Windows build into the app's own folder and point HyperFrames at it
       (`HYPERFRAMES_WHISPER_PATH`). Then prove Hindi and one more non-European language end to end
 - [ ] M10-12 Work out the spoken language instead of assuming it: with Whisper present, detect on the first
