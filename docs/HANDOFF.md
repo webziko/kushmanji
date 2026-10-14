@@ -65,6 +65,8 @@ never put the copies in a video).
   the pre-installed Chromium (`--screenshot`) and shrunk with ImageMagick.
 - **M15-04, half** (`f8df8d1`): a fresh conversation after six requests, with `recapNote`.
 - **M13-04, main half** (`a2bb9d0`): `send({ purpose: "review" | "fix" })`; the chat's buttons are next.
+- **CI on GitHub runs on Windows for every push and passed** for this sitting's commits: the seven unit tests that
+  fail on Linux pass there. Read it with the GitHub tools after pushing from a cloud session.
 - In this container `killTree` leaves preview servers running (it is written for Windows): 24 were found after
   a day of self-tests and killed by hand. Not a Windows problem; worth knowing before measuring here again.
 - My commits swept in a helper's half-written files twice (`git add -A` while it worked): add files by name.
