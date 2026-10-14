@@ -22,6 +22,7 @@ npm run check     # every file parses           (seconds)
 npm test          # unit tests                  (seconds)
 npm run smoke     # the real app, end to end    (about a minute, opens a window)
 npm run smoke:study   # the same, plus footage with real speech in it (slower; needs the voice model)
+npm run dist      # the Windows installer, into app/dist (GitHub also builds it for every push: "Installer")
 ```
 
 Look at the screenshots in `app/.smoke/`, not only the PASS line. If you changed how an agent is driven, also

@@ -171,8 +171,14 @@ Do not build them.
 
 ## M5 · Installer and updates
 
-- [ ] M5-01 Installer (.exe, per user, no admin rights) with electron-builder (suggested: ChatGPT)
-- [ ] M5-02 App icon; Start Menu and Desktop shortcuts
+- [~] M5-01 Installer (.exe, per user, no admin rights) with electron-builder (Claude, 2026-10-14; it was only
+      suggested for ChatGPT). `app/electron-builder.yml`, `npm run dist`, and `.github/workflows/installer.yml`
+      builds `Kushmanji-Setup-<version>.exe` on GitHub's Windows machines for every push (a download on the run's
+      page for 14 days). Plain files, not an asar archive: the HyperFrames CLI needs real paths. Tried here as a
+      Linux build: the packaged app's self-test passes up to the known Linux-only step. Open: install and run it
+      on the owner's PC; it is not signed, so SmartScreen warns
+- [~] M5-02 App icon; Start Menu and Desktop shortcuts (Claude, 2026-10-14): the icon (M14-06) and both shortcuts
+      are in the installer; to be seen on the owner's PC
 - [ ] M5-03 Machines without FFmpeg or Chrome: fetch them on first run
 - [ ] M5-04 First-run health check built on `hyperframes doctor`
 - [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version

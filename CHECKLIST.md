@@ -82,6 +82,10 @@ Claude measured your vlog playing in the real app, picture by picture.
       found mistakes, with "Ask to fix them"
 - [x] **"Test it now"** when an assistant has updated past the version Kushmanji was tried with: one tiny job,
       and a plain answer such as "Claude works with Kushmanji"
+- [x] **An installer** is now built by GitHub for every change (not tried on your PC yet). To get it: open
+      `github.com/webziko/kushmanji/actions`, choose the newest "Installer" run, and download "Kushmanji-Setup"
+      at the bottom. It installs for you only, needs no administrator, and adds Start Menu and Desktop
+      shortcuts. Windows will warn "unknown publisher" because it is not signed yet: "More info", then "Run anyway"
 - [x] **Saved looks**: in the chat's settings, "Save this look" keeps a video's colours, fonts, titles and ending
       card under a name (for example "Happy with Shisha"); "Use" gives another video the same look. Next time you
       make shorts, they can all match

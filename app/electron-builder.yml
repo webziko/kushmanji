@@ -1,0 +1,32 @@
+# The Windows installer (M5-01, M5-02): for one person, no administrator rights, with Start Menu and Desktop
+# shortcuts and Kushmanji's own icon. Built on GitHub's Windows machines (.github/workflows/installer.yml) or with
+# `npm run dist` on a Windows PC. Not signed yet: Windows SmartScreen will say the publisher is unknown.
+appId: io.github.webziko.kushmanji
+productName: Kushmanji
+copyright: Apache-2.0. Built on HyperFrames (Apache-2.0). Not made by HeyGen.
+directories:
+  output: dist
+  buildResources: build
+files:
+  - src/**
+  - package.json
+# Plain files, not one archive: the HyperFrames CLI runs from node_modules with Electron's own Node and starts
+# worker threads and browsers of its own, which want real paths on disk.
+asar: false
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Kushmanji
+  artifactName: Kushmanji-Setup-${version}.exe
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+publish: null

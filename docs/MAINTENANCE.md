@@ -50,6 +50,14 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
    them changes, the copies stop being used or start reloading the editor. Check with the playback measurement
    (`CONTRIBUTING.md`): `pictureShortSides` must read `[720]` once the copies are made.
 
+## The installer
+
+`.github/workflows/installer.yml` builds `Kushmanji-Setup-<version>.exe` for every push. When it fails after a
+change to `package.json`, an electron-builder or Electron update is the usual cause: build with `npm run dist` on
+a Windows PC to see the message. The app is packed as plain files (`asar: false` in `app/electron-builder.yml`):
+the HyperFrames CLI is run from `node_modules` by Electron's own Node and starts workers and browsers that need
+real paths. Signing (to quiet SmartScreen) needs a certificate the owner would have to buy; not done.
+
 ## Electron updates (every eight weeks)
 
 1. Bump `electron` in `app/package.json`, `npm install`, then `node node_modules/electron/install.js` if the
