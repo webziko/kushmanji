@@ -514,7 +514,10 @@ subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each jo
       six requests in one conversation the assistant starts a fresh one, with a recap of the latest six turns
       from the shared record (`recapNote` in `journal.js`); the steps line says "A fresh conversation, to save
       your allowance". Open: the study's summary; measuring what it saves (M15-05)
-- [ ] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13)
+- [~] M15-05 Show what a request cost and how much of the plan is left, before the limit is a surprise (with M2-13).
+      Half done (Claude, 2026-10-14): each reply says "Used a little / some / a lot of Claude's allowance", from
+      the tokens Claude Code and Codex report (re-read context weighed at a tenth; the counts are in its tooltip,
+      `agents/usage.js`). Open: how much of the plan is left (the assistants do not report it), Gemini's counts
 - [x] M15-06 A smaller model through the chat's model menu (Claude, 2026-10-13). Sonnet was picked in the menu
       and did the whole vlog repair (M16-02) in one request of about 17 minutes, without reaching the limit.
       What it cost was not recorded: the app does not show it yet (M15-05)
@@ -607,7 +610,13 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       real key presses. The owner hit this twice: "its not going forward its pausing". Not yet said anywhere
       in Help (with M14-05)
 - [ ] M17-04 "Make shorts from this video" as something the app does: pick the moments, make an upright project
-      in the video's own look, keep her face in frame. Today it is done by hand with three requests
+      in the video's own look, keep her face in frame. Today it is done by hand with three requests. Design worked out
+      in the cloud on 2026-10-14, to build on the owner's PC with real assistants: step one, in the source video,
+      the assistant writes the chosen moments into `SHORTS.md` (a JSON block: clip, in and out times in the
+      clip, title); step two, the app makes one project per short beside it, hard-links the clips it needs (no
+      extra space on the same drive), copies `STYLE.md` and the study, and sends each short's request in turn
+      with `look_at_video` and the saved look. Shorts as scenes inside one project were ruled out: the player and
+      `look_at_video` only show `index.html` (render alone could take `--composition`)
 - [x] M17-05 "Save the video" done by the app, not by the person: done as M4-02 (Claude, 2026-10-14). An
       assistant is the wrong tool for it: a four-minute video takes most of an hour to make here, far longer
       than an assistant's command may run

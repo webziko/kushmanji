@@ -100,6 +100,7 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **The editor's own "Ask agent" buttons** now put their request in the chat box instead of copying it
 - [x] **"Your assistants: tick the ones you have."** In the chat's settings. Someone with only ChatGPT never
       sees Claude or Gemini offered
+- [x] **Each reply says how much of the allowance it used**: "a little", "some" or "a lot"
 - [x] **Long chats start afresh** after six requests, with a short recap, so each request stays small
 - [x] **"Auto (saves your allowance)"** in the model menu: small changes go to a cheaper model, big jobs to the
       best one. A model you pick yourself is always used

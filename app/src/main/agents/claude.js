@@ -4,6 +4,7 @@ import { collect, killTree } from "../proc.js";
 import { HOUSE_PROMPT } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
 import { CLAUDE_LOOK_TOOL, claudeLookArgs } from "./lookTool.js";
+import { fromClaude } from "./usage.js";
 import { mediaToolsEnv } from "./mediaTools.js";
 
 // The Claude Code bridge, and the reference for the agent bridge contract in docs/ARCHITECTURE.md.
@@ -184,8 +185,9 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
         if (block.type === "tool_use") onEvent(activityFor(block));
       }
     } else if (event.type === "result") {
-      if (event.subtype === "success" && !event.is_error) done({ ok: true });
-      else done({ ok: false, error: String(event.result || "Claude could not finish this change.") });
+      const usage = fromClaude(event);
+      if (event.subtype === "success" && !event.is_error) done({ ok: true, usage });
+      else done({ ok: false, error: String(event.result || "Claude could not finish this change."), usage });
     }
   });
 

@@ -5,6 +5,7 @@ import { collect, killTree } from "../proc.js";
 import { withHouseNote } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
 import { codexLookArgs } from "./lookTool.js";
+import { fromCodex } from "./usage.js";
 import { mediaToolsEnv } from "./mediaTools.js";
 
 // The Codex bridge (ChatGPT's coding agent). Same contract as claude.js; see docs/ARCHITECTURE.md.
@@ -217,7 +218,8 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
         done({ ok: false, error: explain(event.error?.message ?? failure) });
       } else if (event.type === "turn.completed") {
         // Codex calls the turn complete even when none of its commands could start. The person has to hear that.
-        done(sandboxDown ? { ok: false, error: SANDBOX_HELP } : { ok: true });
+        const usage = fromCodex(event);
+        done(sandboxDown ? { ok: false, error: SANDBOX_HELP, usage } : { ok: true, usage });
       }
     });
 

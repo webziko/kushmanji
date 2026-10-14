@@ -1088,3 +1088,6 @@ h2 {
 .health-list p { margin: 0 0 4px; }
 .health-fix { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .health-fix code { padding: 3px 8px; border-radius: 6px; background: var(--hover); font-size: 12px; }
+
+/* How much of the allowance a reply used (M15-05). */
+.msg-usage { margin-top: 4px; font-size: 11px; }

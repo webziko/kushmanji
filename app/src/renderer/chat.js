@@ -78,8 +78,17 @@ function limitNote(name, { changed, resets }) {
   ].filter(Boolean).join(" ");
 }
 
+/** "Used a little of Claude's allowance", with the counts for whoever is curious (M15-05, agents/usage.js). */
+function usageNote(name, usage) {
+  if (!usage?.level) return null;
+  return h("div", { class: "msg-usage muted",
+    title: `About ${usage.tokens.toLocaleString()} tokens: ${usage.fresh.toLocaleString()} read new, ` +
+      `${usage.cached.toLocaleString()} read again, ${usage.written.toLocaleString()} written.` },
+  `Used ${usage.level === "little" ? "a little" : usage.level} of ${name}'s allowance`);
+}
+
 function agentMessage({
-  name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed, undoAction,
+  name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed, undoAction, usage,
 }) {
   const steps = [name, ...(activities ?? [])].filter(Boolean);
   return h(
@@ -103,6 +112,7 @@ function agentMessage({
     !ok && !stopped && !limited &&
       h("div", { class: "msg-note error" }, error || "The assistant could not finish this change."),
     undoAction,
+    usageNote(name, usage),
   );
 }
 

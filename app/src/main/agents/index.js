@@ -440,6 +440,8 @@ export class AgentRunner {
       ...(read.plan ? { plan: true, touched: event.touched } : {}),
       ...(turn.purpose ? { purpose: turn.purpose, ...(event.touched?.length ? { touched: event.touched } : {}) } : {}),
       ...(limit ? { limited: true, resets: limit.resets, changed: event.changed } : {}),
+      // How much of the assistant's allowance the reply used, when it said (usage.js, M15-05).
+      ...(event.usage ? { usage: event.usage } : {}),
       // Only a turn that changed something can be undone.
       ...(entry?.files.length ? { undo: { id: entry.id, files: entry.files.slice(0, 200) } } : {}),
       at: Date.now(),
