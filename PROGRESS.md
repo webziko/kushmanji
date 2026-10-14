@@ -77,10 +77,14 @@ Do not build them.
 - [x] M1-05 Home and project screens (Claude, 2026-10-12)
 - [x] M1-06 One running copy; a folder on the command line opens that project (Claude, 2026-10-12)
 - [x] M1-07 Self-test with screenshots: `npm run smoke` (Claude, 2026-10-12)
-- [ ] M1-08 Real thumbnails on the Home cards (now a letter on a dark tile)
+- [x] M1-08 Real thumbnails on the Home cards (now a letter on a dark tile) (Claude, 2026-10-14: done by M14-07's
+      pictures, `covers.js`)
 - [ ] M1-09 Follow Studio's light and dark toggle in the frame around it
 - [ ] M1-10 Rename a project; delete one to the Recycle Bin
-- [ ] M1-11 Project names in any language (a name with no Latin letters becomes "untitled" today)
+- [x] M1-11 Project names in any language (a name with no Latin letters becomes "untitled" today) (Claude,
+      2026-10-14): letters of any script keep themselves ("ನನ್ನ ಊರಿನ ವ್ಲಾಗ್" becomes the folder
+      `ನನ್ನ-ಊರಿನ-ವ್ಲಾಗ್`); Latin accents are still dropped. A video in a Kannada folder was opened, edited by
+      a stand-in assistant, recorded for Undo and checked, in the real app
 - [ ] M1-12 Remember the window's size and place, and reopen the last project
 - [ ] M1-13 Drag the divider to resize the chat; hide and show the chat
 

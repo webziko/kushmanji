@@ -10,15 +10,18 @@ const MAX_RECENT = 30;
 const pathKey = (dir) => path.resolve(dir).toLowerCase();
 
 /**
- * A folder name Windows accepts and a URL carries unescaped: lowercase letters, digits and hyphens.
- * Device names (CON, NUL, COM1...) are refused by Windows even with an extension, so they get a suffix.
+ * A folder name Windows accepts: letters of any script with their marks (a Kannada or Hindi name stays itself,
+ * M1-11), digits and hyphens; Latin accents are dropped so "Café" stays "cafe". Every place that puts the name in
+ * a URL encodes it. Device names (CON, NUL, COM1...) are refused by Windows even with an extension, so they get a
+ * suffix.
  */
 export function folderNameFor(name) {
   const slug = String(name ?? "")
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFC")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48)
     .replace(/-+$/, "");
