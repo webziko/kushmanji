@@ -79,8 +79,18 @@ function readChat(dir) {
   };
 }
 
+// Trimmed in place, so a place counted from the chat in memory is the same place on disk.
 function writeChat(dir, chat) {
-  writeJson(chatFile(dir), { ...chat, messages: chat.messages.slice(-MAX_MESSAGES) });
+  if (chat.messages.length > MAX_MESSAGES) chat.messages.splice(0, chat.messages.length - MAX_MESSAGES);
+  writeJson(chatFile(dir), chat);
+}
+
+// The reply that made history entry `id`. Places move once the chat is long enough to be trimmed, so the place the
+// page knows is only a first guess.
+function replyFor(messages, index, id) {
+  if (!id) return index;
+  if (messages[index]?.undo?.id === id) return index;
+  return messages.findLastIndex((message) => message?.role === "agent" && message.undo?.id === id);
 }
 
 /** Runs chat turns, one at a time, and keeps each project's conversation on disk. */
@@ -248,17 +258,20 @@ export class AgentRunner {
 
   /**
    * Undo what one assistant turn changed (M2-10), or bring it back when it was undone. `index` is the reply's place
-   * in the chat. The files go back as they were; the change is recorded so the next assistant knows.
+   * in the chat and `id` the change it made, which finds the reply when older messages were trimmed. The files go
+   * back as they were; the change is recorded so the next assistant knows.
    */
-  async undo(dir, index) {
+  async undo(dir, index, id = null) {
     if (!this.#history) throw new Error("Undo is not available in this version of the app.");
     if (this.#active?.dir === dir) throw new Error("The assistant is still working. Undo when it has finished.");
-    const message = readChat(dir).messages[index];
+    const before = readChat(dir).messages;
+    index = replyFor(before, index, id);
+    const message = before[index];
     if (message?.role !== "agent" || !message.undo?.id) throw new Error("That change cannot be undone.");
     const back = Boolean(message.undo.undoneBy);
     const done = await this.#history.undo(dir, back ? message.undo.undoneBy : message.undo.id);
     const chat = readChat(dir);
-    const saved = chat.messages[index];
+    const saved = chat.messages[replyFor(chat.messages, index, message.undo.id)];
     if (saved?.undo?.id !== message.undo.id) throw new Error("The chat changed while undoing. Your files were put back.");
     saved.undo = back ? { id: saved.undo.id, files: saved.undo.files } : { ...saved.undo, undoneBy: done.id };
     writeChat(dir, chat);
@@ -474,11 +487,14 @@ export class AgentRunner {
 
   /** Look the project over after a reply that changed it, and add what was found to that reply. */
   #checkReply(dir, index) {
+    const at = readChat(dir).messages[index]?.at;
     void Promise.resolve().then(() => this.#check(dir)).catch(() => null).then((checked) => {
       if (!checked) return;
       const chat = readChat(dir);
-      if (chat.messages[index]?.role !== "agent") return;
-      chat.messages[index].checked = checked;
+      // Found by its time: a reply that came in meanwhile may have trimmed the oldest message.
+      const reply = chat.messages.findLast((message) => message?.role === "agent" && message.at === at);
+      if (!reply) return;
+      reply.checked = checked;
       writeChat(dir, chat);
       this.#emit({ dir, event: { type: "checked", index, checked } });
     });

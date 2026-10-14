@@ -39,7 +39,7 @@ function runner({ state = {}, history, bridgeRun, check } = {}) {
     claude: bridge, codex: bridge, antigravity: bridge,
   });
   const events = [];
-  return { agent: new Runner({ emit: (sent) => events.push(sent.event), history, check }), requests, turns, events };
+  return { agent: new Runner({ emit: (sent) => events.push(sent.event), history, check }), requests, turns, events, files };
 }
 
 test("the runner saves a moment beside the request and tells the chosen assistant", async () => {
@@ -164,6 +164,26 @@ test("each assistant turn becomes one history entry, and its reply can undo it a
   assert.deepEqual(history.calls.at(-1), ["undo", "undo-1"]);
   assert.equal(back.undoneBy, undefined);
   assert.match(turns.at(-1).did, /^Brought back/);
+});
+
+test("in a chat long enough to be trimmed, a reply is still found to undo and to check", async () => {
+  const history = fakeHistory();
+  let checks = 0;
+  const { agent, requests, events, files } = runner({ history, check: async () => ({ ok: true, n: ++checks }) });
+  const chat = path.join("video", ".hyperframes", "studio-win-chat.json");
+  const old = Array.from({ length: 200 }, (_, n) => ({ role: n % 2 ? "agent" : "user", text: `old ${n}`, at: n }));
+  files.set(chat, { engine: "claude", messages: old });
+  agent.send({ dir: "video", text: "Make the title red." });
+  await settled();
+  requests[0].onEvent({ type: "done", ok: true });
+  await ended();
+  const { index, undo } = events.find((event) => event.type === "done");
+  assert.equal(files.get(chat).messages.length, 200);
+  assert.equal(files.get(chat).messages[index].undo.id, "turn-1");
+  assert.ok(files.get(chat).messages[index].checked);
+  // The page may still know an older place for it.
+  const undone = await agent.undo("video", index + 1, undo.id);
+  assert.equal(undone.undoneBy, "undo-1");
 });
 
 test("a turn that changed nothing has no undo, and nothing is undone while an assistant works", async () => {

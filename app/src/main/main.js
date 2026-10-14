@@ -412,9 +412,9 @@ function registerIpc() {
   handle("agent:chooseAccess", ({ dir, level } = {}) => agent.chooseAccess(requireProject(dir), String(level)));
   handle("agent:stop", () => agent.stop());
   handle("agent:reset", (dir) => agent.reset(requireProject(dir)));
-  handle("agent:undo", ({ dir, index } = {}) => {
+  handle("agent:undo", ({ dir, index, id } = {}) => {
     if (!Number.isInteger(index) || index < 0) throw new Error("That change cannot be undone.");
-    return agent.undo(requireProject(dir), index);
+    return agent.undo(requireProject(dir), index, typeof id === "string" ? id : null);
   });
 }
 

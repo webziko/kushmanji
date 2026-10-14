@@ -277,7 +277,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     button.addEventListener("click", async () => {
       button.disabled = true;
       try {
-        show(await api.agent.undo({ dir, index }));
+        show(await api.agent.undo({ dir, index, id: undo.id }));
       } catch (error) {
         note.textContent = error.message;
       } finally {
