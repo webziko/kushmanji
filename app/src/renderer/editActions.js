@@ -48,7 +48,7 @@ const ACTIONS = [
     request: "Add a voiceover that says: ",
   },
   {
-    label: "Save the video",
+    label: "Save video",
     about: "Makes one video file from your whole video and puts it in your Downloads folder. It takes a while: " +
       "a four-minute video can take most of an hour. You can keep watching while it works. The assistant " +
       "has to wait until the video is saved.",

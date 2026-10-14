@@ -153,7 +153,7 @@ async function saveStep({ result, inPage, shot, outDir }) {
     if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 120_000 })))
       throw new Error("The project for the save check did not open.");
   } finally { dialog.showOpenDialog = nativeDialog; }
-  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Save the video').click(); document.querySelector('.edit-action-use').click()");
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Save video').click(); document.querySelector('.edit-action-use').click()");
   if (!(await until(() => inPage("document.body.dataset.save === 'saving'"), { timeoutMs: 10_000 })))
     throw new Error("Save video did not start: " + (await inPage("document.querySelector('.save-status').textContent")));
   await shot("saving");
@@ -272,7 +272,7 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   await shot("chat-moment");
   const labels = await inPage("[...document.querySelectorAll('.edit-action')].map((b) => b.textContent)");
   if (!["Fix the sound", "Add subtitles", "Make it shorter", "Add music", "Change the look",
-    "Add a title", "Save the video"].every((label) => labels.includes(label)))
+    "Add a title", "Save video"].every((label) => labels.includes(label)))
     throw new Error("The plain editing buttons are missing.");
   for (const label of labels) {
     await inPage(`[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === ${inJs(label)}).click()`);
@@ -281,7 +281,7 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
     if ((await inPage("document.querySelector('.composer textarea').value")) !== draft ||
       (await inPage("document.body.dataset.agent")) !== "idle")
       throw new Error("An editing button sent a request or replaced the draft before the person chose to.");
-    if (["Fix the sound", "Add subtitles", "Add music", "Save the video"].includes(label))
+    if (["Fix the sound", "Add subtitles", "Add music", "Save video"].includes(label))
       await shot(`editing-${label.toLowerCase().replaceAll(" ", "-")}`);
     await inPage("document.querySelector('.edit-action-close').click()");
   }

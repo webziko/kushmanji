@@ -122,7 +122,7 @@ Claude measured your vlog playing in the real app, picture by picture.
 
 ## New in the night of 14 October
 
-- [x] **Save video.** A button at the top of every video (and the "Save the video" editing button) makes the
+- [x] **Save video.** A button at the top of every video (and the "Save video" editing button) makes the
       video file and puts it in your Downloads folder. It shows a count, also on the taskbar button, and
       "Show the file" when it is done. It also sets the sound to the loudness YouTube and Instagram expect.
       No editor needed, no assistant used

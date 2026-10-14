@@ -83,7 +83,7 @@ function limitNote(name, { changed, resets }) {
 function usageNote(name, usage) {
   if (!usage?.level) return null;
   return h("div", { class: "msg-usage muted",
-    title: `About ${usage.tokens.toLocaleString()} tokens: ${usage.fresh.toLocaleString()} read new, ` +
+    title: `About ${usage.tokens.toLocaleString()} word pieces (tokens): ${usage.fresh.toLocaleString()} read new, ` +
       `${usage.cached.toLocaleString()} read again, ${usage.written.toLocaleString()} written.` },
   `Used ${usage.level === "little" ? "a little" : usage.level} of ${name}'s allowance`);
 }
