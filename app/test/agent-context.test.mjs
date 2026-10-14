@@ -107,3 +107,18 @@ test("a model the person chose by hand is always used, and so is the assistant's
   await settled();
   assert.equal(plain.requests[0].model, null);
 });
+
+test("only the assistants the person has can be chosen, and at least one stays", async () => {
+  const { agent } = runner({ state: { team: ["codex"] } });
+  // Copied out of the runner's own context, where arrays are another realm's.
+  assert.deepEqual([...agent.history("video").agents.filter((item) => item.inTeam).map((item) => item.id)], ["codex"]);
+  assert.throws(() => agent.choose("video", "claude"), /Your assistants/);
+  agent.choose("video", "codex");
+  assert.throws(() => agent.setTeam([]), /at least one/);
+  assert.throws(() => agent.setTeam(["someone-else"]), /not known/);
+});
+
+test("with nothing ticked yet, every assistant is in the team", () => {
+  const { agent } = runner();
+  assert.ok(agent.history("video").agents.every((item) => item.inTeam));
+});

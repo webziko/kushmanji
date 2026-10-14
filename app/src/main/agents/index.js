@@ -27,6 +27,15 @@ const NAMES = Object.fromEntries(Object.entries(BRIDGES).map(([id, bridge]) => [
 const chatFile = (dir) => path.join(dir, ".hyperframes", "studio-win-chat.json");
 
 const knownEngine = (id) => (Object.hasOwn(BRIDGES, id) ? id : null);
+/**
+ * The assistants the person has (M15-01, "Your team"): someone with one subscription gets a complete app that
+ * never offers the others. Nothing chosen yet means all of them.
+ */
+function teamOf(state) {
+  const chosen = Array.isArray(state?.team) ? state.team.filter((id) => knownEngine(id)) : [];
+  return chosen.length ? chosen : Object.keys(BRIDGES);
+}
+
 /** The person's model choice for an agent. Nothing chosen yet means "Auto"; null means the agent's own default. */
 const chosenModel = (models, engine) => (models && Object.hasOwn(models, engine) ? models[engine] : AUTO);
 
@@ -81,6 +90,7 @@ export class AgentRunner {
    */
   async status() {
     const chosen = readState().models ?? {};
+    const team = teamOf(readState());
     return Promise.all(
       Object.entries(BRIDGES).map(async ([id, bridge]) => {
         const state = await bridge.status().catch((error) => ({ state: "broken", detail: error.message }));
@@ -90,6 +100,7 @@ export class AgentRunner {
           ...bridge.about,
           ...state,
           untested: isNewer(state.version, bridge.about.tested),
+          inTeam: team.includes(id),
           models,
           // Nothing chosen yet means "Auto" (sizing.js). A model the agent no longer offers falls back to the
           // agent's own default.
@@ -109,6 +120,7 @@ export class AgentRunner {
       // `label` is the plain name the person reads ("ChatGPT"), `product` the maker's own ("Codex"): docs/UX.md.
       agents: Object.entries(BRIDGES).map(([id, { about }]) => ({
         id, name: about.name, label: about.label ?? about.name, product: about.product ?? about.name,
+        inTeam: teamOf(readState()).includes(id),
       })),
       access: accessFor(readState().access, dir),
       accessLevels: LEVELS,
@@ -128,9 +140,18 @@ export class AgentRunner {
     updateState({ access: withAccess(readState().access, dir, level) });
   }
 
+  /** Which assistants the person has. At least one: the chat needs someone to talk to. */
+  setTeam(engines) {
+    const team = [...new Set((Array.isArray(engines) ? engines : []).map(String))];
+    if (!team.length) throw new Error("Keep at least one assistant ticked.");
+    if (!team.every((id) => knownEngine(id))) throw new Error("That assistant is not known to this app.");
+    updateState({ team });
+  }
+
   /** Switch this project's chat to another agent. It applies from the next message. */
   choose(dir, engine) {
     if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
+    if (!teamOf(readState()).includes(engine)) throw new Error("Tick that assistant under \"Your assistants\" first.");
     writeChat(dir, { ...readChat(dir), engine });
     updateState({ agent: engine });
   }
@@ -166,6 +187,7 @@ export class AgentRunner {
 
     const chat = readChat(dir);
     const { engine } = chat;
+    if (!teamOf(readState()).includes(engine)) throw new Error("Choose one of your assistants first.");
     // Read from the app's own settings here, never taken from the page or from the project folder.
     const access = accessFor(readState().access, dir);
     // The agent hears its limits and the way of working at the start of a conversation, and again whenever the

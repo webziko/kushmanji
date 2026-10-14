@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     history: call("agent:history"),
     send: call("agent:send"),
     choose: call("agent:choose"),
+    setTeam: call("agent:setTeam"),
     chooseModel: call("agent:chooseModel"),
     chooseAccess: call("agent:chooseAccess"),
     chooseMode: call("agent:chooseMode"),

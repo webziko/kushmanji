@@ -37,7 +37,20 @@ pictures a second, 719 MB instead of 1,268. Numbers and research: `docs/FINDINGS
 `preview:copies`), `app.js` (the top bar's "Making clips smooth to edit" line), `agents/house.js` (one sentence:
 never put the copies in a video).
 
-**Next:** M16-08 (measure on the owner's PC with the real vlog), then the plan below from item 2.
+**Then, same sitting:**
+- **M14-05, M14-11 plain words** (`64bb415`), written by a Sonnet helper from `docs/UX.md` and reviewed. The
+  helper's `claude.js` edits landed in the commit before it (`a0cca8b`), because that commit was made while it
+  worked: harmless, but that is why `a0cca8b` has wording changes in it.
+- **M17-06** (`a0cca8b`, `d01f74a`): `agents/limits.js` recognises the three assistants' limit messages; the
+  chat's card lists what was changed and offers "Carry on with ...". A stand-in `claude.exe` that prints the
+  limit message (in a fake HOME, `.local/bin/claude.exe`) is how it was tried; no real limit was spent.
+- **M15-02** (`a0cca8b`): "Auto (saves your allowance)" is the model menu's choice when none was made
+  (`agents/sizing.js`); small requests go to Sonnet, a Codex "mini" or a Gemini "flash". Not tried with a real
+  assistant yet. If the owner finds Sonnet's small edits worse, the floor is one line in `SMALLER`.
+- **M17-04 shorts** was skipped here on purpose: its worked example (`reviews/shisha-shorts`) and the channel's
+  rules (`C:\Creators\happywithshisha`) are only on the owner's PC.
+
+**Next:** M16-08 (measure on the owner's PC with the real vlog), M17-04 on the owner's PC, then the plan below.
 
 ---
 

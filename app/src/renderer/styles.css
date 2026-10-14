@@ -776,3 +776,9 @@ h2 {
 /* Save video: the count sits beside the project's name and must never push the buttons off the bar. */
 .save-status { min-width: 0; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .save-video { white-space: nowrap; }
+
+/* "Your assistants" in the chat's settings (M15-01). */
+.chat-team { border: 0; margin: 0; padding: 4px 12px 8px; display: grid; gap: 4px; font-size: 13px; min-width: 0; }
+.chat-team legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; color: var(--text-2); }
+.chat-team .team-member { display: flex; gap: 8px; align-items: baseline; }
+.chat-team .msg-note:empty { display: none; }

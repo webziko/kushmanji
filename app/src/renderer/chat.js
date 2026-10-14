@@ -9,6 +9,13 @@ import { createEditActions } from "./editActions.js";
 
 const api = window.hfwin;
 
+// What each assistant is good for, under "Your assistants" (M15-01). Plain, and true of every plan.
+const GOOD_FOR = {
+  claude: "careful editing and planning a whole video",
+  codex: "editing, and it can make pictures",
+  antigravity: "editing, and watching many clips without using much",
+};
+
 // Said beside an assistant's name in the menu when it cannot be used yet.
 const STATE_NOTES = {
   "not-installed": "not on this computer yet",
@@ -135,6 +142,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   let moment = null;
 
   const current = () => agents.find((agent) => agent.id === engine);
+  // The assistants the person ticked under "Your assistants". Older main processes send no `inTeam`: all.
+  const team = () => agents.filter((agent) => agent.inTeam !== false);
   const nameOf = (id) => {
     const agent = agents.find((item) => item.id === id);
     return agent?.label ?? agent?.name ?? "Assistant";
@@ -146,7 +155,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
    * message asking it to check the half-done work and finish it. The person still presses Send.
    */
   function carryOnButtons(stoppedEngine, changed = []) {
-    const others = agents.filter((agent) => agent.id !== stoppedEngine);
+    const others = team().filter((agent) => agent.id !== stoppedEngine);
     if (!others.length) return null;
     const from = nameOf(stoppedEngine);
     return h("div", { class: "notice-actions" }, ...others.map((agent) => h("button", {
@@ -207,6 +216,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     "aria-label": "Assistant",
     title: "Who changes your video for you. A change starts with your next message.",
   });
+  const teamBox = h("fieldset", { class: "chat-team" });
+  const teamNote = h("p", { class: "msg-note error", role: "status" });
   const modelPick = h("select", {
     class: "agent-pick",
     "aria-label": "How careful",
@@ -461,8 +472,14 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   }
 
   function render() {
+    // The chat's assistant was unticked: carry on with the first one the person has.
+    if (agents.length && !team().some((agent) => agent.id === engine) && team()[0]) {
+      engine = team()[0].id;
+      void api.agent.choose({ dir, engine }).catch(() => {});
+    }
+    renderTeam();
     picker.replaceChildren(
-      ...agents.map((agent) => {
+      ...team().map((agent) => {
         const note = STATE_NOTES[agent.state];
         return h("option", { value: agent.id }, note ? `${menuName(agent)} · ${note}` : menuName(agent));
       }),
@@ -493,6 +510,35 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       input.value = "";
       void submit(text, false);
     }
+  }
+
+  /** "Your assistants": one box per assistant. At least one stays ticked. */
+  function renderTeam() {
+    teamBox.replaceChildren(
+      h("legend", {}, "Your assistants: tick the ones you have"),
+      ...agents.map((agent) => {
+        const box = h("input", { type: "checkbox", checked: agent.inTeam !== false });
+        box.addEventListener("change", async () => {
+          const ticked = agents.filter((item) => (item === agent ? box.checked : item.inTeam !== false));
+          if (!ticked.length) {
+            box.checked = true;
+            teamNote.textContent = "Keep at least one assistant ticked.";
+            return;
+          }
+          teamNote.textContent = "";
+          try {
+            await api.agent.setTeam(ticked.map((item) => item.id));
+            for (const item of agents) item.inTeam = ticked.includes(item);
+          } catch (error) {
+            teamNote.textContent = error.message;
+          }
+          render();
+        });
+        return h("label", { class: "team-member" }, box,
+          h("span", {}, menuName(agent), h("span", { class: "muted" }, ` · ${GOOD_FOR[agent.id] ?? ""}`)));
+      }),
+      teamNote,
+    );
   }
 
   /** Ask the main process which agents are installed and signed in. It starts each tool, so it takes seconds. */
@@ -557,6 +603,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     ),
     h("details", { class: "chat-settings" },
       h("summary", {}, "Assistant and clip settings"),
+      teamBox,
       h("div", { class: "chat-head" }, h("label", {}, "Assistant", picker), modelPick),
       h("div", { class: "chat-setting-row" }, h("label", { class: "access muted" }, "Ask me first", modePick)),
       modeAbout,

@@ -74,6 +74,8 @@ Claude measured your vlog playing in the real app, picture by picture.
 - [x] **When an assistant runs out of its allowance mid-job**, the chat now says so plainly, lists the files it
       had already changed, says when it can work again, and offers "Carry on with ChatGPT" or "Carry on with
       Gemini", which prepares the message for you
+- [x] **"Your assistants: tick the ones you have."** In the chat's settings. Someone with only ChatGPT never
+      sees Claude or Gemini offered
 - [x] **"Auto (saves your allowance)"** in the model menu: small changes go to a cheaper model, big jobs to the
       best one. A model you pick yourself is always used
 

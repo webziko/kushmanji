@@ -340,6 +340,7 @@ function registerIpc() {
     return { moment: captured ? { seconds: captured.seconds, when: captured.when } : null };
   });
   handle("agent:choose", ({ dir, engine } = {}) => agent.choose(requireProject(dir), String(engine)));
+  handle("agent:setTeam", (engines) => agent.setTeam(engines));
   handle("agent:chooseModel", ({ engine, model } = {}) =>
     agent.chooseModel(String(engine), model == null ? null : String(model)),
   );

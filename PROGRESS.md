@@ -439,14 +439,17 @@ The owner, 2026-10-13: usage runs out during editing; "maybe you guiding differe
 antigravity also", "the user also should have the option to work with 1 app model or 2 ... some might not have
 subscriptions". Goes with M13 (the team) and M10-05 (the right agent for each job).
 
-- [ ] M15-01 "Your team": tick which assistants you have (one, two or three). The app only ever uses those, and
-      says what each is used for. Someone with one subscription gets a complete app
-- [~] M15-02 (Claude) The right size of model for the job, chosen by the app: a small fast one for "make this red", a
+- [x] M15-01 "Your team": tick which assistants you have (one, two or three). The app only ever uses those, and
+      says what each is used for. Someone with one subscription gets a complete app (Claude, 2026-10-14):
+      "Your assistants: tick the ones you have" at the top of the chat's settings, one line each on what it is
+      good for; the assistant menu and "Carry on with" offer only those, one always stays ticked, and the main
+      process refuses an assistant that is not ticked. Kept in the app's settings (`team`), not per project
+- [x] M15-02 (Claude, 2026-10-14) The right size of model for the job, chosen by the app: a small fast one for "make this red", a
       large one for planning a whole video. The person can still pick by hand. Built (2026-10-14): "Auto (saves
       usage)" in the model menu, and the choice when none was made; a short request about one thing goes to
       Sonnet, a Codex "mini" or a Gemini "flash" model, found by name in the assistant's own list, anything
-      about the whole video, shorts, subtitles or a plan to the default (`agents/sizing.js`). Not yet tried
-      with a real assistant
+      about the whole video, shorts, subtitles or a plan to the default (`agents/sizing.js`). Seen choosing
+      Sonnet in the real app with a stand-in Claude; not yet tried with a real assistant
 - [ ] M15-03 Heavy looking and listening goes to the assistant that does it cheapest (today Gemini: it listened
       to 20 clips), and comes back as a short note the others read, instead of each one studying the footage
 - [ ] M15-04 Keep every request small: send the study's summary, not the whole study; start a fresh
