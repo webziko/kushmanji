@@ -5,6 +5,39 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-18 (night) · Claude · Kannada and Hindi, HyperFrames 0.8.169, an unattended night on the owner's PC
+
+The owner went to sleep and asked for the app to be finished as far as possible, testing with their videos;
+"Happy with Shisha" work is over (they posted the videos themselves). A session cron (`CronCreate`, every 2 h)
+re-wakes this session after a usage limit; it dies with the session.
+
+- **M14-12** (`2f923e1`): both word lists (Sonnet helpers), Kannada joiners fixed (`~` → U+200C). The language
+  menu did nothing: the window blocks every navigation and a page-started reload is one, so the page now asks
+  `app:reload`. The self-test switches to Kannada and back. Main-process sentences remain English (M14-15).
+- **M5-05 / HyperFrames 0.8.169** (`292289f`): both versions measured the same night; the new one is better in
+  the editor (FINDINGS, last section). Self-test fixes it brought out, in the test only: Studio may show a live
+  thumbnail iframe with the same address as the player (pick the largest / the one that plays), and greys out
+  Play while a first open loads (wait for it).
+- **Codex model fallback** (uncommitted when written; see below): `codex.js` asks for the first listed model
+  when Codex's own `config.toml` default is not on the account (the owner's plan changed; "gpt-6-astra").
+
+**What would surprise you**
+- At night the display sleeps and Chromium stops drawing: `capturePage` fails with UnknownVizError and video in
+  Studio will not play. A small PowerShell loop calling `SetThreadExecutionState(ES_DISPLAY_REQUIRED)` (scratch
+  `keep-display.ps1`) keeps it on; it dies when the session restarts, and the self-test then hangs.
+- The auto-mode safety classifier refused to switch off Gemini's broken telemetry hook ("Logging/Audit
+  Tampering"); it is on the owner's list. Gemini cannot edit until they do.
+- The self-test's own Kannada step means a run leaves its settings in English; any run that dies between
+  switching to Kannada and back would leave the next run's Home in Kannada (its settings folder is fresh each run).
+
+**Plan for the rest of the night, in order:** Codex model fallback (test with `npm run smoke:codex`); the five
+motion videos about Kushmanji the owner asked for (`reviews/kushmanji-motion`, a `REQUEST.txt` in each,
+levels 1 to 5, made through the chat with Codex, checked with stills, saved to `reviews/READY`); M10-18 (a chat
+message should not wait for slow Whisper words); M16-10 (say "Getting the editor ready" on a first open);
+M14-15; M9-07 (a log file).
+
+---
+
 ## 2026-10-14 (evening) · Claude · On the owner's PC: smoothness measured, Whisper, shorts, the editor's face
 
 First session on the owner's Windows PC after the cloud work. Pulled 42 commits; `npm test` failed four tests

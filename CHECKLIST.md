@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-14, evening. The app is now called **Kushmanji**._
+_Updated 2026-10-18, morning. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -20,18 +20,15 @@ Two shortcuts are on your Desktop:
       tool off for you. To fix it: open `%USERPROFILE%\.gemini\config\plugins\googlecloudtools.datacloud_telemetry\hooks.json`
       in Notepad, change `"enabled": true` to `"enabled": false`, save. Or tell Claude "you may switch it off".
 
+- [ ] **ChatGPT is set to a model your account no longer has** ("gpt-6-astra" in Codex's own settings, after the
+      plan changed). The app now picks one your account does have (GPT-6-Luna) by itself. Codex also says it is
+      older than it wants: if you like, open PowerShell and run `npm install -g @openai/codex@latest`.
+- [ ] **Read a few screens in Kannada** (Home, top right: Language → ಕನ್ನಡ) and tell me what sounds wrong. Hindi
+      too if you know someone who reads it. Back to English the same way.
 - [ ] **Are the Kannada words right?** The app now writes down Kannada speech by itself (with Whisper). Your
       clip 01 came out as "ಎಲ್ಲಾರಗಿ ನಮ್ಮಸ್ಕಾರಾ ನಾನು ನಿನಗೆ ವಿಷಾಯ ಹಿರ್ವಿಕು ... ಫುಲ್ ಬೋರ್". Nobody here can check Kannada.
-- [ ] **Does moving around in your vlog feel smooth now?** Measured on your PC: a jump shows its picture in
-      0.05 s on the watching screen and about 0.13 s in "Edit by hand".
-- [ ] **Watch the four finished videos** in `C:\hyperframewindows\reviews\READY`: the vlog (4 min 13 s) and
-      three upright shorts. A note in that folder says what to listen for and gives title ideas. Nothing was
-      posted anywhere.
-- [ ] **Listen to the music** on the vlog's name card and ending card, and under the shorts. A computer
-      checked the pictures; nobody has listened.
-- [ ] **Close Kushmanji and open it again** to get "Save video", the new arrow keys and smooth moving around.
-      Then open your vlog, wait until the top bar says "Clips are smooth to edit" (a minute or two, once per
-      project), and drag the playhead: tell me if it now follows your hand.
+- [ ] **Does moving around feel smooth now?** Close Kushmanji and open it again (it now uses HyperFrames
+      0.8.169, which is smoother in the editor), open a video and drag the playhead.
 - [x] **A logo and colours for Kushmanji.** You picked A, "Friendly": the app is now coral and cream with the
       smiling play-button icon. "unofficial" at the top opens "About Kushmanji"
 - [ ] **Which access level should a new person start on?** Today: "Only this video". My advice: "Also cut my clips".
@@ -68,6 +65,15 @@ Then the list further down, starting with one-click export.
 - [x] **The app in Kannada and Hindi.** Home has a Language menu at the top right: English, ಕನ್ನಡ, हिन्दी.
       Every button and explanation on the screens changes; a few sentences that come from deeper in the app
       are still English (next task). Please read a few screens in Kannada and tell me what sounds wrong.
+- [x] **HyperFrames updated to 0.8.169** (from 0.8.149). Measured on your vlog against the old version the same
+      night: jumps in "Edit by hand" 0.21 s instead of 0.28 s, the slowest 0.43 s instead of 1.05 s, and far
+      fewer stutters. It also fixes a thin black strip on the right of upright videos and frozen phone footage.
+- [x] **ChatGPT works again with a smaller plan**: when Codex's own default model is not on your account any
+      more, the app asks for one that is.
+- [x] **Fixed for strangers' PCs**: the self-test failed at night because the screen was asleep; it now says so
+      plainly, and two test checks that picked the wrong picture are fixed.
+- [ ] **Five motion videos about Kushmanji** (you asked for levels 1 to 5): the five projects and requests are
+      ready in `reviews\kushmanji-motion`; they are being made through the app's chat next.
 
 ## New in the evening of 14 October, on your PC
 

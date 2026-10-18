@@ -305,7 +305,7 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       cannot read paths outside plain English letters (UP-03): the app works around the project folder, and
       says plainly when the user folder is the problem. "Add subtitles" now asks for subtitles from the
       study's words, in English
-- [ ] M10-18 With Whisper, the first study of a long video in Kannada or Hindi takes about 1.5 minutes per
+- [~] M10-18 (Claude) With Whisper, the first study of a long video in Kannada or Hindi takes about 1.5 minutes per
       clip, and a chat message waits for the whole study. Let a message go ahead once the pictures are done,
       with the words following; or hear only the clips the video uses (the owner's vlog has three copies of
       every clip: `clean`, `prepared`, `voice-clean`)
