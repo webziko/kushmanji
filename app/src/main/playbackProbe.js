@@ -259,7 +259,15 @@ export async function playbackProbe({ win, outDir, result, shot }) {
     (process.env.HFWIN_SMOKE_PLAYBACK_AT || "0:45,120:30").split(",")
       .map((item) => item.split(":").map(Number)).map(([from, seconds]) => ({ from, seconds }));
   const frames = () => page.mainFrame.framesInSubtree;
-  const composition = () => frames().find((frame) => /\/preview(\?|$)/.test(frame.url));
+  // The video's own frame. In the editor Studio may also show a small live thumbnail of it, with the same address;
+  // the largest preview on screen is the player. Looked up afresh each time: Studio sometimes replaces it.
+  const composition = async () => {
+    const previews = frames().filter((frame) => /\/preview(\?|$)/.test(frame.url));
+    if (previews.length < 2) return previews[0];
+    const sizes = await Promise.all(previews.map((frame) =>
+      frame.executeJavaScript("innerWidth * innerHeight", true).catch(() => 0)));
+    return previews[sizes.indexOf(Math.max(...sizes))];
+  };
   const command = (action, value) =>
     inPage(`window.hfwin.player.command(${JSON.stringify({ dir, action, value })})`);
   const watchLong = (frame) => frame?.executeJavaScript(`(${watchLongTasksInFrame.toString()})()`, true).catch(() => false);
@@ -283,7 +291,7 @@ export async function playbackProbe({ win, outDir, result, shot }) {
 
   // Jumps and a drag on whichever screen is showing, with the stalls they caused in each frame and the app's load.
   const jumpAndDrag = async (screen, studio) => {
-    const frame = composition();
+    const frame = await composition();
     await watchLong(frame);
     await takeLong(frame);
     await takeLong(studio);
@@ -306,20 +314,30 @@ export async function playbackProbe({ win, outDir, result, shot }) {
   const measure = async (screen, play, pause, seek) => {
     const runs = [];
     for (const stretch of stretches) {
-      await pause();
-      await wait(400);
-      await seek(stretch.from);
-      await wait(2000);
-      const frame = composition();
-      const clips = await frame.executeJavaScript(`(${recordInFrame.toString()})()`, true);
-      const started = await play();
-      await wait(stretch.seconds * 500);
-      await shot(`playback-${screen}-${stretch.from}`);
-      await wait(stretch.seconds * 500);
-      const raw = await frame.executeJavaScript(`(${collectInFrame.toString()})()`, true);
-      await pause();
-      fs.writeFileSync(path.join(outDir, `playback-${screen}-${stretch.from}.json`), JSON.stringify({ clips, ...raw }));
-      runs.push({ playPressed: started !== false, ...summarise({ clips, ...raw }, stretch) });
+      // The video's frame was replaced in the middle of a stretch now and then (no project file had changed): the
+      // stretch is played again once, and the run says so (`frameReplaced`).
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await pause();
+          await wait(400);
+          await seek(stretch.from);
+          await wait(2000);
+          const frame = await composition();
+          const clips = await frame.executeJavaScript(`(${recordInFrame.toString()})()`, true);
+          const started = await play();
+          await wait(stretch.seconds * 500);
+          await shot(`playback-${screen}-${stretch.from}`);
+          await wait(stretch.seconds * 500);
+          const raw = await frame.executeJavaScript(`(${collectInFrame.toString()})()`, true);
+          await pause();
+          fs.writeFileSync(path.join(outDir, `playback-${screen}-${stretch.from}.json`), JSON.stringify({ clips, ...raw }));
+          runs.push({ playPressed: started !== false, ...(attempt > 1 ? { frameReplaced: true } : {}),
+            ...summarise({ clips, ...raw }, stretch) });
+          break;
+        } catch (error) {
+          if (attempt > 1 || !/disposed|Cannot set properties of undefined/i.test(String(error?.message))) throw error;
+        }
+      }
     }
     return runs;
   };
@@ -371,7 +389,7 @@ export async function playbackProbe({ win, outDir, result, shot }) {
       for (const type of ["pointerdown", "pointermove", "keydown", "wheel"])
         addEventListener(type, (event) => { if (event.isTrusted) window.__hfwinInput[type] = (window.__hfwinInput[type] ?? 0) + 1; }, true);`);
     result.playback.edit = await measure("edit", () => press("/^play/i"), () => press("/^pause/i"),
-      (at) => composition().executeJavaScript(`window.__player.seek(${Number(at)})`, true));
+      async (at) => (await composition()).executeJavaScript(`window.__player.seek(${Number(at)})`, true));
     await press("/^pause/i");
     result.playback.editJumps = await jumpAndDrag("edit", studio);
     result.playback.editInputSeen = await studio.executeJavaScript("window.__hfwinInput");

@@ -252,3 +252,27 @@ the project opened (198 MB). The playback measurement, with the copies made and 
   the real project's (about 300 against 133 ms) because the study was still transcribing the copied projects.
 - The first measurement run stopped once because the video's frame reloaded itself in the middle of a stretch;
   no project file had changed. Not seen again in 13 runs.
+
+## HyperFrames 0.8.149 to 0.8.169 on the owner's PC (measured 2026-10-18, at night)
+
+Twenty releases (notes: github.com/heygen-com/hyperframes/releases). The ones that matter here: the preview's
+work follows what plays rather than the film's clip count (0.8.167), fewer flashes of the wrong frame at cuts
+(0.8.160), scrubbing back no longer hides scenes or captions (0.8.165, 0.8.168), VFR phone footage no longer
+freezes in renders (0.8.156), no black strip at the right of 1080-wide videos (0.8.155), Windows fixes for a first
+render and a busy `check`. Nothing the app relies on moved: the watcher and history still skip `.cache`, the
+preview route and its ready line are the same, snapshots still name each picture by its time (`at-1.5s`).
+
+Both versions measured on the real vlog the same night, one after the other (the PC had only 2 GB free, so both
+are slower than on 14 October; compare the columns, not with that table):
+
+| | 0.8.149 | 0.8.169 |
+| --- | --- | --- |
+| Jump, watching (middle / slowest) | 148 / 198 ms | 117 / 199 ms |
+| Jump, editor | 278 / 1054 ms | 211 / 432 ms |
+| Editor stalls over 50 ms, two stretches | 13 and 29 | 6 and 8 |
+| Pictures dropped, editor, 45 s + 30 s | 21 + 8 | 16 + 6 |
+
+The self-test needed two fixes that the new Studio brought out, both in the test, not the app: Studio can show a
+small live thumbnail of the video beside the player, with the same address, so the editor checks now take the
+largest preview (or the one that plays); and its Play is greyed out for a moment while a first open loads, so the
+arrow-key check waits until Play can be pressed. Gemini could not be tried: see the add-on in CHECKLIST.md.

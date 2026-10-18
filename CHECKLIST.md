@@ -15,6 +15,11 @@ Two shortcuts are on your Desktop:
 
 ## Waiting on you
 
+- [ ] **Gemini cannot change files again.** A Google Cloud usage-reporting add-on inside Antigravity switched
+      itself back on (13 October) and stops every edit on Windows. Claude was not allowed to switch a reporting
+      tool off for you. To fix it: open `%USERPROFILE%\.gemini\config\plugins\googlecloudtools.datacloud_telemetry\hooks.json`
+      in Notepad, change `"enabled": true` to `"enabled": false`, save. Or tell Claude "you may switch it off".
+
 - [ ] **Are the Kannada words right?** The app now writes down Kannada speech by itself (with Whisper). Your
       clip 01 came out as "ಎಲ್ಲಾರಗಿ ನಮ್ಮಸ್ಕಾರಾ ನಾನು ನಿನಗೆ ವಿಷಾಯ ಹಿರ್ವಿಕು ... ಫುಲ್ ಬೋರ್". Nobody here can check Kannada.
 - [ ] **Does moving around in your vlog feel smooth now?** Measured on your PC: a jump shows its picture in
@@ -264,7 +269,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | The app's settings folder under its new name | `%APPDATA%\Kushmanji` | Delete that folder (the old `HyperFrames Studio Win` one can go too) |
 | Codex updated from 0.145.0 to 0.162.1 | Global npm package | `npm install -g @openai/codex@0.145.0` |
 | Google's `agy` tool installed | `%LOCALAPPDATA%\agy\bin`, added to your PATH | Delete that folder |
-| One Google Cloud usage-reporting add-on switched off, because it was broken on Windows and blocked Gemini | `%USERPROFILE%\.gemini\config\plugins\googlecloudtools.datacloud_telemetry\hooks.json` | Change `"enabled": false` back to `true` |
+| One Google Cloud usage-reporting add-on switched off, because it was broken on Windows and blocked Gemini. It came back on by itself on 13 October (probably an Antigravity update): see "Waiting on you" | `%USERPROFILE%\.gemini\config\plugins\googlecloudtools.datacloud_telemetry\hooks.json` | Change `"enabled": false` back to `true` |
 | HyperFrames' source code downloaded for reference (1.5 GB) | `C:\hyperframewindows\upstream` | Delete that folder |
 | Remote Control switched on for the Claude session | This session only | Toolbar switch |
 | Whisper's speech model, large-v3 (3.1 GB, from huggingface.co, checked), 14 October | `%USERPROFILE%\.cache\hyperframes\whisper\models` | Delete `ggml-large-v3.bin` |

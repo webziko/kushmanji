@@ -194,7 +194,10 @@ Do not build them.
       start" only when something is missing: FFmpeg (with the `winget` line to copy and how to run it), the
       browser for saving videos (Kushmanji fetches it with one press), little disk space or memory. Otherwise
       "Kushmanji has everything it needs on this computer". `main/health.js`. Not yet seen on a fresh Windows PC
-- [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version
+- [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version. The routine is
+      `docs/MAINTENANCE.md`; it was followed on 2026-10-18 to move from 0.8.149 to 0.8.169 (Claude): check,
+      tests, self-test, one Claude request, and the playback measurement, both versions the same night
+      (`docs/FINDINGS.md`, last section). Still open: updates for the app itself
 - [ ] M5-06 Work with no system Node installed (the CLI calls `npx` for a few things)
 - [ ] M5-07 Windows on ARM build
 

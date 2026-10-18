@@ -204,15 +204,18 @@ async function editorArrowStep({ win, result, inPage }) {
   const studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
   const studio = frames().find((frame) => frame.parent === page.mainFrame &&
     frame.url.split("?")[0] === studioUrl.split("?")[0]);
-  // The player's own picture, not the small live thumbnail Studio's Compositions list may show: both are
-  // previews of the same video, and the thumbnail never plays (it made this check fail now and then).
+  // Studio may show a small live thumbnail of the video in its Compositions list as well as the player: two
+  // previews with the same address, and the thumbnail never plays (it made this check fail now and then). The
+  // player is whichever starts playing when Play is pressed.
   const previews = frames().filter((frame) => frame.parent === studio && /\/preview(\?|\/|$)/.test(frame.url));
-  const picture = previews.find((frame) => /[?&]__hf_shader_loading=player\b/.test(frame.url)) ?? previews[0];
-  if (!studio || !picture) throw new Error("The editor's picture was not found for the arrow-key check.");
+  if (!studio || previews.length === 0) throw new Error("The editor's picture was not found for the arrow-key check.");
+  let picture = previews[0];
   const press = (label) => studio.executeJavaScript(
     `(() => { const b = [...document.querySelectorAll('button')].find((b) => ${label}.test(b.getAttribute('aria-label') || b.title || ''));
       if (!b) return false; b.click(); b.blur(); return true; })()`, true);
-  const now = () => picture.executeJavaScript("({ time: window.__player.getTime(), playing: window.__player.isPlaying() })");
+  const stateOf = (frame) =>
+    frame.executeJavaScript("({ time: window.__player.getTime(), playing: window.__player.isPlaying() })");
+  const now = () => stateOf(picture);
   const key = async (keyCode) => {
     page.sendInputEvent({ type: "keyDown", keyCode });
     page.sendInputEvent({ type: "keyUp", keyCode });
@@ -223,10 +226,24 @@ async function editorArrowStep({ win, result, inPage }) {
   win.focus();
   page.focus();
   await inPage(inEditor);
-  await picture.executeJavaScript("window.__player.seek(20)", true);
+  // The editor says "Loading" over its picture and greys out Play until the whole video is ready, which can take a
+  // while on a first open (HyperFrames 0.8.169 here). A person waits for that too; how long is recorded.
+  const playReady = () => studio.executeJavaScript(`(() => { const b = [...document.querySelectorAll('button')]
+    .find((b) => /^play$/i.test(b.getAttribute('aria-label') || ''));
+    return Boolean(b) && !b.disabled && b.getAttribute('aria-disabled') !== 'true'; })()`, true).catch(() => false);
+  const waited = Date.now();
+  if (!(await until(playReady, { timeoutMs: 120_000 }))) throw new Error("The editor's Play button never became ready.");
+  result.editorPlayReadySeconds = Math.round((Date.now() - waited) / 100) / 10;
+  for (const frame of previews) await frame.executeJavaScript("window.__player.seek(20)", true).catch(() => null);
   await wait(300);
   if (!(await press("/^play/i"))) throw new Error("The editor's Play button was not found.");
-  if (!(await until(async () => (await now()).playing, { timeoutMs: 5000 }))) {
+  const started = await until(async () => {
+    for (const frame of previews) {
+      if ((await stateOf(frame).catch(() => null))?.playing) picture = frame;
+    }
+    return (await now()).playing;
+  }, { timeoutMs: 5000 });
+  if (!started) {
     // What the editor's picture says it is waiting for, so a failure here can be told apart from a slow load.
     result.editorWaiting = {
       picture: await picture.executeJavaScript(
@@ -237,6 +254,10 @@ async function editorArrowStep({ win, result, inPage }) {
         .map((b) => b.getAttribute("aria-label") || b.title || "").filter((label) => /^play/i.test(label))`, true)
         .catch(() => null),
       time: await now().catch(() => null),
+      frames: await Promise.all(frames().map(async (frame) => ({
+        url: frame.url.slice(-90), parent: frame.parent?.url.slice(-50) ?? null,
+        state: /\/preview/.test(frame.url) ? await stateOf(frame).catch((error) => String(error?.message ?? error)) : null,
+      }))),
     };
     throw new Error("The editor did not start playing for the arrow-key check.");
   }
