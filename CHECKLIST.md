@@ -72,8 +72,14 @@ Then the list further down, starting with one-click export.
       more, the app asks for one that is.
 - [x] **Fixed for strangers' PCs**: the self-test failed at night because the screen was asleep; it now says so
       plainly, and two test checks that picked the wrong picture are fixed.
-- [ ] **Five motion videos about Kushmanji** (you asked for levels 1 to 5): the five projects and requests are
-      ready in `reviews\kushmanji-motion`; they are being made through the app's chat next.
+- [x] **Five motion videos about Kushmanji** (you asked for levels 1 to 5), made through the app's own chat by
+      ChatGPT (GPT-6-Luna) in about 50 minutes, checked frame by frame by Claude, saved in
+      `reviews\READY\Kushmanji motion videos`: a logo reveal (6 s, wide), three features as bouncy cards (8 s,
+      square), a product demo with typing and subtitles (10 s, wide), "Hello · ನಮಸ್ಕಾರ · नमस्ते" in glowing
+      letters (8 s, upright), and a 3D timeline that collapses into the logo (10 s, wide). No music yet. What a
+      computer could not judge: the motion itself, and whether the level 1 ending (a fade to grey-brown) looks right.
+- [x] **A problem report.** Help now has "Show the problem report": a small log file you can send when something
+      goes wrong. It holds no messages, words or files, and your Windows user folder is replaced by "~".
 
 ## New in the evening of 14 October, on your PC
 

@@ -30,6 +30,14 @@ re-wakes this session after a usage limit; it dies with the session.
 - The self-test's own Kannada step means a run leaves its settings in English; any run that dies between
   switching to Kannada and back would leave the next run's Home in Kannada (its settings folder is fresh each run).
 
+**Morning (done after the plan below was written):** Codex model fallback (`d0eeb71`; gpt-6-luna answered),
+M10-18 two-round study (`22d7055`; ready after 5 s instead of 313 s on two Hindi clips), M9-07 problem-report
+log (`49a611f`, by a Sonnet helper in a worktree, reviewed; tried in the real app: the "start" line is written),
+and the five motion videos (made by Codex through the chat, ~50 min; stills checked; rendered to
+`reviews/READY/Kushmanji motion videos`). **The full self-test fails this morning at the editor's arrow-key
+check (M9-13)**, on the last commit as well, while the owner uses the PC; it passed with the PC idle. Treat that
+step as unverified for M10-18 and M9-07 until it passes again on an idle PC.
+
 **Plan for the rest of the night, in order:** Codex model fallback (test with `npm run smoke:codex`); the five
 motion videos about Kushmanji the owner asked for (`reviews/kushmanji-motion`, a `REQUEST.txt` in each,
 levels 1 to 5, made through the chat with Codex, checked with stills, saved to `reviews/READY`); M10-18 (a chat
