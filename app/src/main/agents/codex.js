@@ -27,7 +27,12 @@ export const about = {
  * that adds or retires a model shows up here by itself.
  */
 export async function models() {
-  const home = process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
+  return listedModels();
+}
+
+const codexHome = () => process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
+
+export function listedModels(home = codexHome()) {
   try {
     const cache = JSON.parse(fs.readFileSync(path.join(home, "models_cache.json"), "utf8"));
     return cache.models
@@ -37,6 +42,26 @@ export async function models() {
     // No list yet (Codex has not run), or a format this version of the app does not know: offer the default only.
     return [];
   }
+}
+
+/** The model Codex's own settings name (`model = "..."` at the top of config.toml), or null. */
+export function configuredModel(home = codexHome()) {
+  try {
+    const top = fs.readFileSync(path.join(home, "config.toml"), "utf8").split(/^\s*\[/m)[0];
+    return /^\s*model\s*=\s*"([^"]+)"/m.exec(top)?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The model to ask for when the person chose none. Codex's own settings can name one the account no longer offers:
+ * seen 2026-10-18, "gpt-6-astra" after the owner's plan changed, and every request failed with "not supported when
+ * using Codex with a ChatGPT account". Then the first model Codex lists for this account is used instead.
+ */
+export function fallbackModel(configured, offered) {
+  if (!configured || offered.length === 0) return null;
+  return offered.some((model) => model.id === configured) ? null : offered[0].id;
 }
 
 const forward = (file) => file.replaceAll("\\", "/");
@@ -160,13 +185,14 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
   // Shared by both tries, so a second try's words follow the first's instead of starting over.
   let wroteText = false;
   let child = null;
+  const asked = model ?? fallbackModel(configuredModel(), listedModels());
 
   /** One try at the turn. `plain` uses Codex's simpler Windows sandbox: see SANDBOX_FALLBACK. */
   const attempt = (plain) => {
     const options = [
       "--json",
       "--skip-git-repo-check",
-      ...(model ? ["-m", model] : []),
+      ...(asked ? ["-m", asked] : []),
       // The app's own "look at the video" (lookTool.js), started by Codex outside its sandbox.
       ...codexLookArgs(dir),
       ...(ACCESS[access] ?? ACCESS.project)(),
