@@ -85,6 +85,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   selection.js           what is selected in the editor, for the chat's "Pointing at"
   editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
   exporter.js            "Save video": the video file, made into the Downloads folder
+  log.js                 the problem report: a daily log file with nothing private in it (`redact`)
   lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them
   covers.js              Home's picture of each video, captured from the player
   storage.js             Home's "Undo copies take ..." and "Free up space" (upstream's `hyperframes clean`)

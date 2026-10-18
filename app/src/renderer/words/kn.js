@@ -323,6 +323,8 @@ export default {
   "Move to the moment you mean, write what you want in the chat, and press Send when you are ready.": "ನೀವು ಹೇಳುತ್ತಿರುವ ಕ್ಷಣಕ್ಕೆ ಹೋಗಿ, ಚಾಟ್‌ನಲ್ಲಿ ನಿಮಗೇನು ಬೇಕೋ ಬರೆಯಿರಿ, ಸಿದ್ಧವಾದಾಗ ಕಳುಹಿಸಿ ಒತ್ತಿ.",
   "Check the result": "ಫಲಿತಾಂಶ ನೋಡಿ",
   "Watch the change, then press Save video to make a video file in your Downloads folder. Edit by hand opens the full editor.": "ಬದಲಾವಣೆಯನ್ನು ನೋಡಿ, ನಂತರ Downloads ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ವಿಡಿಯೋ ಫೈಲ್ ಮಾಡಲು ವಿಡಿಯೋ ಸೇವ್ ಮಾಡಿ ಒತ್ತಿ. ನೀವೇ ಎಡಿಟ್ ಮಾಡಿ ಒತ್ತಿದರೆ ಪೂರ್ತಿ ಎಡಿಟರ್ ತೆರೆಯುತ್ತದೆ.",
+  "If something goes wrong, send this file to whoever helps you. It has no messages, words or files in it.": "ಏನಾದರೂ ತೊಂದರೆ ಆದರೆ, ಈ ಫೈಲ್ ಅನ್ನು ನಿಮಗೆ ಸಹಾಯ ಮಾಡುವವರಿಗೆ ಕಳುಹಿಸಿ. ಇದರಲ್ಲಿ ಯಾವುದೇ ಸಂದೇಶ, ಪದ ಅಥವಾ ಫೈಲ್ ಇಲ್ಲ.",
+  "Show the problem report": "ತೊಂದರೆಯ ವರದಿ ತೋರಿಸಿ",
   "Step {number} of {total}": "ಹಂತ {number} / {total}",
   "Sending a message uses your chosen assistant's allowance.": "ಸಂದೇಶ ಕಳುಹಿಸಿದರೆ ನೀವು ಆರಿಸಿದ ಅಸಿಸ್ಟೆಂಟ್‌ನ ಬಳಕೆಯ ಮಿತಿ ಖರ್ಚಾಗುತ್ತದೆ.",
   "Saving a long video takes a while. For subtitles, the app writes down what is said in your clips; check the words before you use them.": "ಉದ್ದದ ವಿಡಿಯೋ ಸೇವ್ ಮಾಡಲು ಸ್ವಲ್ಪ ಸಮಯ ಹಿಡಿಯುತ್ತದೆ. ಸಬ್‌ಟೈಟಲ್‌ಗಾಗಿ ಆ್ಯಪ್ ನಿಮ್ಮ ಕ್ಲಿಪ್‌ಗಳಲ್ಲಿ ಹೇಳಿದ ಮಾತನ್ನು ಬರೆದಿಡುತ್ತದೆ; ಬಳಸುವ ಮೊದಲು ಆ ಪದಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",

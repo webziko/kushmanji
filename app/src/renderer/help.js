@@ -96,6 +96,16 @@ export function createHelp() {
   const dialog = h("dialog", { class: "help-dialog", "aria-labelledby": "help-title" },
     h("div", { class: "help-head" }, title, progress), content, footer);
   document.body.append(dialog);
+  // The problem report (M9-07): shown in File Explorer, ready to be sent to whoever helps. Nothing private is in it.
+  const reportNote = h("p", { class: "muted", role: "status" });
+  const report = h("div", { class: "help-report" },
+    h("p", {}, t("If something goes wrong, send this file to whoever helps you. " +
+      "It has no messages, words or files in it.")),
+    h("button", { class: "secondary help-report-show", type: "button", onclick: () => {
+      reportNote.textContent = "";
+      window.hfwin.logs.show().catch((error) => { reportNote.textContent = error.message; });
+    } }, t("Show the problem report")),
+    reportNote);
   function remember() {
     seen = true;
     try { localStorage.setItem(SEEN, "1"); } catch { /* Remember for this session instead. */ }
@@ -144,7 +154,8 @@ export function createHelp() {
     content.replaceChildren(...ordered.map(({ id, name, parts }) => h("details", {
       class: "help-section", "data-help": id, open: id === current,
     }, h("summary", {}, name), h("dl", {}, parts.map(([name, sentence]) =>
-      h("div", {}, h("dt", {}, name), h("dd", {}, sentence)))))));
+      h("div", {}, h("dt", {}, name), h("dd", {}, sentence)))))), report);
+    reportNote.textContent = "";
     footer.replaceChildren(
       h("button", { class: "secondary help-replay", type: "button", onclick: showWalk }, t("Show me around")),
       h("span", { class: "spacer" }),

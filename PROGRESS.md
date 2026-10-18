@@ -262,7 +262,12 @@ is making sure each one runs on Windows from inside the app, and making it easy 
       process for the owner, 93 tests were added for the runner's paths, light copies, storage, health, looks,
       the look tool, covers, the "Ask agent" catcher, the journal and the Windows rules. The recorded-output
       tests for each bridge are still open, and still ChatGPT's.)
-- [ ] M9-07 A log file the owner can send when something goes wrong, with nothing private in it
+- [x] M9-07 A log file the owner can send when something goes wrong, with nothing private in it. Done (Claude,
+      2026-10-18, by a Sonnet helper): `main/log.js` writes one JSON-lines file a day in `<userData>/logs`
+      (2 MB cap, newest 7 kept, never throws) and scrubs every string (home folder, emails, long tokens,
+      Authorization/Bearer/api_key/token values); `main.js` logs start, each turn's end, errors, the preview
+      server dying and failed saves; Help has "Show the problem report" (`logs:show`), in English, Kannada
+      and Hindi
 - [~] M9-08 Licence file and third-party notices. The owner chose Apache-2.0 and `LICENSE` is in the repository
       (2026-10-13). Still to write: the notices for HyperFrames and Electron
 - [ ] M9-09 Version numbers and a changelog. Committing has started (2026-10-13); from here on one task per commit

@@ -1002,6 +1002,22 @@ dialog[open]::backdrop {
   line-height: 1.6;
 }
 
+/* The problem report (M9-07): one sentence and one button at the end of the guide. */
+.help-report {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.help-report p {
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+
+.help-report button {
+  min-height: 44px;
+}
+
 [data-screen="watch"] .editor-words {
   display: none;
 }

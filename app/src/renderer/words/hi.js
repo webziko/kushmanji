@@ -323,6 +323,8 @@ export default {
   "Move to the moment you mean, write what you want in the chat, and press Send when you are ready.": "उस पल पर जाएँ जिसकी बात कर रहे हैं, चैट में लिखें कि आप क्या चाहते हैं, और तैयार होने पर भेजें दबाएँ।",
   "Check the result": "नतीजा जाँचें",
   "Watch the change, then press Save video to make a video file in your Downloads folder. Edit by hand opens the full editor.": "बदलाव देखें, फिर Downloads फ़ोल्डर में वीडियो फ़ाइल बनाने के लिए वीडियो सेव करें दबाएँ। खुद एडिट करें दबाने पर पूरा एडिटर खुलता है।",
+  "If something goes wrong, send this file to whoever helps you. It has no messages, words or files in it.": "अगर कुछ गड़बड़ हो जाए, तो यह फ़ाइल उसे भेजें जो आपकी मदद करता है। इसमें कोई मैसेज, शब्द या फ़ाइल नहीं है।",
+  "Show the problem report": "समस्या की रिपोर्ट दिखाएँ",
   "Step {number} of {total}": "{total} में से स्टेप {number}",
   "Sending a message uses your chosen assistant's allowance.": "मैसेज भेजने पर आपके चुने हुए असिस्टेंट की लिमिट खर्च होती है।",
   "Saving a long video takes a while. For subtitles, the app writes down what is said in your clips; check the words before you use them.": "लंबा वीडियो सेव करने में समय लगता है। सबटाइटल के लिए ऐप आपकी क्लिप में बोला गया लिख लेता है; इस्तेमाल करने से पहले शब्द जाँच लें।",

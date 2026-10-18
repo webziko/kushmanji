@@ -494,7 +494,8 @@ export class AgentRunner {
     });
     writeChat(turn.dir, chat);
     const index = chat.messages.length - 1;
-    event = { ...event, index, undo: chat.messages[index].undo ?? null };
+    // `engine` names who answered, for the problem report (log.js); the page does not need it.
+    event = { ...event, index, undo: chat.messages[index].undo ?? null, engine: turn.engine };
     if (this.#check && (entry?.files.length || filesChangedSince(turn.dir, turn.startedAt).length)) {
       this.#checkReply(turn.dir, index);
     }

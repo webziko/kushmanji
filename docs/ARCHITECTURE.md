@@ -66,6 +66,23 @@ renders with the CLI in its own browser and always reads the full files. The top
 to edit (5 of 19)" while it works. Without FFmpeg nothing is made and the originals play. Measured: a jump went
 from 0.28 to 0.04 seconds, and a dragged playhead from 1 or 2 pictures a second to 33 (`docs/FINDINGS.md`).
 
+**The problem report** (M9-07, `main/log.js`). When something goes wrong the owner needs a file to send, and that
+file must hold nothing private. `createLog` writes `<userData>/logs/kushmanji-YYYY-MM-DD.log` (the person's own
+day), one JSON object per line: `{ at, kind, ...details }`. A day's file stops growing at 2 MB (it says so on one
+last line) and only the newest seven files stay; nothing but files with that exact name pattern is ever deleted.
+Writing never throws: a full disk or a file another program holds only loses that line. What is logged is fixed in
+`main.js`: `start` (app, Electron, HyperFrames and Windows versions, screen count), `turn` (`engine`, `ok`,
+`stopped`, `limited`, `problem`: no message and no reply), `error` (an uncaught error or unhandled rejection: its
+name, code, message and first five stack lines), `preview-exit` (the exit code) and `save-failed` (the plain
+sentence the page shows). Never a chat message, a transcript word or a file's content, and callers pass only kinds,
+ids, codes, counts and short sentences. As a second lock, `redact` scrubs every string that is passed: the home
+folder becomes `~` (either slash, any letter case, also as a `file:` address), email addresses, any run of 32 or
+more letters, digits, `_` and `-`, and the value after `Authorization`, `Bearer`, `api_key`, `token=`, `secret=`
+and `password=` are removed, strings are cut to 500 characters and objects to four levels. Errors are caught with
+`uncaughtExceptionMonitor`, which does not stop Electron showing its own error box for an uncaught error, and an
+`unhandledRejection` handler that prints Node's usual warning itself. Help's "Show the problem report" opens the
+newest file in File Explorer (`logs.show`).
+
 **Undo for each assistant turn** (M2-10, `agents/turnHistory.js`). While a project is open its preview server
 keeps the history and refuses the CLI's `history` commands, so just before an assistant starts the runner opens
 a history "window" on that server (`POST /api/projects/:id/history/window`, under the assistant's name, ending by
@@ -122,8 +139,8 @@ working. Dialogs are removed with the project; buttons are disabled during an as
 `renderer/help.js` holds the screen guide, three-step welcome walkthrough and shared editor-word glossary
 (M14-04). One native dialog and Help button live for the shell page's lifetime and survive project/room changes;
 full-screen playback has its own Help entry. The walkthrough stores only its seen flag in the shell origin's
-localStorage (`hfwin-help-seen-v1`), with an in-memory fallback when storage is unavailable. Help makes no IPC
-calls, starts no assistant and changes no project files. The glossary sits above the unchanged Studio iframe,
+localStorage (`hfwin-help-seen-v1`), with an in-memory fallback when storage is unavailable. Help makes one IPC
+call, `logs.show` (the "Show the problem report" button, M9-07), starts no assistant and changes no project files. The glossary sits above the unchanged Studio iframe,
 which gets the remaining stage height. Playback keyboard shortcuts ignore an open dialog's contents.
 
 ## Decisions
@@ -203,6 +220,7 @@ and the caller in `renderer/`.
 | `agent.checkup(engine)` | "Test it now" (M12-03): one small real turn in a new scratch folder at "Only this video", then `{ ok, said, version }`; kept in the app's settings per version, and `status()` no longer marks a version that passed as `untested` |
 | `agent.setTeam(engines)` | Which assistants the person has ("Your assistants", M15-01): known ids only, at least one. Kept in the app's settings; `status()` and `history()` mark each agent `inTeam` |
 | `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default, `"auto"` (also the value when nothing was chosen) sizes each request (`agents/sizing.js`). Otherwise only an id from that agent's `models()` is accepted |
+| `logs.show()` | Help's "Show the problem report" (M9-07, `log.js`): shows the newest log file in File Explorer and returns `true`, or opens the logs folder and returns `false` when no file has been written yet; refused with a plain sentence when there is neither. The page names no path |
 | event `preview:copies` | `{ dir, status: { state, done, total, failed } }`: the lighter copies for watching and editing (`lightCopies.js`) |
 | `agent.stop()` / `agent.reset(dir)` | Stop the run / forget the conversation (project files untouched) |
 | `save.start(dir)` | Make the project's video file with the CLI's own `render`, in the person's Downloads folder, named after the project and the time. Its sound is then brought to about -14 LUFS (`loudness.js`; the picture is copied). One at a time; refused while an assistant works. Returns the status below |

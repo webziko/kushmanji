@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, screen, session, shell } from "electron";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeGuide } from "./agents/craft.js";
@@ -15,6 +16,7 @@ import { checkHealth, getBrowser } from "./health.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
+import { createLog, errorDetails } from "./log.js";
 import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
@@ -82,8 +84,17 @@ function lockDownSession() {
 const isLocal = (url) => /^http:\/\/127\.0\.0\.1(:\d+)?(\/|$)/.test(url);
 
 let win = null;
+/**
+ * The problem report (log.js, M9-07). Made once the app is ready, in the settings folder, so the self-test's stays
+ * apart. Only kinds, ids, codes and short error sentences go in: never a message, a word of speech or a file's text.
+ */
+let log = null;
+const note = (kind, details) => log?.write(kind, details);
 const preview = new PreviewManager({
-  onExit: (dir, code) => win?.webContents.send("preview:exit", { dir, code }),
+  onExit: (dir, code) => {
+    note("preview-exit", { code });
+    win?.webContents.send("preview:exit", { dir, code });
+  },
   onChange: (dir) => {
     win?.webContents.send("preview:changed", { dir });
     lightCopies.refresh(dir);
@@ -112,6 +123,16 @@ const study = new FootageStudy({
 let speech = null;
 const agent = new AgentRunner({
   emit: (payload) => {
+    const { event } = payload;
+    if (event?.type === "done") {
+      note("turn", {
+        engine: event.engine,
+        ok: Boolean(event.ok),
+        stopped: Boolean(event.stopped),
+        limited: Boolean(event.limited),
+        problem: event.problem ?? null,
+      });
+    }
     win?.webContents.send("agent:event", payload);
     shortsMaker.agentEvent(payload);
   },
@@ -144,6 +165,7 @@ const exporter = new ExportManager({
   folder: () => app.getPath("downloads"),
   ffmpeg: () => realTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
   emit: (payload) => {
+    if (payload.status.state === "failed") note("save-failed", { message: payload.status.message });
     win?.setProgressBar(payload.status.state === "saving" ? Math.max(0.02, payload.status.percent / 100) : -1);
     win?.webContents.send("save:event", payload);
   },
@@ -353,6 +375,17 @@ function registerIpc() {
     return true;
   });
   handle("preview:log", () => preview.log);
+  // The problem report (M9-07), shown in File Explorer so the person can send it. The page names no path.
+  handle("logs:show", async () => {
+    const file = log?.file();
+    if (file) {
+      shell.showItemInFolder(file);
+      return true;
+    }
+    // Nothing written yet (or the folder cannot be written to): show the folder if there is one.
+    if (!log || (await shell.openPath(log.folder))) throw new Error("There is no problem report yet.");
+    return false;
+  });
   // Saved looks (M10-04): kept in the app's settings folder, copied into a video as its STYLE.md.
   const looks = () => path.join(app.getPath("userData"), "looks");
   handle("looks:list", (dir) => ({ looks: listKits(looks()), written: hasStyle(requireProject(dir)) }));
@@ -519,6 +552,21 @@ if (!app.requestSingleInstanceLock()) {
   // Not `await app.whenReady()`: Electron holds back "ready" until this module has finished loading, so a
   // top-level await on it waits for itself and the app never starts.
   void app.whenReady().then(async () => {
+    log = createLog({ folder: path.join(app.getPath("userData"), "logs") });
+    note("start", {
+      appVersion: app.getVersion(),
+      electron: process.versions.electron,
+      hyperframes: cliVersion,
+      windows: os.release(),
+      screens: screen.getAllDisplays().length,
+    });
+    // Monitors, not handlers: a handler for an uncaught error would hide the error box Electron shows by default.
+    process.on("uncaughtExceptionMonitor", (error) => note("error", { where: "uncaught", ...errorDetails(error) }));
+    // A handler does change one thing: Node no longer prints its "unhandled rejection" warning, so print it here.
+    process.on("unhandledRejection", (reason) => {
+      note("error", { where: "rejection", ...errorDetails(reason) });
+      console.error("Unhandled promise rejection:", reason);
+    });
     lockDownSession();
     speech = new SpeechTool({
       folder: path.join(app.getPath("userData"), "tools", "whisper"),
