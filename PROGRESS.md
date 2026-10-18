@@ -522,10 +522,19 @@ now comes first**: it changes what every later feature looks like. The review it
       hides the logo and gives its accent Kushmanji's coral (Studio itself is not changed; a test reads Studio's
       built files so an update that renames either fails). The app sets its own Windows app id (the installer's),
       so the taskbar takes its icon, and the owner's two Desktop shortcuts got the Kushmanji icon
-- [~] M14-12 (Claude) The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
+- [x] M14-12 The app's own words in the person's language (owner, 2026-10-14: "for me i used kannada many people
       use english and all"): a language menu (English first, then Kannada, Hindi and others), with every word in
       one list per language (`docs/UX.md` is the English one). The assistants already answer in the language
-      they are written to; the footage study's speech is M10-11
+      they are written to; the footage study's speech is M10-11. Done (Claude, 2026-10-18): Home has a
+      Language menu (English, ಕನ್ನಡ, हिन्दी); the page's 396 phrases go through `t()` (`renderer/words.js`,
+      marked by a Sonnet helper) and `words/kn.js` and `words/hi.js` hold them, written by Sonnet helpers.
+      Dates follow the language. Choosing one reloads the page through `app:reload`, because the window
+      refuses a reload the page starts itself (found on the owner's PC). The self-test switches to Kannada and
+      back. Nobody who reads Kannada or Hindi has checked the words yet
+- [ ] M14-15 The words that come from the main process are still English in Kannada and Hindi: the access
+      levels and ways of working with their explanations, the line under the chat box, the clips strip's notes,
+      Home's health lines, the speech tool's and the shorts' messages. A second list, passed through `t()` on
+      the page by a function the test allows to take a variable
 
 ## M15 · Spend less: smaller models, and a team you choose
 

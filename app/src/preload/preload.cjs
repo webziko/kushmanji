@@ -16,7 +16,7 @@ const EVENTS = new Set([
 ]);
 
 contextBridge.exposeInMainWorld("hfwin", {
-  app: { info: call("app:info") },
+  app: { info: call("app:info"), reload: call("app:reload") },
   projects: {
     list: call("projects:list"),
     saveCover: call("projects:saveCover"),

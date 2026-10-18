@@ -32,6 +32,9 @@ if (typeof document !== "undefined") document.documentElement.lang = current;
 
 export const language = () => current;
 
+/** Dates and numbers in the chosen language ("kn-IN": Kannada month names); the computer's own for English. */
+export const locale = () => (current === "en" ? undefined : `${current}-IN`);
+
 /**
  * Keep the choice and draw every screen again in it. Only offered on Home, where nothing is in progress.
  * False when the choice could not be kept (then nothing is reloaded: the page would come back in the old language).
@@ -43,7 +46,11 @@ export function setLanguage(id) {
   } catch {
     return false;
   }
-  location.reload();
+  // The window refuses navigations, and a reload the page starts is one: the main process does it instead.
+  // (A plain page, such as the unit test's stand-in, has no bridge and reloads itself.)
+  const bridge = globalThis.window?.hfwin?.app;
+  if (bridge?.reload) bridge.reload().catch(() => {});
+  else location.reload();
   return true;
 }
 

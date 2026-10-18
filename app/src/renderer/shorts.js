@@ -3,12 +3,12 @@
 // makes each short as its own video (main/shorts.js) and asks the assistant to build them one by one
 // (main/shortsMaker.js). The card says how far that has got.
 import { h } from "./dom.js";
-import { t } from "./words.js";
+import { locale, t } from "./words.js";
 
 const api = window.hfwin;
 
 const seconds = (value) => t("{count} s", { count: Math.round(Number(value) || 0) });
-const when = (at) => new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "long" });
+const when = (at) => new Date(at).toLocaleDateString(locale(), { day: "numeric", month: "long" });
 
 export function createShortsCard(dir) {
   const element = h("div", { class: "shorts-card", role: "status", hidden: true });

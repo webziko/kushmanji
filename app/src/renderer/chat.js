@@ -7,7 +7,7 @@ import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
 import { createShortsCard } from "./shorts.js";
-import { t } from "./words.js";
+import { locale, t } from "./words.js";
 
 const api = window.hfwin;
 
@@ -76,7 +76,7 @@ function userMessage({ text, pointing, moment }) {
 function resetsText(resets) {
   const date = /^\d{4}-\d\d-\d\dT/.test(resets ?? "") ? new Date(resets) : null;
   if (date && !Number.isNaN(date.getTime()))
-    return date.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
+    return date.toLocaleString(locale(), { weekday: "long", hour: "numeric", minute: "2-digit" });
   // "2 days" reads as an answer to "when?" only with "in".
   return /^\d+\s*(?:second|minute|hour|day|week)s?\b/i.test(resets ?? "")
     ? t("in {time}", { time: resets }) : resets ?? "";

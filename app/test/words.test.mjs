@@ -164,10 +164,12 @@ test("a saved language the app does not have, or storage that throws, means Engl
   });
 });
 
-test("a line that is empty in the chosen language shows the English", async () => {
+// The lists are filled now, so this uses a phrase no list has; the empty-entry case is translate()'s own test.
+test("a line the chosen language does not have shows the English, and placeholders are filled either way", async () => {
   await withPage({ stored: "kn" }, ({ t }) => {
-    assert.equal(t("Save video"), "Save video");
-    assert.equal(t("Free up {amount}", { amount: "2 GB" }), "Free up 2 GB");
+    assert.equal(t("A phrase no list has"), "A phrase no list has");
+    assert.match(t("Free up {amount}", { amount: "2 GB" }), /2 GB/);
+    assert.notEqual(t("Save video"), "Save video", "the Kannada list is used");
   });
 });
 

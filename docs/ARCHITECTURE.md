@@ -168,6 +168,7 @@ and the caller in `renderer/`.
 | Call | Does |
 | --- | --- |
 | `app.info()` | App, CLI and Electron versions; the projects folder |
+| `app.reload()` | Draw the page again, after the person picks a language on Home (`renderer/words.js`, M14-12). The window refuses every navigation, and a reload the page starts is one; this one is started by the main process |
 | `projects.list()` | `[{ dir, name, modifiedAt, external }]`, newest first |
 | `projects.create(name)` | `hyperframes init` in the projects folder |
 | `projects.fromFootage()` | Native folder picker; scan up to 200 media files, create a project, copy into assets, return project and imported files |

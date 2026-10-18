@@ -58,6 +58,12 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 
 Then the list further down, starting with one-click export.
 
+## New on the night of 17 to 18 October (you were asleep)
+
+- [x] **The app in Kannada and Hindi.** Home has a Language menu at the top right: English, ಕನ್ನಡ, हिन्दी.
+      Every button and explanation on the screens changes; a few sentences that come from deeper in the app
+      are still English (next task). Please read a few screens in Kannada and tell me what sounds wrong.
+
 ## New in the evening of 14 October, on your PC
 
 - [x] **Smoothness measured on your real vlog.** Jumping to a moment: 0.05 s watching, 0.13 s in the editor;

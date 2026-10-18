@@ -172,6 +172,29 @@ async function saveStep({ result, inPage, shot, outDir }) {
 }
 
 /**
+ * The app in Kannada (M14-12): Home's language menu draws every screen again in the chosen language. It once
+ * could not, because the window refused every navigation, a reload included. Back to English afterwards, since
+ * the rest of the self-test finds buttons by their English words.
+ */
+async function languageStep({ result, inPage, shot }) {
+  await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← My videos')?.click()");
+  if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 15_000 })))
+    throw new Error("Could not return Home to choose a language.");
+  const choose = (id) => inPage(`(() => { const pick = document.querySelector('.language-pick');
+    pick.value = ${inJs(id)}; pick.dispatchEvent(new Event('change')); })()`);
+  const showing = (id) => until(() => inPage(`document.documentElement.lang === ${inJs(id)} &&
+    document.body.dataset.view === 'home'`).catch(() => false), { timeoutMs: 20_000 });
+  await choose("kn");
+  if (!(await showing("kn"))) throw new Error("Choosing Kannada did not draw the app again.");
+  const words = await inPage("[...document.querySelectorAll('button')].map((b) => b.textContent)");
+  result.language = { kannadaButtons: words.filter((text) => /[ಀ-೿]/.test(text)).length };
+  if (result.language.kannadaButtons < 3) throw new Error("After choosing Kannada, Home's buttons were not in Kannada.");
+  await shot("home-kannada");
+  await choose("en");
+  if (!(await showing("en"))) throw new Error("Choosing English again did not draw the app again.");
+}
+
+/**
  * In "Edit by hand", while the video plays, a real arrow key skips ten seconds and the video keeps playing.
  * Paused, or with the keyboard in the chat box, the key is left alone. Keys are sent the way Windows sends them.
  */
@@ -181,7 +204,10 @@ async function editorArrowStep({ win, result, inPage }) {
   const studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
   const studio = frames().find((frame) => frame.parent === page.mainFrame &&
     frame.url.split("?")[0] === studioUrl.split("?")[0]);
-  const picture = frames().find((frame) => frame.parent === studio && /\/preview(\?|\/|$)/.test(frame.url));
+  // The player's own picture, not the small live thumbnail Studio's Compositions list may show: both are
+  // previews of the same video, and the thumbnail never plays (it made this check fail now and then).
+  const previews = frames().filter((frame) => frame.parent === studio && /\/preview(\?|\/|$)/.test(frame.url));
+  const picture = previews.find((frame) => /[?&]__hf_shader_loading=player\b/.test(frame.url)) ?? previews[0];
   if (!studio || !picture) throw new Error("The editor's picture was not found for the arrow-key check.");
   const press = (label) => studio.executeJavaScript(
     `(() => { const b = [...document.querySelectorAll('button')].find((b) => ${label}.test(b.getAttribute('aria-label') || b.title || ''));
@@ -200,8 +226,20 @@ async function editorArrowStep({ win, result, inPage }) {
   await picture.executeJavaScript("window.__player.seek(20)", true);
   await wait(300);
   if (!(await press("/^play/i"))) throw new Error("The editor's Play button was not found.");
-  if (!(await until(async () => (await now()).playing, { timeoutMs: 5000 })))
+  if (!(await until(async () => (await now()).playing, { timeoutMs: 5000 }))) {
+    // What the editor's picture says it is waiting for, so a failure here can be told apart from a slow load.
+    result.editorWaiting = {
+      picture: await picture.executeJavaScript(
+        "({ text: document.body?.innerText.slice(0, 300), ready: window.__renderReady ?? null })", true).catch(() => null),
+      editor: await studio.executeJavaScript(`[...document.querySelectorAll("*")].filter((e) => !e.childElementCount &&
+        /loading|waiting/i.test(e.textContent)).map((e) => e.textContent.trim()).slice(0, 6)`, true).catch(() => null),
+      playButtons: await studio.executeJavaScript(`[...document.querySelectorAll("button")]
+        .map((b) => b.getAttribute("aria-label") || b.title || "").filter((label) => /^play/i.test(label))`, true)
+        .catch(() => null),
+      time: await now().catch(() => null),
+    };
     throw new Error("The editor did not start playing for the arrow-key check.");
+  }
   await inPage(inEditor);
   await wait(600);
   const start = await now();
@@ -961,7 +999,10 @@ export async function runSmoke({ win, outDir }) {
     } catch (error) {
       // Windows gives no picture of a window while the screen is locked or asleep ("UnknownVizError"). The
       // sound probe measures without one; every other run needs its pictures and fails here.
-      if (!process.env.HFWIN_SMOKE_SOUND) throw error;
+      if (!process.env.HFWIN_SMOKE_SOUND) {
+        throw /UnknownViz/i.test(String(error?.message ?? error))
+          ? new Error("The screen was off or locked, and the self-test needs it on to take its pictures.") : error;
+      }
       result.noPictures = String(error?.message ?? error);
     }
     result.steps.push(name);
@@ -1105,6 +1146,7 @@ export async function runSmoke({ win, outDir }) {
     await pointingStep({ win, result, inPage, shot });
     if (process.env.HFWIN_SMOKE_AGENT) await agentStep({ result, inPage, shot, dir: chatProject });
     await saveStep({ result, inPage, shot, outDir });
+    await languageStep({ result, inPage, shot });
     result.ok = true;
   } catch (error) {
     result.error = error instanceof Error ? error.message : String(error);

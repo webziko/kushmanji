@@ -196,6 +196,7 @@ function createWindow() {
   });
   // The window holds one local page with Studio framed inside it. Nothing may replace that page (a file dropped
   // on the window would), and links to the web open in the person's browser.
+  // A reload counts as a navigation too, so the page cannot reload itself: it asks for `app:reload` instead.
   win.webContents.on("will-navigate", (event) => event.preventDefault());
   // No <webview>: it would be a second, less restricted way to embed a page.
   win.webContents.on("will-attach-webview", (event) => event.preventDefault());
@@ -237,6 +238,11 @@ function requireProject(dir) {
 }
 
 function registerIpc() {
+  // Choosing a language draws every screen again (renderer/words.js). Started here because a reload the page asks
+  // for itself is a navigation, which the window refuses; one started by the main process is not.
+  handle("app:reload", () => {
+    setTimeout(() => win?.webContents.reload(), 50);
+  });
   handle("app:info", () => ({
     appVersion: app.getVersion(),
     cliVersion,
@@ -476,8 +482,9 @@ if (process.env.HFWIN_SMOKE) {
   app.setPath("downloads", path.join(process.env.HFWIN_SMOKE, "downloads"));
 }
 // The playback measurement counts pictures really put on screen. Windows stops painting a window that another
-// one covers, which would read as a frozen video, so for that one test run the window is always painted.
-if (process.env.HFWIN_SMOKE_PLAYBACK) {
+// one covers, which would read as a frozen video, so for the self-test the window is always painted. The plain
+// self-test needs it too: its editor check plays the video, which did not start under a covered window at night.
+if (process.env.HFWIN_SMOKE) {
   app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
   app.commandLine.appendSwitch("disable-renderer-backgrounding");
 }
