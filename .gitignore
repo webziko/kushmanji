@@ -16,3 +16,6 @@ Thumbs.db
 
 # Tools fetched onto this computer for the app to use (a voice-cleaning program, later Whisper). Never committed.
 /tools/
+
+# Temporary copies of the repository that Claude Code makes for a helper working apart (git worktrees).
+/.claude/worktrees/

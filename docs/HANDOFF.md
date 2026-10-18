@@ -5,6 +5,35 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-14 (evening) · Claude · On the owner's PC: smoothness measured, Whisper, shorts, the editor's face
+
+First session on the owner's Windows PC after the cloud work. Pulled 42 commits; `npm test` failed four tests
+here because this PC's Node 24.11 has an `fs.rmSync` bug with "é" paths: `npm test` now runs on Electron's own
+Node (`scripts/test.mjs`, `f0ac807`).
+
+- **M16-08** (`1afe5ea`): measured on the real vlog. Watching: jumps 54 ms, drag 31 pictures a second. Editor:
+  133 ms. A Sonnet helper tried copies keyed every 0.2 s and on every picture: no difference, so `copyArgs`
+  stays. The editor's first minute on a new project is slow (M16-10, new).
+- **M10-11** (`3ad06f1`): Whisper. `speechTool.js` fetches whisper.cpp's Windows build and the `large-v3`
+  model on the person's "Get it" (both SHA-256 pinned). "small" and "large-v3-turbo" wrote nonsense for the
+  owner's Kannada; large-v3 writes Kannada and Hindi well, ~1.5 min per clip on this 8-core laptop. Whisper
+  cannot read non-ANSI paths (UP-03): the study works in a plain temp folder, and a non-plain user folder is
+  refused in plain words. `npm run smoke:study` with `HFWIN_SMOKE_GET_SPEECH=1` presses "Get it" for real.
+- **M14-14** (`0e2dab7`): `studioFace.js` hides the HeyGen logo in Studio and recolours its accent; the app sets
+  the installer's AppUserModelID; the owner's two Desktop shortcuts got the Kushmanji icon.
+- **M17-04** (`acc013f`): "Make shorts". The assistant writes `SHORTS.md` (+ `STYLE.md`); the chat card's "Make
+  them" makes one project per short (`shorts.js`, by a Sonnet helper, reviewed) and `shortsMaker.js` queues one
+  fixed request per short ("follow STYLE.md exactly").
+
+**What would surprise you**
+- Running the CLI by hand on this PC: use Electron's Node (`ELECTRON_RUN_AS_NODE=1` + `electron.exe`), not the
+  system Node 24.11, or `hyperframes init` leaves `.hf-create-*` folders and no `index.html` in "é" paths.
+- The real app was driven from here through `--remote-debugging-port=9333` (scratch `cdp.mjs`); a page target
+  and the preview iframe are listed at `http://127.0.0.1:9333/json/list`.
+- A second launch with a folder argument works; my "it does not open" scare was a broken test folder.
+
+---
+
 ## 2026-10-14 (afternoon) · Claude · Full review with tests, and a premium look (M14-13), in the cloud
 
 The owner asked to merge the branch into `main` (done for the morning's work: PR #1, merge `b13a496`), to review
