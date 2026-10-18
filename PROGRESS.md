@@ -305,10 +305,16 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       cannot read paths outside plain English letters (UP-03): the app works around the project folder, and
       says plainly when the user folder is the problem. "Add subtitles" now asks for subtitles from the
       study's words, in English
-- [~] M10-18 (Claude) With Whisper, the first study of a long video in Kannada or Hindi takes about 1.5 minutes per
+- [x] M10-18 With Whisper, the first study of a long video in Kannada or Hindi takes about 1.5 minutes per
       clip, and a chat message waits for the whole study. Let a message go ahead once the pictures are done,
       with the words following; or hear only the clips the video uses (the owner's vlog has three copies of
-      every clip: `clean`, `prepared`, `voice-clean`)
+      every clip: `clean`, `prepared`, `voice-clean`). Done (Claude, 2026-10-18): the study works in two rounds,
+      every clip's pictures (and Parakeet's quick words) first, then Whisper's words clip by clip; `ready()`,
+      which a chat message waits on, settles after the first round. A clip waiting for its words carries
+      `wordsPending: true` and a note for the assistants; a study stopped half way hears those clips again
+      next time. Tried directly on a two-clip Hindi project: ready after 5 s, all words after 313 s.
+      `smoke:study` with `HFWIN_SMOKE_GET_SPEECH=1` now checks the second round too. Hearing only the clips
+      the video uses is not done
 - [ ] M10-12 Work out the spoken language instead of assuming it: with Whisper present, detect on the first
       half minute, then use Parakeet where it speaks that language. Today "Automatic" assumes English or
       another European language and says so

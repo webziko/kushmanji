@@ -339,6 +339,11 @@ When it runs: when the project opens, when a media file appears or changes in th
 two-second quiet period for copies in progress), and before every chat turn (`AgentRunner`'s `prepare`), which
 waits for it and shows "Studying your footage" as the step. Stop ends the wait, not the study.
 
+Two rounds (M10-18): first every changed clip's length, pictures and, with Parakeet, its words (seconds per
+clip); then, clip by clip, the words Whisper writes (a minute or more each). `ready()`, which a chat turn
+waits on, settles after the first round; meanwhile such a clip has `wordsPending: true` and a note telling the
+assistant to read the file again later. A study stopped in the second round hears those clips again next time.
+
 Words: Parakeet for English and 24 other European languages, Whisper for the rest (`chooseEngine`). With the
 language left on "Automatic" and only Parakeet present, the transcript is marked `languageSure: false`,
 because Parakeet writes confident nonsense for a language it does not speak. A language no installed engine

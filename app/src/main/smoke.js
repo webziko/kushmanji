@@ -666,15 +666,24 @@ async function speechToolStep({ result, inPage, shot, dir, settled }) {
   if (!process.env.HFWIN_SMOKE_GET_SPEECH) return;
   await inPage("document.querySelector('.study-speech button').click()");
   const hindi = () => readIndex(dir)?.clips.find((found) => found.file === "assets/hindi-voice.wav");
-  if (!(await until(() => Boolean(hindi()?.transcript), { timeoutMs: 3_600_000, everyMs: 2000 }))) {
+  // Whisper's words come in a second round, after every clip's pictures, with the clips marked meanwhile (M10-18):
+  // seen at least once while waiting, or a chat message would still be waiting for the slow words.
+  let pendingSeen = false;
+  if (!(await until(() => {
+    pendingSeen ||= Boolean(readIndex(dir)?.clips.some((found) => found.wordsPending));
+    return Boolean(hindi()?.transcript);
+  }, { timeoutMs: 3_600_000, everyMs: 2000 }))) {
     result.study.speechState = await inPage("document.querySelector('.study-speech')?.textContent ?? ''");
     throw new Error("After getting the speech tool, the Hindi clip was never written down.");
   }
   await until(settled, { timeoutMs: 600_000, everyMs: 500 });
   const clip = hindi();
   const heard = fs.readFileSync(path.join(dir, clip.transcript.text), "utf8");
-  result.study.hindiWithWhisper = { engine: clip.transcript.engine, words: clip.transcript.wordCount, heard };
+  result.study.hindiWithWhisper = { engine: clip.transcript.engine, words: clip.transcript.wordCount, heard, pendingSeen };
   await shot("study-hindi-whisper");
+  if (!pendingSeen) throw new Error("Whisper's words were not written in a round of their own after the pictures.");
+  if (readIndex(dir)?.clips.some((found) => found.wordsPending || found.notes?.some((note) => /still being written/.test(note))))
+    throw new Error("A clip still says its words are being written after the study finished.");
   if (!/[ऀ-ॿ]{2}/.test(heard) || !/रोटी/.test(heard)) throw new Error("Whisper did not write the Hindi clip in Hindi.");
 }
 

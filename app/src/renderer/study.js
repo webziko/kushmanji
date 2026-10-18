@@ -11,7 +11,8 @@ const STEPS = { reading: t("opening it"), pictures: t("taking pictures"), words:
 
 // Notes the study writes for the assistants, who read the same file. Nothing for the person to fix, so not shown.
 const forAssistants = (note) =>
-  note.startsWith("The language of this clip was assumed") || note.startsWith("The picture ends at");
+  note.startsWith("The language of this clip was assumed") || note.startsWith("The picture ends at") ||
+  note.startsWith("The words of this clip are still being written");
 
 /** "assets/prepared/04.mp4" becomes "04": a clip as the person knows it, with no folders or file ending. */
 const clipName = (file) => file.split(/[\\/]/).pop().replace(/\.[^.]+$/, "") || file;

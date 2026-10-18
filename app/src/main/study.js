@@ -45,8 +45,13 @@ const ABOUT =
   "on the frame), and a transcript (`transcript.text`: one line per phrase with the times it runs between; " +
   "`transcript.words`: every word with its start and end, in HyperFrames' own format). When " +
   "`transcript.languageSure` is false the language was assumed, and the words may be wrong if the speech is not " +
-  "in English or another European language. `notes` says, in plain words, what could not be studied. Paths are " +
+  "in English or another European language. `wordsPending: true` means the words are still being written down " +
+  "(a slow speech tool) and will appear in this file. `notes` says, in plain words, what could not be studied. Paths are " +
   "from the project folder. Do not edit this folder: the app rebuilds it when footage changes.";
+
+// On a clip whose words Whisper is still writing (M10-18). For the assistants; the clips strip says it its own way.
+export const WORDS_PENDING =
+  "The words of this clip are still being written down. Read this file again in a few minutes for them.";
 
 const posix = (file) => file.split(path.sep).join("/");
 const studyDir = (dir) => path.join(dir, ...STUDY_FOLDER);
@@ -176,7 +181,10 @@ export class FootageStudy {
    * this, so the agent never starts from a study that is missing the clip the person just added.
    */
   async ready(dir) {
-    await this.run(dir);
+    const whole = this.run(dir);
+    // Once every clip has its pictures; Whisper's slow words carry on behind the chat (M10-18).
+    const job = this.#job?.dir === dir ? this.#job : null;
+    await (job ? Promise.race([job.quick, whole]) : whole);
   }
 
   /**
@@ -193,6 +201,8 @@ export class FootageStudy {
     const job = {
       dir, cancelled: false, again: false, missingWords, child: null, done: 0, total: 0, current: null, step: null,
     };
+    // Settled when every clip has its pictures and quick words (#pass), or when the job ends, whichever is first.
+    job.quick = new Promise((resolve) => { job.quickDone = resolve; });
     // After whatever was running (a project just closed is still winding down), never beside it.
     const before = this.#job?.promise ?? Promise.resolve();
     this.#job = job;
@@ -205,6 +215,7 @@ export class FootageStudy {
       })
       .catch(() => {})
       .finally(() => {
+        job.quickDone();
         if (this.#job === job) this.#job = null;
         this.#emit({ dir, status: this.status(dir) });
       });
@@ -234,7 +245,9 @@ export class FootageStudy {
     if (footage.length === 0 && !old) return;
 
     const previous = new Map((old?.clips ?? []).map((clip) => [clip.file, clip]));
-    const wordless = (entry) => job.missingWords && entry?.hasSound === true && !entry.transcript;
+    // A clip whose words were still being written when the study last stopped (the video was closed) is heard again.
+    const wordless = (entry) =>
+      entry?.wordsPending === true || (job.missingWords && entry?.hasSound === true && !entry.transcript);
     const stale = footage.filter((clip) =>
       force || !isCurrent(previous.get(clip.file), clip) || wordless(previous.get(clip.file)));
     job.missingWords = false;
@@ -280,6 +293,26 @@ export class FootageStudy {
     }
     if (job.cancelled) return;
     save();
+    // Every clip has its pictures (and its quick words): a waiting chat message may go ahead. Unless more footage
+    // arrived meanwhile: then the next round's new clips come first.
+    if (!job.again) job.quickDone();
+
+    // The second round: Whisper's words, one clip after another, saved as each one is ready.
+    const pending = studied.filter((entry) => entry.wordsPending);
+    job.total = pending.length;
+    job.done = 0;
+    for (const entry of pending) {
+      if (job.cancelled) return;
+      job.current = entry.file;
+      entry.notes = entry.notes.filter((note) => note !== WORDS_PENDING);
+      delete entry.wordsPending;
+      const folder = path.join(studyDir(dir), slugFor(entry.file));
+      await this.#words(job, entry, {
+        source: path.join(dir, entry.file), folder, seconds: entry.seconds, spoken, tools,
+      });
+      job.done++;
+      if (!job.cancelled) save();
+    }
     // The study of a clip that is no longer in the project is our own file, and stale: remove it.
     for (const clip of gone) {
       if (clip.study) fs.rmSync(path.join(dir, clip.study), { recursive: true, force: true });
@@ -385,25 +418,39 @@ export class FootageStudy {
     // here speaks the new one) would be found by an agent and believed.
     for (const old of ["transcript.json", "transcript.txt"]) fs.rmSync(path.join(folder, old), { force: true });
     if (audio && !job.cancelled) {
-      job.step = "words";
-      this.#tell(job);
-      const made = await this.#transcript(job, { source, folder, seconds, spoken: clip.spoken, tools });
-      if (made.problem) entry.notes.push(made.problem);
-      if (made.transcript) {
-        entry.transcript = {
-          ...made.transcript,
-          words: inProject(made.transcript.words),
-          text: inProject(made.transcript.text),
-        };
-        if (!made.transcript.languageSure && made.transcript.wordCount > 0) {
-          entry.notes.push(
-            "The language of this clip was assumed, not known. If the speech is not in English or another " +
-              "European language, the transcript is wrong: the person should choose the spoken language in the app.",
-          );
-        }
+      // Whisper takes a minute or more per clip: its words come in a second round (#pass), after every clip's
+      // pictures, so a chat message does not wait for them (M10-18). Parakeet's take seconds and come now.
+      const language = clip.spoken === "auto" ? null : clip.spoken;
+      if (chooseEngine({ language, parakeet: tools.parakeet, whisper: tools.whisper }).engine === "whisper") {
+        entry.wordsPending = true;
+        entry.notes.push(WORDS_PENDING);
+      } else {
+        await this.#words(job, entry, { source, folder, seconds, spoken: clip.spoken, tools });
       }
     }
     return entry;
+  }
+
+  /** Write down what is said in one clip into its study entry. */
+  async #words(job, entry, { source, folder, seconds, spoken, tools }) {
+    const inProject = (file) => posix(path.relative(job.dir, file));
+    job.step = "words";
+    this.#tell(job);
+    const made = await this.#transcript(job, { source, folder, seconds, spoken, tools });
+    if (made.problem) entry.notes.push(made.problem);
+    if (made.transcript) {
+      entry.transcript = {
+        ...made.transcript,
+        words: inProject(made.transcript.words),
+        text: inProject(made.transcript.text),
+      };
+      if (!made.transcript.languageSure && made.transcript.wordCount > 0) {
+        entry.notes.push(
+          "The language of this clip was assumed, not known. If the speech is not in English or another " +
+            "European language, the transcript is wrong: the person should choose the spoken language in the app.",
+        );
+      }
+    }
   }
 
   /** The time printed on a frame. Arial is on every Windows PC; without a font file the frame goes unstamped. */
