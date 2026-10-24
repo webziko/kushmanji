@@ -45,6 +45,15 @@ chat switches to Gemini; numbers in FINDINGS. The input shape `{"event":"user","
 Gemini is the authority on this bridge (AGENTS.md); when it can edit again, it should look this over. The self-test
 gained `HFWIN_SMOKE_THEN_REQUEST` and `HFWIN_SMOKE_THINK_SECONDS`, and records `turnSeconds` per chat turn.
 
+**On the owner's PC, with their go-ahead ("I want everything you to do")**: Gemini's telemetry plugin off (`agy plugin
+disable`), so Gemini edits again (`smoke:antigravity` passed, a real edit in 77.6 s); four Data Cloud MCP servers
+disabled in agy's own list, but three still start because the IDE add-on "Google Cloud Data Agent Kit" provides
+them (`mcpServerDefinitionProviders`), so that switch is the owner's, in the IDE; the plain-text classic GitHub key
+(nearly every scope on webziko) revoked through `POST https://api.github.com/credentials/revoke` (202, then 401)
+and its entry removed from `~/.gemini/settings.json`; a second, fine-grained key in agy's `mcp_config.json` is in
+use and was left; Codex 0.162.1 → 0.164.0 (`smoke:codex` passed, `tested` updated). Careful: the self-test's
+Electron has the same command line as the owner's Kushmanji; close the owner's by its process id, not by pattern.
+
 **Fresh-PC checks**: M5-06 (no Node: the full self-test passes), M6-04 (a crash leaves no server), M6-05 (a taken
 port moves the editor up; it then forgets its layout and remembered sound pictures), M6-01 (every self-test now
 runs under "my projects José ಕನ್ನಡ"), M6-03 (folders deeper than 200 characters are refused plainly).

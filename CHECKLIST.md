@@ -15,13 +15,15 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
       right, too quiet or too loud? Nobody on the AI side can hear it.
-- [ ] **Close Kushmanji and open it again**, so the faster Gemini is used (the copy that is open started before).
-- [ ] **A GitHub key is stored in plain text** in `C:\Users\kish\.gemini\settings.json` (Gemini's settings, for its
-      GitHub helper). Anything that can read your user folder can read it. Safer: on github.com, Settings →
-      Developer settings → Personal access tokens, delete that one and make a new one with only what it needs.
-- [ ] **Optional, about 10 s faster per Gemini message:** the Google Cloud "Data Cloud" add-on in Antigravity
-      starts four helpers on every Gemini message. If you do not use Google Cloud data tools, switching that
-      add-on off in Antigravity saves the time. Claude did not touch your Antigravity settings.
+- [ ] **Optional, about 10 s faster per Gemini message:** the "Google Cloud Data Agent Kit" add-on in the
+      Antigravity app gives Gemini three helpers that start on every message, and only the app can switch them
+      off. If you do not use Google Cloud data tools: open Antigravity, press Ctrl+Shift+X (Extensions), find
+      "Google Cloud Data Agent Kit", press Disable. Measured: two Gemini replies 28 and 24 s now, 19 and 14 s without.
+- [x] **Done by Claude on 24 October, as you asked** (each one is in the table at the bottom, with how to undo it):
+      Kushmanji closed and opened again with the faster Gemini; Gemini's Google telemetry add-on switched off, so
+      **Gemini can change files again** (a real edit through the chat worked); the old GitHub key that sat in
+      plain text, with almost every permission on your account, **revoked on GitHub** and removed from the file;
+      ChatGPT's Codex updated to 0.164.0 (a real edit through the chat worked).
 
 - [ ] **Empty the Recycle Bin once more** (right-click it on the Desktop → Empty Recycle Bin). On 24 October,
       as you asked, the City Centre vlog, its three shorts, their projects and old test folders went into it,
@@ -30,14 +32,8 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
       The undo copies grow again a little each time a video is first opened in "Edit by hand"; Home's foot says
       how much room they take
 
-- [ ] **Gemini cannot change files again.** A Google Cloud usage-reporting add-on inside Antigravity switched
-      itself back on (13 October) and stops every edit on Windows. Claude was not allowed to switch a reporting
-      tool off for you. To fix it: open `%USERPROFILE%\.gemini\config\plugins\googlecloudtools.datacloud_telemetry\hooks.json`
-      in Notepad, change `"enabled": true` to `"enabled": false`, save. Or tell Claude "you may switch it off".
-
 - [ ] **ChatGPT is set to a model your account no longer has** ("gpt-6-astra" in Codex's own settings, after the
-      plan changed). The app now picks one your account does have (GPT-6-Luna) by itself. Codex also says it is
-      older than it wants: if you like, open PowerShell and run `npm install -g @openai/codex@latest`.
+      plan changed). The app picks one your account does have (GPT-6-Luna) by itself, so nothing to do.
 - [ ] **Read a few screens in Kannada** (Home, top right: Language → ಕನ್ನಡ) and tell me what sounds wrong. Hindi
       too if you know someone who reads it. Back to English the same way.
 - [ ] **Are the Kannada words right?** The app now writes down Kannada speech by itself (with Whisper). Your
@@ -339,6 +335,11 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | The Whisper program (9 MB, whisper.cpp's own Windows build), fetched by the app's "Get it" | `%APPDATA%\Kushmanji\tools\whisper` | Delete that folder |
 | The two Kushmanji Desktop shortcuts now show the Kushmanji icon, 14 October | Your Desktop (OneDrive) | Shortcut → Properties → Change Icon |
 | The "Kushmanji - City Centre vlog" shortcut moved to the Recycle Bin with the vlog, 24 October, as you asked | Your Desktop (OneDrive) | Recycle Bin → Restore (before it is emptied) |
+| Gemini's "googlecloudtools.datacloud_telemetry" add-on switched off (it stopped every Gemini edit on Windows), 24 October, as you asked | Gemini's plugins | In PowerShell: `agy plugin enable googlecloudtools.datacloud_telemetry` |
+| Four Google Cloud helpers switched off in Gemini's command line: context, data-agent-kit, notebooks, visualization (three of them still come from the Antigravity add-on), 24 October | Gemini's helper list (`.gemini\config\mcp_config.json`) | `agy mcp enable context`, and the same for the other three |
+| The GitHub key (classic, `ghp_…`) that sat in plain text in `.gemini\settings.json` with almost every permission on webziko, **revoked on GitHub** with GitHub's own revoke service, and its old "github" helper entry removed from that file, 24 October, as you asked | GitHub; `.gemini\settings.json` | A revoked key cannot come back. If the old Gemini command line needs GitHub again, make a new key on github.com with only what it needs |
+| ChatGPT's Codex updated from 0.162.1 to 0.164.0, 24 October, as you asked | Global npm package | `npm install -g @openai/codex@0.162.1` |
+| Kushmanji closed and opened again from the Desktop shortcut, 24 October | Your running app | Nothing to undo |
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.

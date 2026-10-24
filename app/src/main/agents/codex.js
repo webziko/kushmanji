@@ -20,7 +20,7 @@ export const about = {
   install: ["npm install -g @openai/codex"],
   signIn: ["codex login"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
-  tested: "0.162.1",
+  tested: "0.164.0",
 };
 
 /**
