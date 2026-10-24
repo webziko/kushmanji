@@ -203,7 +203,9 @@ Do not build them.
 - [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version. The routine is
       `docs/MAINTENANCE.md`; it was followed on 2026-10-18 to move from 0.8.149 to 0.8.169 (Claude): check,
       tests, self-test, one Claude request, and the playback measurement, both versions the same night
-      (`docs/FINDINGS.md`, last section). Still open: updates for the app itself
+      (`docs/FINDINGS.md`, last section). Followed again on 2026-10-25 to move to 0.8.193 (Claude): check, tests,
+      self-test, one ChatGPT request (Claude Code was signed out), and both versions measured on the practice
+      vlog within the hour: the same or a little better (FINDINGS). Still open: updates for the app itself
 - [x] M5-06 Work with no system Node installed (Claude, 2026-10-24). With every Node, npm and npx folder taken off
       PATH, the full self-test passed: making, playing, editing, studying and saving a video all run on Electron's
       own Node. The CLI 0.8.169 runs `npx` in two places only: `skills update` (installing HyperFrames' skills for
@@ -776,7 +778,9 @@ Windows bugs found in heygen-com/hyperframes itself. Each becomes a pull request
       has no reflink), then hashes it. 553 MB of footage became 636 MB of history in the measuring runs of
       M16-07. Not Windows-only, but it hurts most there and with big footage. Reproduce: open a project with a
       few large videos in Studio, then look at that folder. A fix upstream: reference media by hash in place,
-      or an option to keep media out of history
+      or an option to keep media out of history. 2026-10-25: upstream says it is fixed ("Studio history no longer
+      copies big media", 0.8.192), and on 0.8.193 the practice vlog's 536 MB of clips take 1 MB of history. Close
+      after one look on a real vlog opened for the first time
 
 - [ ] UP-03 (whisper.cpp, not HyperFrames) `whisper-cli.exe` of release b5454 stops at once (exit 0xC0000409)
       when the model's path has a letter outside plain English: `whisper-cli -m "C:\...\speech-é\modèle.bin" -f

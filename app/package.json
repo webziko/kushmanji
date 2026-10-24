@@ -22,7 +22,7 @@
     "dist": "electron-builder --win"
   },
   "dependencies": {
-    "hyperframes": "0.8.169"
+    "hyperframes": "0.8.193"
   },
   "devDependencies": {
     "electron": "^44.7.0",

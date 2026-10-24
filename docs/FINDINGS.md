@@ -277,6 +277,35 @@ small live thumbnail of the video beside the player, with the same address, so t
 largest preview (or the one that plays); and its Play is greyed out for a moment while a first open loads, so the
 arrow-key check waits until Play can be pressed. Gemini could not be tried: see the add-on in CHECKLIST.md.
 
+## HyperFrames 0.8.169 to 0.8.193 (measured 2026-10-25, at night, on the owner's PC)
+
+Twenty-four releases in a week (notes summarised by a helper from npm and the GitHub releases). The ones that
+matter here: Windows file renames retry through antivirus and indexer locks instead of failing a render, and
+WebGPU starts (0.8.193); `init` writes folders with non-ASCII names (0.8.174) and renders work in folders with a
+percent sign (0.8.188); the history lock works on USB and exFAT drives (0.8.189) and two claims on one project no
+longer crash on Windows (0.8.183); accented and non-Latin text shows correctly in `check`, `snapshot` and Studio
+(0.8.183); 29.97 fps phone clips and long phone videos export smoothly (0.8.173, 0.8.181); non-English
+`transcribe` works (0.8.177); sound effects from Openverse with no account (0.8.170, `media-use resolve --type
+sfx`); motion blur with a Studio panel (0.8.185 to 0.8.191); a seek bar in Studio's preview (0.8.190); Studio's
+history no longer copies big media (0.8.192). Nothing the app relies on moved: the self-test, the Studio face
+test and the lighter copies (`pictureShortSides` [720]) pass unchanged.
+
+The practice vlog (`scripts/test-vlog.mjs`, 19 clips, 4.5 min), measured on both versions within the hour:
+
+| | 0.8.169 | 0.8.193 |
+| --- | --- | --- |
+| Jump, watching (middle / slowest) | 37 / 76 ms | 37 / 69 ms |
+| Jump, editor | 49 / 99 ms | 49 / 70 ms |
+| Pictures dropped, watching, 45 s + 30 s | 9 + 9 | 8 + 3 |
+| Pictures dropped, editor, 45 s + 30 s | 7 + 4 | 6 + 4 |
+| Editor stalls over 50 ms | 1 | 0 |
+| Opening the editor | 1.0 s | 0.8 s |
+
+Undo copies (UP-02): the practice vlog's 536 MB of clips take 1 MB in `~/.cache/hyperframes/history`
+(fingerprints of each clip, no copies), first opened on 0.8.169 and used again on 0.8.193. One real ChatGPT edit
+went through the chat on 0.8.193 (83 s, the app's check found nothing). Claude Code was signed out on this PC
+that night, so no Claude request was tried.
+
 ## Why Gemini was slow in Kushmanji (measured 2026-10-24, agy 1.4.7)
 
 The owner noticed Gemini answering slowly in Kushmanji and fast in the Antigravity app: "which model am I using"

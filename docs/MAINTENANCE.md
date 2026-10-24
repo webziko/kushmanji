@@ -50,7 +50,9 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
    them changes, the copies stop being used or start reloading the editor. Check with the playback measurement
    (`CONTRIBUTING.md`): `pictureShortSides` must read `[720]` once the copies are made.
 6. Measure the old and the new version the same day, one after the other (`HFWIN_SMOKE_PLAYBACK=1` on a real
-   project): the PC's own state moves the numbers more than a version does. Last done: 0.8.149 to 0.8.169.
+   project): the PC's own state moves the numbers more than a version does. Without the owner's footage, use the
+   practice vlog (`node scripts/test-vlog.mjs <folder>` on Electron's Node) and run each measurement twice: the
+   first run also makes the lighter copies. Last done: 0.8.169 to 0.8.193 (2026-10-25, `docs/FINDINGS.md`).
 7. Kushmanji's face on the editor (`studioFace.js`) hides Studio's logo by its label (`aria-label="Hyperframes"`)
    and replaces four accent colours by name. `test/studioFace.test.mjs` reads Studio's built files and fails when
    either changes; then open "Edit by hand" and look.
