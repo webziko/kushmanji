@@ -16,10 +16,12 @@ and `C:\Creators`". Moved to the Recycle Bin, not deleted: `reviews/city-centre-
 
 **What would surprise you**
 - The Recycle Bin on C: is capped at 24.7 GB and already held about 20 GB. Past the cap Windows purges its
-  oldest items for good, so the move stopped with 0.5 GB to spare. Still waiting for the owner to empty it:
-  `%USERPROFILE%\.cache\hyperframes\history` (4 GB of Studio undo copies, 2.9 GB of it for the vlog), and
-  `reviews/shisha-shorts`, `review-profile`, `m16-playback`, `m14-reopen`. Check the bin's room again before
-  moving them (`$Recycle.Bin\<SID>` on disk against `BitBucket\Volume\{guid}\MaxCapacity`).
+  oldest items for good, so the first move stopped with 0.5 GB to spare (the bin's room is `$Recycle.Bin\<SID>`
+  on disk against `BitBucket\Volume\{guid}\MaxCapacity`). After the owner emptied it, the rest followed:
+  `reviews/shisha-shorts`, `review-profile`, `m16-playback`, `m14-reopen`, and every project folder in
+  `%USERPROFILE%\.cache\hyperframes\history` (4 GB of Studio undo copies, 2.9 GB of them for the vlog), one
+  at a time, skipping any whose `owner.pid` still ran. Kushmanji was open on Home at the time. Studio rebuilds
+  a project's history the next time it opens it.
 - The vlog's path is still in the app's `recentFolders`; Home skips folders that are gone, so it just
   disappears from the list. M10-14 (no sound in the preview) can no longer be re-checked on that vlog.
 - `C:\Creators` (26 GB, the channel workspace of another chat) and `C:\lamjingshai` (5.6 GB of horror videos)

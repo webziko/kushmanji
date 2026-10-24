@@ -13,14 +13,12 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
-- [ ] **Empty the Recycle Bin to get the space back** (right-click it on the Desktop → Empty Recycle Bin). On
-      24 October, as you asked, the City Centre vlog, its three shorts, their projects and old test folders
-      (4.5 GB) went into it. Files in the Recycle Bin still take room until it is emptied. It also holds about
-      20 GB of things deleted earlier, which go for good too: look inside first if you are unsure.
-      The bin was nearly full, so 4.8 GB more is waiting for room. Once it is empty, tell Claude "move the rest":
-      HyperFrames' undo copies (4 GB, in `%USERPROFILE%\.cache\hyperframes\history`) and four old folders in
-      `reviews` (`shisha-shorts`, `review-profile`, `m16-playback`, `m14-reopen`). Moving more into a full bin
-      would make Windows delete its oldest things for good, which is why Claude stopped
+- [ ] **Empty the Recycle Bin once more** (right-click it on the Desktop → Empty Recycle Bin). On 24 October,
+      as you asked, the City Centre vlog, its three shorts, their projects and old test folders went into it,
+      and you emptied it (C: went from 31 GB free to 73 GB). Then the rest followed: HyperFrames' undo copies
+      (4 GB) and four old folders in `reviews`, 4.75 GB in all. Emptying the bin again gives that space back.
+      The undo copies grow again a little each time a video is first opened in "Edit by hand"; Home's foot says
+      how much room they take
 
 - [ ] **Gemini cannot change files again.** A Google Cloud usage-reporting add-on inside Antigravity switched
       itself back on (13 October) and stops every edit on Windows. Claude was not allowed to switch a reporting
