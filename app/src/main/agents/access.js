@@ -1,4 +1,5 @@
 import path from "node:path";
+import { say } from "../say.js";
 
 // How much an agent may do on the person's computer. The person picks a level under the chat box; each bridge
 // turns it into that agent's own limits (`ACCESS` in claude.js, codex.js, antigravity.js), and mediaTools.js
@@ -6,24 +7,27 @@ import path from "node:path";
 
 /**
  * In the order the menu shows them, least to most. `name` and `about` are what the person reads, in the words of
- * docs/UX.md ("What may the assistant do"). The ids are what is stored and sent, and never change. The notes
- * below quote these names, because an assistant tells the person which menu choice to make.
+ * docs/UX.md ("What may the assistant do"), in English here and in the chosen language on the page (say.js). The
+ * ids are what is stored and sent, and never change. The notes below quote these English names, because an
+ * assistant tells the person which menu choice to make.
  */
 export const LEVELS = [
   {
     id: "project",
-    name: "Only this video",
-    about: "The assistant can change this video and nothing else on your computer.",
+    name: say("Only this video"),
+    about: say("The assistant can change this video and nothing else on your computer."),
   },
   {
     id: "tools",
-    name: "Also cut my clips",
-    about: "The assistant can also cut, join and recolour your clips, but only clips that belong to this video.",
+    name: say("Also cut my clips"),
+    about: say("The assistant can also cut, join and recolour your clips, " +
+      "but only clips that belong to this video."),
   },
   {
     id: "full",
-    name: "Anything on this computer",
-    about: "The assistant can open any program and change or delete any file on this computer, without asking you.",
+    name: say("Anything on this computer"),
+    about: say("The assistant can open any program and change or delete any file on this computer, " +
+      "without asking you."),
   },
 ];
 

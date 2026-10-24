@@ -411,4 +411,18 @@ export default {
   "{count} shorts planned: {list}.": "{count} ಶಾರ್ಟ್ಸ್ ಪ್ಲಾನ್ ಆಗಿವೆ: {list}.",
   "Each becomes its own video next to this one, in this video's look (STYLE.md). The assistant builds them one by one, a few minutes each, using its allowance.": "ಪ್ರತಿಯೊಂದೂ ಇದರ ಪಕ್ಕದಲ್ಲೇ ತನ್ನದೇ ವಿಡಿಯೋ ಆಗುತ್ತದೆ, ಈ ವಿಡಿಯೋದ ಲುಕ್‌ನಲ್ಲಿ (STYLE.md). ಅಸಿಸ್ಟೆಂಟ್ ಅವನ್ನು ಒಂದೊಂದಾಗಿ, ಒಂದಕ್ಕೆ ಕೆಲವು ನಿಮಿಷದಂತೆ ಮಾಡುತ್ತದೆ, ತನ್ನ ಬಳಕೆಯ ಮಿತಿ ಬಳಸುತ್ತದೆ.",
   "Make them": "ಮಾಡಿ",
+  // The main process (src/main, marked with say()): sentences it writes for the person, shown on the page
+  // through tFrom(). agents/access.js and agents/working.js: what the assistant may do, and how it works with you
+  "Only this video": "",
+  "The assistant can change this video and nothing else on your computer.": "",
+  "Also cut my clips": "",
+  "The assistant can also cut, join and recolour your clips, but only clips that belong to this video.": "",
+  "Anything on this computer": "",
+  "The assistant can open any program and change or delete any file on this computer, without asking you.": "",
+  "Just do it": "",
+  "The assistant makes the choices and shows you a finished first version.": "",
+  "Show me the plan first": "",
+  "The assistant shows you its plan and waits for your yes before it builds anything.": "",
+  "Decide with me": "",
+  "You decide step by step: the story, then the look, then motion and sound. The assistant waits for your yes each time.": "",
 };

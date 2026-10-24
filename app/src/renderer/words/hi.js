@@ -411,4 +411,18 @@ export default {
   "{count} shorts planned: {list}.": "{count} शॉर्ट्स का प्लान: {list}।",
   "Each becomes its own video next to this one, in this video's look (STYLE.md). The assistant builds them one by one, a few minutes each, using its allowance.": "हर शॉर्ट इस वीडियो के पास अपना अलग वीडियो बनता है, इसी वीडियो के लुक में (STYLE.md)। असिस्टेंट उन्हें एक-एक करके बनाता है, हर एक में कुछ मिनट लगते हैं, और उसकी लिमिट खर्च होती है।",
   "Make them": "इन्हें बनाएँ",
+  // The main process (src/main, marked with say()): sentences it writes for the person, shown on the page
+  // through tFrom(). agents/access.js and agents/working.js: what the assistant may do, and how it works with you
+  "Only this video": "",
+  "The assistant can change this video and nothing else on your computer.": "",
+  "Also cut my clips": "",
+  "The assistant can also cut, join and recolour your clips, but only clips that belong to this video.": "",
+  "Anything on this computer": "",
+  "The assistant can open any program and change or delete any file on this computer, without asking you.": "",
+  "Just do it": "",
+  "The assistant makes the choices and shows you a finished first version.": "",
+  "Show me the plan first": "",
+  "The assistant shows you its plan and waits for your yes before it builds anything.": "",
+  "Decide with me": "",
+  "You decide step by step: the story, then the look, then motion and sound. The assistant waits for your yes each time.": "",
 };

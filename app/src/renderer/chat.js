@@ -7,7 +7,7 @@ import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
 import { createShortsCard } from "./shorts.js";
-import { locale, t } from "./words.js";
+import { locale, t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 
@@ -623,9 +623,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
 
   // `data-mode` is what the smoke test reads.
   function renderMode() {
-    modePick.replaceChildren(...modes.map((item) => h("option", { value: item.id }, item.name)));
+    modePick.replaceChildren(...modes.map((item) => h("option", { value: item.id }, tFrom(item.name))));
     modePick.value = mode ?? "";
-    modeAbout.textContent = modes.find((item) => item.id === mode)?.about ?? "";
+    modeAbout.textContent = tFrom(modes.find((item) => item.id === mode)?.about ?? "");
     document.body.dataset.mode = mode ?? "";
   }
 
@@ -666,9 +666,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
 
   // `data-access` is what the smoke test reads.
   function renderAccess() {
-    accessPick.replaceChildren(...levels.map((level) => h("option", { value: level.id }, level.name)));
+    accessPick.replaceChildren(...levels.map((level) => h("option", { value: level.id }, tFrom(level.name))));
     accessPick.value = access ?? "";
-    accessAbout.textContent = levels.find((level) => level.id === access)?.about ?? "";
+    accessAbout.textContent = tFrom(levels.find((level) => level.id === access)?.about ?? "");
     accessAbout.classList.toggle("warn", access === "full");
     document.body.dataset.access = access ?? "";
   }

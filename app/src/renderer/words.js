@@ -4,7 +4,7 @@
 // Read words/README.md before adding a phrase or writing a list.
 import kn from "./words/kn.js";
 import hi from "./words/hi.js";
-import { translate } from "./translate.js";
+import { translate, translateFrom } from "./translate.js";
 
 export const LANGUAGES = [
   { id: "en", name: "English" },
@@ -56,3 +56,9 @@ export function setLanguage(id) {
 
 /** The chosen language's version of the exact English `text`; `values` fills each `{name}` in it. */
 export const t = (text, values) => translate(text, TABLES[current], values);
+
+/**
+ * A sentence the main process wrote with say() (M14-15), in the chosen language. The one way to translate text the
+ * page holds in a variable: use it only on what comes from the main process, never on a phrase of the page's own.
+ */
+export const tFrom = (sentence) => translateFrom(sentence, TABLES[current]);

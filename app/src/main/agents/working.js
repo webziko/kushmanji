@@ -1,3 +1,5 @@
+import { say } from "../say.js";
+
 // How involved the person wants to be. The three ways are upstream's own (docs/guides/general-video.mdx), so a
 // project planned here reads the same to the HyperFrames skills (upstream calls them "Build it for me", "Review
 // the story first" and "Co-direct it"). The person sees them in the words of docs/UX.md ("Ask me first"): the
@@ -13,19 +15,19 @@
 export const MODES = [
   {
     id: "build",
-    name: "Just do it",
-    about: "The assistant makes the choices and shows you a finished first version.",
+    name: say("Just do it"),
+    about: say("The assistant makes the choices and shows you a finished first version."),
   },
   {
     id: "review",
-    name: "Show me the plan first",
-    about: "The assistant shows you its plan and waits for your yes before it builds anything.",
+    name: say("Show me the plan first"),
+    about: say("The assistant shows you its plan and waits for your yes before it builds anything."),
   },
   {
     id: "codirect",
-    name: "Decide with me",
-    about: "You decide step by step: the story, then the look, then motion and sound. " +
-      "The assistant waits for your yes each time.",
+    name: say("Decide with me"),
+    about: say("You decide step by step: the story, then the look, then motion and sound. " +
+      "The assistant waits for your yes each time."),
   },
 ];
 

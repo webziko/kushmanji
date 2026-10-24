@@ -6,7 +6,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
-import { translate } from "../src/renderer/translate.js";
+import { translate, translateFrom } from "../src/renderer/translate.js";
+import { say } from "../src/main/say.js";
 
 const RENDERER = fileURLToPath(new URL("../src/renderer", import.meta.url));
 // Where t() and the language live; they talk about t() in their own comments and are not pages.
@@ -41,10 +42,11 @@ function literalAt(source, at) {
  * joined by + count as one sentence), `{ bad, line }` for a call that is anything else. A phrase the list cannot
  * know in advance would silently never be translated, so those are mistakes.
  */
-function findCalls(source) {
+function findCalls(source, name = "t") {
   const code = withoutComments(source);
   const found = [];
-  for (const match of code.matchAll(/(?<![\w$.])t\(/g)) {
+  // Not a method (`.t(`) or a class's own (`#say(`), only the function itself.
+  for (const match of code.matchAll(new RegExp(`(?<![\\w$.#])${name}\\(`, "g"))) {
     const line = code.slice(0, match.index).split("\n").length;
     let at = match.index + match[0].length;
     let text = "";
@@ -66,7 +68,15 @@ function findCalls(source) {
 
 const calls = pages.flatMap((name) =>
   findCalls(fs.readFileSync(path.join(RENDERER, name), "utf8")).map((call) => ({ ...call, name })));
-const used = new Set(calls.filter((call) => !call.bad).map((call) => call.text));
+
+// The main process marks the sentences it writes for the person with say() (M14-15); the page shows them through
+// tFrom(), from the same lists. The self-test's own sentences are not the person's, and say.js only defines it.
+const MAIN = fileURLToPath(new URL("../src/main", import.meta.url));
+const mainFiles = fs.readdirSync(MAIN, { recursive: true })
+  .filter((name) => name.endsWith(".js") && !["smoke.js", "say.js"].includes(path.basename(name))).sort();
+const mainCalls = mainFiles.flatMap((name) =>
+  findCalls(fs.readFileSync(path.join(MAIN, name), "utf8"), "say").map((call) => ({ ...call, name })));
+const used = new Set([...calls, ...mainCalls].filter((call) => !call.bad).map((call) => call.text));
 
 const lists = {
   kn: (await import(pathToFileURL(path.join(RENDERER, "words/kn.js")))).default,
@@ -77,6 +87,11 @@ test("the page's code has phrases marked, and each call gives t() the English te
   assert.ok(used.size > 200, `only ${used.size} phrases found: is the finder reading the files?`);
   const bad = calls.filter((call) => call.bad).map((call) => `${call.name}:${call.line}`);
   assert.deepEqual(bad, [], "t() must be given the English sentence as a string, not a variable or a template");
+});
+
+test("each say() in the main process gives the English sentence itself", () => {
+  const bad = mainCalls.filter((call) => call.bad).map((call) => `${call.name}:${call.line}`);
+  assert.deepEqual(bad, [], "say() must be given the English sentence as a string, not a variable or a template");
 });
 
 for (const [id, list] of Object.entries(lists)) {
@@ -212,4 +227,25 @@ test("translate fills each {name} with the value, in the chosen text or in the E
   assert.equal(translate("Open {name}", null, { name: "$& $1 {name}" }), "Open $& $1 {name}",
     "a value is text, never a replacement pattern");
   assert.equal(translate("Plain {braces} stay", null), "Plain {braces} stay", "no values, nothing is replaced");
+});
+
+test("a sentence from the main process is found by its exact line, or by the pattern of a line with values", () => {
+  const table = {
+    "Whisper is ready": "Whisper ಸಿದ್ಧ",
+    "Studied {done} of {total} clips": "{total} ರಲ್ಲಿ {done} ಕ್ಲಿಪ್",
+    "{count} clips": "{count} ಕ್ಲಿಪ್‌ಗಳು",
+    "{name}": "only placeholders",
+  };
+  assert.equal(translateFrom("Whisper is ready", table), "Whisper ಸಿದ್ಧ");
+  assert.equal(translateFrom(say("Studied {done} of {total} clips", { done: 3, total: 19 }), table), "19 ರಲ್ಲಿ 3 ಕ್ಲಿಪ್");
+  assert.equal(translateFrom("Studied 3 of 19 clips", table), "19 ರಲ್ಲಿ 3 ಕ್ಲಿಪ್", "the line with the most fixed words wins");
+  assert.equal(translateFrom("Something new", table), "Something new", "a line that is only placeholders matches nothing");
+  assert.equal(translateFrom("Whisper is ready", null), "Whisper is ready", "English has no table");
+  assert.equal(translateFrom(undefined, table), undefined);
+});
+
+test("say() fills the English the way the page's lists expect", () => {
+  assert.equal(say("Plain"), "Plain");
+  assert.equal(say("{done} of {total} ($&)", { done: 0, total: "$1" }), "0 of $1 ($&)");
+  assert.equal(say("Hello {name}", {}), "Hello {name}");
 });
