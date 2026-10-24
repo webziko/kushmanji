@@ -15,9 +15,6 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
       right, too quiet or too loud? Nobody on the AI side can hear it.
-- [ ] **May Claude press "Get it now" for FFmpeg once, for real?** It downloads 115 MB from FFmpeg's official
-      Windows builds on GitHub (github.com/GyanD/codexffmpeg, release 9.0.2) into a test run's own folder, to
-      prove the button works on a PC without FFmpeg. Nothing on your PC changes; the folder can be deleted after.
 
 - [ ] **Empty the Recycle Bin once more** (right-click it on the Desktop → Empty Recycle Bin). On 24 October,
       as you asked, the City Centre vlog, its three shorts, their projects and old test folders went into it,
@@ -95,7 +92,8 @@ Then the list further down, starting with one-click export.
 - [x] **FFmpeg with one press.** On a PC without FFmpeg, Home's "Before you start" now has a "Get it now (about
       115 MB)" button instead of a line to paste into PowerShell. The app fetches FFmpeg's official Windows build,
       checks it is exactly the expected file, and keeps it in its own folder. Your PC has FFmpeg already, so you
-      will not see it. Not yet pressed for real: that downloads 115 MB (see "Waiting on you").
+      will not see it. Pressed for real with your yes, in a test run with FFmpeg hidden: 24 seconds, then the whole
+      self-test passed using the downloaded FFmpeg (saving, studying clips, smooth copies).
 - [x] **Fixed for strangers' PCs**: a video folder buried very deep (over 200 characters of path) now gets a
       plain sentence asking to move it, instead of a long error; the app works with no Node installed; a taken
       port and a crash were tried and are fine.

@@ -64,11 +64,22 @@ HFWIN_SMOKE_ACCESS=tools            # optional: project, tools or full
 HFWIN_SMOKE_MODEL=sonnet            # optional: a model from the chat's menu
 HFWIN_SMOKE_TURN_MINUTES=45         # a long edit needs longer than the seven-minute default
 HFWIN_SMOKE_NAME=vlog               # optional: keep this run's files in app/.smoke-vlog
+HFWIN_SMOKE_EXPECT=<a text>         # what index.html will contain after the edit; without it the run looks for
+                                    # the self-test's own title and reports "the project file did not change"
 ```
 
 then `npm run smoke:agent` (or `smoke:codex`, `smoke:antigravity`). With `HFWIN_SMOKE_NAME` set, several runs
 can go at once. The full-screen check passes only while the self-test's window is in front; with another
 window in front the run says "full screen was NOT checked" instead of failing.
+
+Other switches for `npm run smoke`, each for one question:
+
+```
+HFWIN_SMOKE_FIRST_OPEN=1 + HFWIN_SMOKE_REAL_PROJECT=<folder>   # time "Getting the editor ready" (M16-10)
+HFWIN_SMOKE_PROJECTS_ROOT=<folder>     # keep the run's projects there (deep paths, other drives: M6-01, M6-03)
+HFWIN_SMOKE_GET_FFMPEG=1               # with FFmpeg off PATH: press Home's "Get it now" for real (115 MB, into
+                                       # the run's own folder), then the whole run on the app's own FFmpeg (M5-03)
+```
 
 ## Where things live
 

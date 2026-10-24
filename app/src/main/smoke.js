@@ -527,9 +527,16 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   result.editingButtons.opensEditor = true;
 }
 
+/**
+ * FFmpeg or FFprobe as the app finds them: the one named in HYPERFRAMES_FFMPEG_PATH (the app's own copy, after
+ * "Get it now", M5-03) or HYPERFRAMES_FFPROBE_PATH, else a real program on PATH.
+ */
+const realTool = (name) => process.env[`HYPERFRAMES_${name.toUpperCase()}_PATH`]?.trim() ||
+  whereAll(name).find((file) => /\.exe$/i.test(file));
+
 /** A few seconds of moving picture with a tone, made with the real FFmpeg: footage for an agent to cut. */
 function makeTestClip(dir, seconds) {
-  const ffmpeg = whereAll("ffmpeg").find((file) => /.exe$/i.test(file));
+  const ffmpeg = realTool("ffmpeg");
   if (!ffmpeg) throw new Error("FFmpeg is not installed, so the test clip could not be made.");
   const file = path.join(dir, "assets", "test-clip.mp4");
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -571,7 +578,7 @@ async function makeSpokenClips(dir) {
   const english = path.join(assets, "voice-en.wav");
   await say(SPOKEN, english);
   await say(SPOKEN_HINDI, path.join(assets, "hindi-voice.wav"), "hf_alpha");
-  const ffmpeg = whereAll("ffmpeg").find((file) => /\.exe$/i.test(file));
+  const ffmpeg = realTool("ffmpeg");
   const talk = path.join(assets, "bakery talk.mp4");
   const muxed = spawnSync(
     ffmpeg,
@@ -699,7 +706,7 @@ async function speechToolStep({ result, inPage, shot, dir, settled }) {
 
 /** A media file's length in seconds, or null. */
 function durationOf(file) {
-  const ffprobe = whereAll("ffprobe").find((found) => /.exe$/i.test(found));
+  const ffprobe = realTool("ffprobe");
   if (!ffprobe) return null;
   const probed = spawnSync(ffprobe, ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], {
     windowsHide: true,
@@ -1016,6 +1023,46 @@ async function soundProbe({ win, outDir, result, shot }) {
 }
 
 /**
+ * `HFWIN_SMOKE_GET_FFMPEG`, run with FFmpeg off PATH (M5-03): press Home's "Get it now" for real, which fetches
+ * 115 MB into the self-test's own settings folder, and wait until Home says nothing is missing. The run then goes
+ * on as usual, so its test clip, study, lighter copies and saved video all use the app's own FFmpeg.
+ */
+async function getFfmpegStep({ result, inPage, shot }) {
+  const button = "[...document.querySelectorAll('.health-list button')].find((b) => /MB|%|…|Try again/.test(b.textContent))";
+  if (!(await until(() => inPage(`Boolean(${button})`), { timeoutMs: 180_000 })))
+    throw new Error("Home did not offer to get FFmpeg. Is FFmpeg still on PATH?");
+  if (realTool("ffmpeg")) throw new Error("FFmpeg is still on PATH, so this would not show the app's own.");
+  await shot("ffmpeg-offer");
+  const started = Date.now();
+  await inPage(`${button}.click()`);
+  const percents = [];
+  let midway = false;
+  for (;;) {
+    if (Date.now() - started > 1_800_000) throw new Error("Getting FFmpeg took more than half an hour.");
+    const state = await inPage(`({ label: ${button}?.textContent ?? "",
+      done: [...document.querySelectorAll('#app p')].some((p) => p.textContent ===
+        "Kushmanji has everything it needs on this computer."),
+      problem: [...document.querySelectorAll('.health-list p.muted')].find((p) => !p.hidden)?.textContent ?? "" })`);
+    if (state.done) break;
+    if (state.label === "Try again") throw new Error(`Getting FFmpeg failed: ${state.problem}`);
+    const percent = Number(/(\d+)%/.exec(state.label)?.[1]);
+    if (Number.isFinite(percent) && percents.at(-1) !== percent) percents.push(percent);
+    if (!midway && percent >= 40) {
+      midway = true;
+      await shot("ffmpeg-getting");
+    }
+    await wait(500);
+  }
+  await shot("ffmpeg-ready");
+  const own = process.env.HYPERFRAMES_FFMPEG_PATH ?? "";
+  if (!own.toLowerCase().startsWith(app.getPath("userData").toLowerCase()))
+    throw new Error(`After "Get it now", FFmpeg is not the app's own copy: ${own || "none"}.`);
+  const version = spawnSync(own, ["-version"], { windowsHide: true, encoding: "utf8" }).stdout?.split("\n")[0];
+  result.ffmpegGet = { seconds: Math.round((Date.now() - started) / 1000), percents: percents.length,
+    lastPercent: percents.at(-1) ?? null, path: own, version };
+}
+
+/**
  * `HFWIN_SMOKE_FIRST_OPEN` with `HFWIN_SMOKE_REAL_PROJECT`: open that project in "Edit by hand" and time the
  * "Getting the editor ready" note (M16-10). Use a project Studio has not opened on this computer yet, or a copy of
  * one in a new folder: on a later open the note should not appear at all.
@@ -1107,6 +1154,7 @@ export async function runSmoke({ win, outDir }) {
     await helpStep({ win, result, inPage, shot });
     await wait(400);
     await shot("home");
+    if (process.env.HFWIN_SMOKE_GET_FFMPEG) await getFfmpegStep({ result, inPage, shot });
     // HFWIN_SMOKE_JUST_ASK with HFWIN_SMOKE_REAL_PROJECT and an agent: one real job on a real project, without
     // the self-test's own steps. The request goes from the editor screen, so it carries no "At 0:00".
     if (process.env.HFWIN_SMOKE_JUST_ASK && process.env.HFWIN_SMOKE_REAL_PROJECT && process.env.HFWIN_SMOKE_AGENT) {
@@ -1144,7 +1192,7 @@ export async function runSmoke({ win, outDir }) {
     // Exercise the actual Home intake, including the dialog -> IPC -> safe copy path.
     const source = path.join(outDir, "source footage é");
     fs.mkdirSync(path.join(source, "assets"), { recursive: true });
-    const hasFfmpeg = whereAll("ffmpeg").some((file) => /\.exe$/i.test(file));
+    const hasFfmpeg = Boolean(realTool("ffmpeg"));
     if (hasFfmpeg) makeTestClip(source, 6);
     else fs.writeFileSync(path.join(source, "assets", "picture.png"), Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64",

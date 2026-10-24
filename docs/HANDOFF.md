@@ -32,11 +32,11 @@ file did not change" although it did. The music is a pad made with FFmpeg from s
 not "Save video", which would raise it to YouTube loudness. Codex at "Only this video" cannot start npm (EPERM),
 so it cannot run `hyperframes check` itself; the app's own check after the turn found nothing.
 
-**M5-03 built, one real press left**: `ffmpegTool.js` (modelled on `speechTool.js`, whose `unzip` it shares) and
-`health:get(kind)` replacing `health:getBrowser`. The pinned zip's digest came from GitHub's release API, not from
-a download, so the real 115 MB fetch has never run: it needs the owner's yes. To try it: `npm run smoke` with
-FFmpeg's folders taken off PATH shows the button on Home; pressing it there downloads into the run's own
-`user-data`, nothing else changes.
+**M5-03 done**: `ffmpegTool.js` (modelled on `speechTool.js`, whose `unzip` it shares) and `health:get(kind)`
+replacing `health:getBrowser`. With the owner's yes, pressed for real by the new `HFWIN_SMOKE_GET_FFMPEG=1` (run it
+with FFmpeg's folders taken off PATH; it downloads into the run's own `user-data`): 24 s, then the full run passed
+on the downloaded build. The self-test now finds FFmpeg as the app does (`realTool` in `smoke.js`: the variable
+first, then PATH), or its own test clip would have been made without it.
 
 **Fresh-PC checks**: M5-06 (no Node: the full self-test passes), M6-04 (a crash leaves no server), M6-05 (a taken
 port moves the editor up; it then forgets its layout and remembered sound pictures), M6-01 (every self-test now
