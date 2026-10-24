@@ -199,7 +199,12 @@ Do not build them.
       `docs/MAINTENANCE.md`; it was followed on 2026-10-18 to move from 0.8.149 to 0.8.169 (Claude): check,
       tests, self-test, one Claude request, and the playback measurement, both versions the same night
       (`docs/FINDINGS.md`, last section). Still open: updates for the app itself
-- [ ] M5-06 Work with no system Node installed (the CLI calls `npx` for a few things)
+- [x] M5-06 Work with no system Node installed (Claude, 2026-10-24). With every Node, npm and npx folder taken off
+      PATH, the full self-test passed: making, playing, editing, studying and saving a video all run on Electron's
+      own Node. The CLI 0.8.169 runs `npx` in two places only: `skills update` (installing HyperFrames' skills for
+      the assistants, M2-08, which still needs Node) and the "local studio" mode of `preview`, used only when a
+      project has its own `@hyperframes/studio` installed (Kushmanji's projects do not). ChatGPT's Codex is an npm
+      package, so that assistant needs Node; Claude Code's own installer does not
 - [ ] M5-07 Windows on ARM build
 
 ## M6 · Windows hardening
