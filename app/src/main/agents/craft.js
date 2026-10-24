@@ -148,6 +148,10 @@ animated scene. Where the person has asked for something else, the person wins.
 - Big and few: one idea per word group; a headline at least 9% of the frame's short side in a trailer, body text
   at least 2.6%. Fully readable for letters / 15 + 1.5 seconds, and never less than 1.5 s.
 - Colour changes only between words, never inside one. Never over a face or a figure's head.
+- Fonts: never declare an @font-face for a font that is installed (Segoe UI, Nirmala UI): one face declared for
+  every weight hides the real bold, and the words come out thin. Name it in font-family and set font-weight.
+  A font that is not on Windows (Nunito, for one) shows only if its file is in the video's assets with an
+  @font-face pointing at that file.
 - Words enter with motion (per letter or per word, a short stagger) and leave with motion, not a plain fade.
 - Safe margins: about 5% of the frame. Upright videos for Shorts and Reels: nothing important within 160 px of
   the top, 320 px of the bottom or 60 px of the sides (at 1080 by 1920).

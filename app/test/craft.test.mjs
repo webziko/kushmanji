@@ -49,7 +49,7 @@ test("the motion guide covers what went wrong in the trailer test", () => {
   const shown = /data-automation='([^']+)'/.exec(MOTION_GUIDE)?.[1];
   assert.equal(JSON.parse(shown).version, 1);
   for (const lesson of [/change the shape of its screen/, /never washes out a figure/, /Colour changes only between words/,
-    /walks in place while the world scrolls/, /seeded generator/, /No plain cross-fade/]) {
+    /walks in place while the world scrolls/, /seeded generator/, /No plain cross-fade/, /hides the real bold/]) {
     assert.match(MOTION_GUIDE, lesson);
   }
 });
