@@ -7,6 +7,9 @@ const SIGNED_OUT = new RegExp([
   "not logged in", "not signed in", "please (?:log|sign) ?in", "log ?in again", "sign ?in again",
   "invalid (?:api )?key", "authentication (?:failed|error|required)", "\\bunauthori[sz]ed\\b", "\\b401\\b",
   "token (?:has )?expired", "oauth token", "credentials? (?:are |is )?(?:missing|invalid|expired)",
+  // Claude Code 2.1.280, 2026-10-25, when its saved sign-in has run out: "Failed to authenticate: OAuth session
+  // expired and could not be refreshed".
+  "failed to authenticate", "(?:oauth|login|sign-?in) session (?:has )?expired",
 ].join("|"), "i");
 
 const OFFLINE = new RegExp([

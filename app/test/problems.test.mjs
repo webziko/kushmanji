@@ -7,7 +7,8 @@ const claude = { name: "Claude", signIn: "claude auth login" };
 
 test("a sign-out says so, with the command that signs in again", () => {
   for (const error of ["Invalid API key · Please run /login", "API Error: 401 {\"type\":\"authentication_error\"}",
-    "Not logged in", "OAuth token has expired"]) {
+    "Not logged in", "OAuth token has expired",
+    "Failed to authenticate: OAuth session expired and could not be refreshed"]) {
     const got = plainProblem({ error }, claude);
     assert.equal(got?.kind, "signed-out", error);
     assert.match(got.said, /Claude is signed out.*claude auth login/);
