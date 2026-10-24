@@ -13,6 +13,12 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
+- [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
+      right, too quiet or too loud? Nobody on the AI side can hear it.
+- [ ] **May Claude press "Get it now" for FFmpeg once, for real?** It downloads 115 MB from FFmpeg's official
+      Windows builds on GitHub (github.com/GyanD/codexffmpeg, release 9.0.2) into a test run's own folder, to
+      prove the button works on a PC without FFmpeg. Nothing on your PC changes; the folder can be deleted after.
+
 - [ ] **Empty the Recycle Bin once more** (right-click it on the Desktop → Empty Recycle Bin). On 24 October,
       as you asked, the City Centre vlog, its three shorts, their projects and old test folders went into it,
       and you emptied it (C: went from 31 GB free to 73 GB). Then the rest followed: HyperFrames' undo copies
