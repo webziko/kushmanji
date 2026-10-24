@@ -592,13 +592,18 @@ now comes first**: it changes what every later feature looks like. The review it
       levels and ways of working with their explanations, the line under the chat box, the clips strip's notes,
       Home's health lines, the speech tool's and the shorts' messages. A second list, passed through `t()` on
       the page by a function the test allows to take a variable
-- [ ] M14-16 The error messages the main process throws (`new Error(...)`, 102 of them) are still English in
-      Kannada and Hindi; several reach the screen (opening a project, adding clips, the study's and the shorts'
-      problems). `throw new Error(say(...))` and `tFrom` where the page shows `error.message`. Also the native
-      folder windows' titles (main.js, `dialog.showOpenDialog`): the page would pass them in, translated
-- [ ] M14-17 An assistant's notes quote the English menu names ("choose 'Also cut my clips'"), so in Kannada or
-      Hindi it may name a choice the person cannot find. Tell the assistant the person's language and the names
-      as shown, or have it quote both
+- [x] M14-16 The error messages the main process throws are said in Kannada and Hindi (Claude, 2026-10-25; written
+      by a Sonnet helper in a worktree, reviewed): 82 sentences from about 75 throw sites go through `say()`, the
+      page shows them with `tFrom(error.message)`, and a test fails on any new unmarked English error (12 left in
+      English on purpose: values the page's own menus never send, and guards nobody sees). The three native folder
+      windows take their title from the page, checked by `dialogTitle.js` (one line, at most 200 characters, else
+      English). Left: a sentence nested inside another's `{message}` or `{reason}` stays English; the "Add clips"
+      window's file-type label. Nobody who reads Kannada or Hindi has checked the new lines
+- [x] M14-17 The assistants name the app's menus as the person sees them (Claude, 2026-10-25). The page sends its
+      language with each message; for Kannada or Hindi the assistant is told, at the start of a conversation and
+      whenever it changes, which language the person reads the app in and the 28 button and menu names as shown,
+      with the English in brackets, taken from the page's own word lists (`agents/language.js`). Not yet tried
+      with a real assistant in Kannada
 
 ## M15 · Spend less: smaller models, and a team you choose
 
