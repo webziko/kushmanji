@@ -34,8 +34,8 @@ const run = spawnSync(electron, [appDir], {
     ...env,
     HFWIN_SMOKE: outDir,
     // Spaces, an accent and Kannada letters, as in "C:\Users\José Müller\Videos": every run goes through such a
-    // path (M6-01), from making the project to saving the video.
-    HFWIN_PROJECTS_ROOT: path.join(outDir, "my projects José ಕನ್ನಡ"),
+    // path (M6-01), from making the project to saving the video. HFWIN_SMOKE_PROJECTS_ROOT tries another place.
+    HFWIN_PROJECTS_ROOT: process.env.HFWIN_SMOKE_PROJECTS_ROOT || path.join(outDir, "my projects José ಕನ್ನಡ"),
     ...(withAgent ? { HFWIN_SMOKE_AGENT: withAgent } : {}),
     ...(withSpeech ? { HFWIN_SMOKE_STUDY: "speech" } : {}),
   },

@@ -32,6 +32,8 @@ import {
   listProjects,
   projectAt,
   rememberFolder,
+  TOO_DEEP,
+  tooDeep,
 } from "./projects.js";
 import { makeShorts, readShortsPlan } from "./shorts.js";
 import { madeRecord, recordMade, ShortsMaker } from "./shortsMaker.js";
@@ -264,6 +266,7 @@ function requireProject(dir) {
   if (!isProject(dir)) {
     throw new Error("That folder is not a video this app can open. Choose a folder where a video was made.");
   }
+  if (tooDeep(dir)) throw new Error(TOO_DEEP);
   return dir;
 }
 

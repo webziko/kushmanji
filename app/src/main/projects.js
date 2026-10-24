@@ -13,6 +13,19 @@ const pathKey = (dir) => path.resolve(dir).toLowerCase();
 export const isProject = (dir) =>
   typeof dir === "string" && path.isAbsolute(dir) && fs.existsSync(path.join(dir, "index.html"));
 
+/**
+ * The longest folder path a video may live at (M6-03). Windows' old 260-character limit still holds for the
+ * HyperFrames command line (it runs on Electron's Node, which is not marked long-path aware): making a project 245
+ * characters deep failed with "ENOENT ... mkdtemp" even with LongPathsEnabled on, measured 2026-10-24. The project
+ * needs room inside too: Studio's thumbnails take up to 116 characters, so past about 140 they are missing.
+ */
+export const MAX_FOLDER_CHARS = 200;
+
+export const tooDeep = (dir) => path.resolve(dir).length > MAX_FOLDER_CHARS;
+
+export const TOO_DEEP = "This video's folder is too deep inside other folders: Windows' video tools cannot work with " +
+  "such long paths. Move the folder nearer the top of a drive, for example to C:\\Videos, and open it again.";
+
 /** Projects under the app's own folder are its own; any other folder was opened from elsewhere. */
 const isExternal = (dir) => !pathKey(dir).startsWith(pathKey(projectsRoot()) + path.sep);
 
@@ -56,6 +69,7 @@ export async function createProject(name) {
   const base = folderNameFor(name);
   let folder = base;
   for (let n = 2; fs.existsSync(path.join(root, folder)); n++) folder = `${base}-${n}`;
+  if (tooDeep(path.join(root, folder))) throw new Error(TOO_DEEP);
   // Skills are skipped here because that step reaches GitHub and can take a minute; it is its own task (M2-08).
   const result = await runCli(["init", folder, "--non-interactive"], {
     cwd: root,
