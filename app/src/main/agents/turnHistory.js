@@ -3,6 +3,7 @@
 // talks to the server: a history "window" opened before the assistant starts and closed when it stops makes
 // everything written in between one entry under the assistant's name, and undo puts those files back. The undo is
 // itself an entry, so undoing the undo brings the change back. Studio's history panel shows the same entries.
+import { say } from "../say.js";
 
 // A window ends by itself after this long without a write (the server's own limit is ten minutes; its default of
 // thirty seconds is shorter than an assistant often thinks). Writes after that are still kept in the history, as
@@ -31,7 +32,7 @@ export const fileNames = (files) => (Array.isArray(files) ? files : [])
 export function turnHistory(currentPreview, { fetch: send = fetch } = {}) {
   const post = async (dir, route, body) => {
     const base = historyBase(currentPreview(), dir);
-    if (!base) throw new Error("Open this video first.");
+    if (!base) throw new Error(say("Open this video first."));
     const response = await send(`${base}${route}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,7 +68,9 @@ export function turnHistory(currentPreview, { fetch: send = fetch } = {}) {
       try {
         answer = await post(dir, "/undo", { entryId });
       } catch (error) {
-        throw new Error(`That change could not be undone (${error.message}). Your video was not changed.`);
+        // The reason is the server's own English, or "Open this video first." above.
+        throw new Error(say("That change could not be undone ({reason}). Your video was not changed.",
+          { reason: error.message }));
       }
       const entry = answer?.entry ?? answer;
       return { id: entry?.id ? String(entry.id) : null, files: fileNames(entry?.files) };

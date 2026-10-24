@@ -182,7 +182,7 @@ export class AgentRunner {
   /** Which assistants the person has. At least one: the chat needs someone to talk to. */
   setTeam(engines) {
     const team = [...new Set((Array.isArray(engines) ? engines : []).map(String))];
-    if (!team.length) throw new Error("Keep at least one assistant ticked.");
+    if (!team.length) throw new Error(say("Keep at least one assistant ticked."));
     if (!team.every((id) => knownEngine(id))) throw new Error("That assistant is not known to this app.");
     updateState({ team });
   }
@@ -190,7 +190,9 @@ export class AgentRunner {
   /** Switch this project's chat to another agent. It applies from the next message. */
   choose(dir, engine) {
     if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
-    if (!teamOf(readState()).includes(engine)) throw new Error("Tick that assistant under \"Your assistants\" first.");
+    if (!teamOf(readState()).includes(engine)) {
+      throw new Error(say("Tick that assistant under \"Your assistants\" first."));
+    }
     writeChat(dir, { ...readChat(dir), engine });
     updateState({ agent: engine });
     void this.prewarm(dir);
@@ -251,7 +253,9 @@ export class AgentRunner {
    */
   async checkup(engine) {
     if (!knownEngine(engine)) throw new Error("That assistant is not known to this app.");
-    if (this.#active || this.#undoing) throw new Error("An assistant is still working. Test this one when it has finished.");
+    if (this.#active || this.#undoing) {
+      throw new Error(say("An assistant is still working. Test this one when it has finished."));
+    }
     // Claimed before the first wait, so a message sent meanwhile is refused and Stop reaches the test.
     const turn = { dir: null, checkup: true, stopped: false, handle: { stop() { turn.stopped = true; } } };
     this.#active = turn;
@@ -306,8 +310,10 @@ export class AgentRunner {
    */
   async undo(dir, index, id = null) {
     if (!this.#history) throw new Error("Undo is not available in this version of the app.");
-    if (this.#active?.dir === dir) throw new Error("The assistant is still working. Undo when it has finished.");
-    if (this.#undoing) throw new Error("A change is still being undone. Try again in a moment.");
+    if (this.#active?.dir === dir) {
+      throw new Error(say("The assistant is still working. Undo when it has finished."));
+    }
+    if (this.#undoing) throw new Error(say("A change is still being undone. Try again in a moment."));
     this.#undoing = dir;
     try {
       return await this.#undo(dir, index, id);
@@ -320,12 +326,14 @@ export class AgentRunner {
     const before = readChat(dir).messages;
     index = replyFor(before, index, id);
     const message = before[index];
-    if (message?.role !== "agent" || !message.undo?.id) throw new Error("That change cannot be undone.");
+    if (message?.role !== "agent" || !message.undo?.id) throw new Error(say("That change cannot be undone."));
     const back = Boolean(message.undo.undoneBy);
     const done = await this.#history.undo(dir, back ? message.undo.undoneBy : message.undo.id);
     const chat = readChat(dir);
     const saved = chat.messages[replyFor(chat.messages, index, message.undo.id)];
-    if (saved?.undo?.id !== message.undo.id) throw new Error("The chat changed while undoing. Your files were put back.");
+    if (saved?.undo?.id !== message.undo.id) {
+      throw new Error(say("The chat changed while undoing. Your files were put back."));
+    }
     saved.undo = back ? { id: saved.undo.id, files: saved.undo.files } : { ...saved.undo, undoneBy: done.id };
     writeChat(dir, chat);
     const files = saved.undo.files.slice(0, 8).join(", ");
@@ -344,16 +352,20 @@ export class AgentRunner {
    * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
    */
   send({ dir, text, pointing = null, moment = null, purpose = null }) {
-    if (this.#active) throw new Error("The assistant is still working. Press Stop, or wait for it to finish.");
-    if (this.#undoing) throw new Error("A change is still being undone. Send again in a moment.");
+    if (this.#active) {
+      throw new Error(say("The assistant is still working. Press Stop, or wait for it to finish."));
+    }
+    if (this.#undoing) throw new Error(say("A change is still being undone. Send again in a moment."));
     if (purpose !== null && !PURPOSES.has(purpose)) throw new Error("That kind of request is not known to this app.");
     const message = String(text ?? "").trim();
-    if (!message) throw new Error("Type what you want to change first.");
-    if (message.length > MAX_REQUEST) throw new Error("That message is too long. Shorten it and send again.");
+    if (!message) throw new Error(say("Type what you want to change first."));
+    if (message.length > MAX_REQUEST) {
+      throw new Error(say("That message is too long. Shorten it and send again."));
+    }
 
     const chat = readChat(dir);
     const { engine } = chat;
-    if (!teamOf(readState()).includes(engine)) throw new Error("Choose one of your assistants first.");
+    if (!teamOf(readState()).includes(engine)) throw new Error(say("Choose one of your assistants first."));
     // Every request in a resumed conversation sends all of it again, so a long one spends the person's allowance
     // on old words. After a few requests the assistant starts afresh, with a recap from the shared record (M15-04).
     const sofar = chat.turns?.[engine] ?? 0;

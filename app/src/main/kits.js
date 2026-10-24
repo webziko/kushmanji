@@ -4,6 +4,7 @@
 // keeps a copy in the app's settings folder under a name, and "Use" copies it into another video.
 import fs from "node:fs";
 import path from "node:path";
+import { say } from "./say.js";
 
 export const STYLE_FILE = "STYLE.md";
 const MAX_BYTES = 64_000;
@@ -15,7 +16,7 @@ export function kitFileName(name) {
   // Cut by letters, not UTF-16 units, so a letter outside the basic plane is never split in half.
   const kept = String(name ?? "").normalize("NFC").replace(/[^\p{L}\p{M}\p{N} _-]+/gu, "").replace(/\s+/g, " ");
   const clean = Array.from(kept).slice(0, 60).join("").trim();
-  if (!clean) throw new Error("Give the look a name, for example the name of your channel.");
+  if (!clean) throw new Error(say("Give the look a name, for example the name of your channel."));
   // Windows keeps a few names for devices; a file cannot have one.
   return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(clean) ? `${clean} look.md` : `${clean}.md`;
 }
@@ -45,14 +46,18 @@ export function hasStyle(dir) {
 
 function readStyle(file) {
   const stat = fs.statSync(file);
-  if (!stat.isFile() || stat.size > MAX_BYTES) throw new Error("That look is too large to be a description of a look.");
+  if (!stat.isFile() || stat.size > MAX_BYTES) {
+    throw new Error(say("That look is too large to be a description of a look."));
+  }
   return fs.readFileSync(file, "utf8");
 }
 
 /** Keep this video's STYLE.md under `name`. A look of the same name is replaced: that is how a look is updated. */
 export function saveKit(folder, dir, name) {
   const source = path.join(dir, STYLE_FILE);
-  if (!hasStyle(dir)) throw new Error("This video has no look written down yet. Ask the assistant to write one first.");
+  if (!hasStyle(dir)) {
+    throw new Error(say("This video has no look written down yet. Ask the assistant to write one first."));
+  }
   const text = readStyle(source);
   fs.mkdirSync(folder, { recursive: true });
   const target = path.join(folder, kitFileName(name));
@@ -82,7 +87,7 @@ function isSavedLook(folder, text) {
 /** Copy the saved look `name` into this video as its STYLE.md, keeping any look it had as STYLE.before.md. */
 export function useKit(folder, dir, name) {
   const source = path.join(folder, kitFileName(name));
-  if (!fs.existsSync(source)) throw new Error("That look is no longer saved.");
+  if (!fs.existsSync(source)) throw new Error(say("That look is no longer saved."));
   const text = readStyle(source);
   const target = path.join(dir, STYLE_FILE);
   // Never lose what was there: the person's or an assistant's own description of this video. A look that is only a

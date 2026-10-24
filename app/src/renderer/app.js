@@ -96,7 +96,7 @@ function projectCard(project) {
         class: "ghost small",
         title: t("Show this video's folder in File Explorer"),
         "aria-label": t("Show the folder of {name}", { name: project.name }),
-        onclick: () => api.projects.reveal(project.dir).catch((error) => showError(error.message)),
+        onclick: () => api.projects.reveal(project.dir).catch((error) => showError(tFrom(error.message))),
       },
       t("Show folder"),
     ),
@@ -165,7 +165,7 @@ async function createProject(name, request) {
     home.prompt.value = "";
     await openProject(project.dir, { request });
   } catch (error) {
-    showError(error.message);
+    showError(tFrom(error.message));
   } finally {
     // After a successful create the page is the project view and these nodes are detached; resetting is harmless.
     home.busy = false;
@@ -187,10 +187,11 @@ async function makeFromPrompt(event) {
 async function pickFolder() {
   showError("");
   try {
-    const project = await api.projects.pickFolder();
+    // The native window's title comes from here: the main process does not know the language (M14-16).
+    const project = await api.projects.pickFolder(t("Open the folder of a video"));
     if (project) await openProject(project.dir);
   } catch (error) {
-    showError(error.message);
+    showError(tFrom(error.message));
   }
 }
 
@@ -200,7 +201,7 @@ async function startFromFootage() {
   home.footage.disabled = true;
   showError("");
   try {
-    const project = await api.projects.fromFootage();
+    const project = await api.projects.fromFootage(t("Choose a folder of video clips"));
     if (!project) return;
     await openProject(project.dir);
     if (open?.dir !== project.dir) return;
@@ -211,7 +212,7 @@ async function startFromFootage() {
       "Tell me what you suggest before you change anything.",
     );
   } catch (error) {
-    showError(error.message);
+    showError(tFrom(error.message));
   } finally {
     home.busy = false;
     home.footage.disabled = false;
@@ -432,7 +433,7 @@ function showHome() {
       const idle = main.isConnected && document.activeElement === document.body;
       if (idle && !projects?.length) home.prompt.focus();
     })
-    .catch((error) => showError(error.message))
+    .catch((error) => showError(tFrom(error.message)))
     .finally(() => main.removeAttribute("data-loading"));
   // Never leave the page invisible, whatever happens to the list.
   setTimeout(() => main.removeAttribute("data-loading"), 3000);
@@ -477,6 +478,15 @@ function setStudio(state, error = "") {
   document.body.dataset.studio = state;
   if (error) document.body.dataset.error = error;
   else delete document.body.dataset.error;
+}
+
+/**
+ * Why the editor did not start (main/preview.js): a sentence on the first line, and under it, when the editor's
+ * server printed any, its own last lines. Only the sentence is the app's to translate; the rest stays as it came.
+ */
+function startFailure(message) {
+  const [sentence, ...printed] = String(message ?? "").split("\n");
+  return [tFrom(sentence), ...printed].join("\n");
 }
 
 async function openProject(dir, { request } = {}) {
@@ -605,14 +615,14 @@ async function openProject(dir, { request } = {}) {
     onclick: async () => {
       addMedia.disabled = true;
       try {
-        const imported = await api.projects.addMedia(dir);
+        const imported = await api.projects.addMedia(dir, t("Add clips (your own files are not changed)"));
         if (imported && open === project) {
           mediaStatus.textContent = imported.count === 1
             ? t("1 file added") : t("{count} files added", { count: imported.count });
           project.chat.draft("Look at the clips I just added (they are in the assets folder). Check the sound " +
             "and whether any picture is sideways before you change anything.");
         }
-      } catch (error) { mediaStatus.textContent = error.message; }
+      } catch (error) { mediaStatus.textContent = tFrom(error.message); }
       finally { addMedia.disabled = false; }
     },
   }, t("Add clips"));
@@ -654,7 +664,7 @@ async function openProject(dir, { request } = {}) {
     project.started = started;
     player.open(started);
   } catch (error) {
-    if (open === project) project.fail("failed", error.message);
+    if (open === project) project.fail("failed", startFailure(error.message));
   }
 }
 

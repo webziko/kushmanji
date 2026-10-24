@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { say } from "./say.js";
 
 const within = (root, file) => {
   const relative = path.relative(root, file);
@@ -14,15 +15,15 @@ export function readClipStudy(dir, file) {
     const target = path.resolve(root, relative);
     if (!within(study, target) || !within(study, fs.realpathSync.native(target)) ||
       fs.statSync(target).size > limit) {
-      throw new Error("The app cannot show what it saw in this clip.");
+      throw new Error(say("The app cannot show what it saw in this clip."));
     }
     return fs.readFileSync(target);
   };
   const index = JSON.parse(read(path.join(".hyperframes", "study", "index.json"), 2_000_000));
   const clip = index.clips?.find((item) => item.file === file);
-  if (!clip) throw new Error("The app has not finished watching this clip yet. Try again in a moment.");
+  if (!clip) throw new Error(say("The app has not finished watching this clip yet. Try again in a moment."));
   const images = (clip.sheets ?? []).slice(0, 4).map(({ file: picture }) => {
-    if (!/\.(jpe?g|png)$/i.test(picture)) throw new Error("One of this clip's pictures cannot be shown.");
+    if (!/\.(jpe?g|png)$/i.test(picture)) throw new Error(say("One of this clip's pictures cannot be shown."));
     return `data:image/${/\.png$/i.test(picture) ? "png" : "jpeg"};base64,${read(picture, 6_000_000).toString("base64")}`;
   });
   return {

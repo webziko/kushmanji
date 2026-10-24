@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { runCli } from "./cli.js";
 import { folderNameFor } from "./folderName.js";
+import { say } from "./say.js";
 import { projectsRoot, readState, updateState } from "./state.js";
 
 const MAX_RECENT = 30;
@@ -23,8 +24,9 @@ export const MAX_FOLDER_CHARS = 200;
 
 export const tooDeep = (dir) => path.resolve(dir).length > MAX_FOLDER_CHARS;
 
-export const TOO_DEEP = "This video's folder is too deep inside other folders: Windows' video tools cannot work with " +
-  "such long paths. Move the folder nearer the top of a drive, for example to C:\\Videos, and open it again.";
+export const TOO_DEEP = say("This video's folder is too deep inside other folders: Windows' video tools " +
+  "cannot work with such long paths. Move the folder nearer the top of a drive, for example to C:\\Videos, " +
+  "and open it again.");
 
 /** Projects under the app's own folder are its own; any other folder was opened from elsewhere. */
 const isExternal = (dir) => !pathKey(dir).startsWith(pathKey(projectsRoot()) + path.sep);
@@ -81,8 +83,9 @@ export async function createProject(name) {
     const detail = (result.stderr || result.stdout).trim().split(/\r?\n/).slice(-6).join("\n");
     throw new Error(
       result.timedOut
-        ? "Making the video took too long."
-        : `Could not make the video.\n${detail}`,
+        ? say("Making the video took too long.")
+        // The tool's own last lines (English) follow the sentence, for whoever is asked to look at the problem.
+        : detail ? say("Could not make the video.\n{detail}", { detail }) : say("Could not make the video."),
     );
   }
   return describe(dir, false);

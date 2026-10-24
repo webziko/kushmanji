@@ -23,7 +23,7 @@ export function createShortsCard(dir) {
     try {
       show(await api.shorts.make(dir), null);
     } catch (error) {
-      element.replaceChildren(h("p", { class: "shorts-problem" }, error.message));
+      element.replaceChildren(h("p", { class: "shorts-problem" }, tFrom(error.message)));
     }
   }
 
@@ -47,7 +47,7 @@ export function createShortsCard(dir) {
         status.error != null ? tFrom(status.error) : t("Making the shorts stopped.")));
     } else if (plan?.error) {
       lines.push(h("p", { class: "shorts-problem" }, [
-        t("The plan for shorts cannot be used yet: {problem}", { problem: plan.error }),
+        t("The plan for shorts cannot be used yet: {problem}", { problem: tFrom(plan.error) }),
         t("Ask the assistant to fix SHORTS.md."),
       ].join(" ")));
     } else if (plan?.made) {

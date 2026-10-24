@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { isMedia, MEDIA_EXTENSIONS } from "./mediaImport.js";
+import { say } from "./say.js";
 import { kindOf, mayHoldFootage } from "./studyPlan.js";
 
 // What the chat's "@" list and its drop target need from a video's folder (M3-03). The page asks for names,
@@ -95,25 +96,28 @@ const EXTENSIONS = new Set(MEDIA_EXTENSIONS.map((extension) => `.${extension}`))
  */
 export async function validateDropped(paths) {
   if (!Array.isArray(paths) || paths.length === 0 || paths.length > MAX_DROPPED) {
-    throw new Error(`Drop between one and ${MAX_DROPPED} files at a time.`);
+    throw new Error(say("Drop between one and {max} files at a time.", { max: MAX_DROPPED }));
   }
   const chosen = [];
   for (const file of paths) {
     if (typeof file !== "string" || !path.isAbsolute(file)) {
-      throw new Error("One of the dropped files could not be found on this computer, so nothing was added.");
+      throw new Error(
+        say("One of the dropped files could not be found on this computer, so nothing was added."));
     }
     const name = path.basename(file);
     if (!EXTENSIONS.has(path.extname(file).toLowerCase())) {
-      throw new Error(`${name} is not a video, sound or picture file, so nothing was added.`);
+      throw new Error(say("{name} is not a video, sound or picture file, so nothing was added.", { name }));
     }
     let info;
     try {
       info = await fs.lstat(file);
     } catch {
-      throw new Error(`${name} is missing or cannot be read, so nothing was added.`);
+      throw new Error(say("{name} is missing or cannot be read, so nothing was added.", { name }));
     }
     // A shortcut is not the file it points to: importing it would copy the shortcut, or follow it elsewhere.
-    if (!info.isFile()) throw new Error(`${name} is a folder or a shortcut, so nothing was added.`);
+    if (!info.isFile()) {
+      throw new Error(say("{name} is a folder or a shortcut, so nothing was added.", { name }));
+    }
     chosen.push(path.resolve(file));
   }
   return [...new Set(chosen)];

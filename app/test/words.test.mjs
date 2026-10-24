@@ -94,6 +94,55 @@ test("each say() in the main process gives the English sentence itself", () => {
   assert.deepEqual(bad, [], "say() must be given the English sentence as a string, not a variable or a template");
 });
 
+// An error the main process throws inside a page call reaches the screen: the preload throws it again with the
+// same message, and the page shows it through tFrom() (M14-16). So a message written in English is marked with
+// say(). These are left unmarked on purpose: a value the page's own menus never send, or a message only a log
+// or a programmer reads. The self-test (smoke.js, playbackProbe.js) and the assistants' tools are not the
+// person's.
+const LEFT_IN_ENGLISH = new Set([
+  "That choice is not known to this app.",
+  "That assistant is not known to this app.",
+  "That choice is not offered by this assistant.",
+  "That kind of request is not known to this app.",
+  "That language is not known to this app.",
+  "That playback control is not available.",
+  "Use a number for the playback position or sound level.",
+  "Choose whether to include the current video moment.",
+  "Undo is not available in this version of the app.",
+  // Guards on a folder the main process has already checked; the chat's "@" list also swallows them.
+  "Open a video first.",
+  "This video's folder could not be read.",
+  // Caught in the same file and turned into a sentence for the person there.
+  "no space",
+]);
+
+/** What a file gives `new Error(...)` as plain text, not through say(): `{ text, line }` (text null: a template). */
+function unmarkedErrors(source) {
+  const code = withoutComments(source);
+  const found = [];
+  for (const match of code.matchAll(/new Error\(/g)) {
+    let at = match.index + match[0].length;
+    while (/\s/.test(code[at] ?? "")) at++;
+    // A name or an expression holds a message made elsewhere (and marked there).
+    if (code.startsWith("say(", at) || !/["'`]/.test(code[at] ?? "")) continue;
+    const line = code.slice(0, match.index).split("\n").length;
+    found.push({ text: literalAt(code, at)?.text ?? null, line });
+  }
+  return found;
+}
+
+test("a message the main process throws goes through say(), or is one left in English on purpose", () => {
+  const theirs = (name) => !name.split(/[\\/]/).includes("tools") && path.basename(name) !== "playbackProbe.js";
+  const thrown = mainFiles.filter(theirs).flatMap((name) =>
+    unmarkedErrors(fs.readFileSync(path.join(MAIN, name), "utf8")).map((error) => ({ ...error, name })));
+  const unmarked = thrown.filter(({ text }) => !LEFT_IN_ENGLISH.has(text))
+    .map(({ name, line, text }) => `${name}:${line} ${text ?? "(text with a value in it)"}`);
+  assert.deepEqual(unmarked, [],
+    "write throw new Error(say(\"...\", { name })) and add its line to words/kn.js and hi.js");
+  const gone = [...LEFT_IN_ENGLISH].filter((text) => !thrown.some((error) => error.text === text));
+  assert.deepEqual(gone, [], "these are no longer thrown: take them off LEFT_IN_ENGLISH");
+});
+
 for (const [id, list] of Object.entries(lists)) {
   test(`every phrase in the page is a line of ${id}.js`, () => {
     const missing = [...used].filter((text) => !Object.hasOwn(list, text));

@@ -9,6 +9,7 @@ import { checkTurn } from "./agents/turnCheck.js";
 import { turnHistory } from "./agents/turnHistory.js";
 import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
+import { dialogTitle } from "./dialogTitle.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
@@ -269,7 +270,8 @@ function handle(channel, fn) {
 
 function requireProject(dir) {
   if (!isProject(dir)) {
-    throw new Error("That folder is not a video this app can open. Choose a folder where a video was made.");
+    throw new Error(
+      say("That folder is not a video this app can open. Choose a folder where a video was made."));
   }
   if (tooDeep(dir)) throw new Error(TOO_DEEP);
   return dir;
@@ -297,24 +299,32 @@ function registerIpc() {
     return box ? saveCover(dir, await win.webContents.capturePage(box)) : false;
   });
   handle("projects:create", (name) => createProject(name));
-  handle("projects:fromFootage", async () => {
+  // The three folder windows (this, "Add clips" and "Open a folder") take their title from the page, which knows
+  // the language; dialogTitle() keeps it to plain text and falls back to the English title (M14-16).
+  handle("projects:fromFootage", async (title) => {
     if (agent.busy) {
-      throw new Error("The assistant is still working. Wait for it to finish before starting another video.");
+      throw new Error(
+        say("The assistant is still working. Wait for it to finish before starting another video."));
     }
-    const options = { title: "Choose a folder of video clips", properties: ["openDirectory"] };
+    const options = {
+      title: dialogTitle(title, "Choose a folder of video clips"),
+      properties: ["openDirectory"],
+    };
     const picked = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
     if (picked.canceled || !picked.filePaths[0]) return null;
     const folder = picked.filePaths[0];
     const files = await mediaFilesIn(folder);
-    if (!files.length) throw new Error("That folder has no video, sound or picture files.");
+    if (!files.length) throw new Error(say("That folder has no video, sound or picture files."));
     const project = await createProject(path.basename(folder));
     return { ...project, imported: await importMedia(project.dir, files) };
   });
-  handle("projects:addMedia", async (dir) => {
+  handle("projects:addMedia", async (dir, title) => {
     requireProject(dir);
-    if (agent.busy) throw new Error("The assistant is still working. Wait for it to finish before adding clips.");
+    if (agent.busy) {
+      throw new Error(say("The assistant is still working. Wait for it to finish before adding clips."));
+    }
     const options = {
-      title: "Add clips (your own files are not changed)",
+      title: dialogTitle(title, "Add clips (your own files are not changed)"),
       properties: ["openFile", "multiSelections"],
       filters: [{ name: "Video, sound and pictures", extensions: MEDIA_EXTENSIONS }],
     };
@@ -328,15 +338,17 @@ function registerIpc() {
   // again here and copied by the same safe import as the picker above. Never while an assistant works.
   handle("projects:addDropped", async ({ dir, paths } = {}) => {
     requireProject(dir);
-    if (agent.busy) throw new Error("The assistant is still working. Wait for it to finish before adding clips.");
+    if (agent.busy) {
+      throw new Error(say("The assistant is still working. Wait for it to finish before adding clips."));
+    }
     const imported = await importMedia(dir, await validateDropped(paths));
     void study.run(dir);
     return imported;
   });
   // The clips, sounds, pictures and scenes of the open video, for the "@" list in the message box.
   handle("mentions:list", (dir) => listMentionable(requireProject(dir)));
-  handle("projects:pickFolder", async () => {
-    const options = { title: "Open the folder of a video", properties: ["openDirectory"] };
+  handle("projects:pickFolder", async (title) => {
+    const options = { title: dialogTitle(title, "Open the folder of a video"), properties: ["openDirectory"] };
     const picked = win
       ? await dialog.showOpenDialog(win, options)
       : await dialog.showOpenDialog(options);
@@ -382,7 +394,9 @@ function registerIpc() {
   // One video at a time, and never while an assistant is changing one: the file would hold half an edit.
   handle("save:start", (dir) => {
     dir = requireProject(dir);
-    if (agent.busy) throw new Error("The assistant is still working. Save the video when it has finished.");
+    if (agent.busy) {
+      throw new Error(say("The assistant is still working. Save the video when it has finished."));
+    }
     return exporter.start(dir);
   });
   handle("save:stop", () => exporter.stop());
@@ -403,7 +417,7 @@ function registerIpc() {
       return true;
     }
     // Nothing written yet (or the folder cannot be written to): show the folder if there is one.
-    if (!log || (await shell.openPath(log.folder))) throw new Error("There is no problem report yet.");
+    if (!log || (await shell.openPath(log.folder))) throw new Error(say("There is no problem report yet."));
     return false;
   });
   // Saved looks (M10-04): kept in the app's settings folder, copied into a video as its STYLE.md.
@@ -412,7 +426,9 @@ function registerIpc() {
   handle("looks:save", ({ dir, name } = {}) => saveKit(looks(), requireProject(dir), String(name ?? "")));
   handle("looks:use", ({ dir, name } = {}) => {
     dir = requireProject(dir);
-    if (agent.busy) throw new Error("The assistant is still working. Change the look when it has finished.");
+    if (agent.busy) {
+      throw new Error(say("The assistant is still working. Change the look when it has finished."));
+    }
     return useKit(looks(), dir, String(name ?? ""));
   });
   handle("health:check", (options) => checkHealth({ again: options?.again === true }));
@@ -429,11 +445,11 @@ function registerIpc() {
     requireProject(dir);
     const current = preview.current;
     if (!win || !current || path.resolve(current.dir).toLowerCase() !== path.resolve(dir).toLowerCase())
-      throw new Error("Open this video before using its playback controls.");
+      throw new Error(say("Open this video before using its playback controls."));
     const frame = rootPlayerFrame(win.webContents.mainFrame, current);
     if (!frame) {
       if (action === "state") return { ready: false };
-      throw new Error("The video is still loading. Try again in a moment.");
+      throw new Error(say("The video is still loading. Try again in a moment."));
     }
     return runPlayerCommand(frame, { action, value });
   });
@@ -456,9 +472,9 @@ function registerIpc() {
   handle("shorts:status", (dir) => shortsMaker.status(requireProject(dir)));
   handle("shorts:make", (dir) => {
     const source = requireProject(dir);
-    if (shortsMaker.busy) throw new Error("Shorts are already being made. Wait until they are done.");
+    if (shortsMaker.busy) throw new Error(say("Shorts are already being made. Wait until they are done."));
     const plan = readShortsPlan(source);
-    if (!plan) throw new Error("There is no plan for shorts yet. Press Make shorts first.");
+    if (!plan) throw new Error(say("There is no plan for shorts yet. Press Make shorts first."));
     const made = makeShorts(source, plan);
     recordMade(source, made);
     // On Home after their source, which stays first: the person is still working on it.
@@ -495,14 +511,16 @@ function registerIpc() {
   // `moment` likewise requests a fresh root-player snapshot, not a time or note supplied by the page.
   handle("agent:send", async ({ dir, text, pointing, moment = false, purpose = null } = {}) => {
     dir = requireProject(dir);
-    if (samePath(exporter.dir, dir))
-      throw new Error("This video is being saved. Wait until it is saved, or stop saving, then send your message.");
+    if (samePath(exporter.dir, dir)) {
+      throw new Error(
+        say("This video is being saved. Wait until it is saved, or stop saving, then send your message."));
+    }
     if (typeof moment !== "boolean") throw new Error("Choose whether to include the current video moment.");
     let captured = null;
     if (moment) {
       const current = preview.current;
       if (!win || !current || path.resolve(current.dir).toLowerCase() !== path.resolve(dir).toLowerCase())
-        throw new Error("Open this video before sending its current moment.");
+        throw new Error(say("Open this video before sending its current moment."));
       captured = await readPlaybackMoment(rootPlayerFrame(win.webContents.mainFrame, current));
     }
     const { selection } = !moment && pointing ? await selected(dir) : { selection: null };
@@ -528,7 +546,7 @@ function registerIpc() {
   handle("agent:stop", () => agent.stop());
   handle("agent:reset", (dir) => agent.reset(requireProject(dir)));
   handle("agent:undo", ({ dir, index, id } = {}) => {
-    if (!Number.isInteger(index) || index < 0) throw new Error("That change cannot be undone.");
+    if (!Number.isInteger(index) || index < 0) throw new Error(say("That change cannot be undone."));
     return agent.undo(requireProject(dir), index, typeof id === "string" ? id : null);
   });
 }

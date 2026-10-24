@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { folderNameFor } from "./folderName.js";
 import { readJson, writeJson } from "./jsonFile.js";
+import { say } from "./say.js";
 import { STUDY_FOLDER } from "./studyPlan.js";
 
 export const SHORTS_FILE = "SHORTS.md";
@@ -75,7 +76,7 @@ function planFrom(text) {
     body: found[2],
   }));
   const wrong = () =>
-    new Error("The shorts plan could not be read: the block in SHORTS.md is not written correctly.");
+    new Error(say("The shorts plan could not be read: the block in SHORTS.md is not written correctly."));
   const tagged = blocks.find((block) => block.kind === "json");
   if (tagged) {
     const value = parseBlock(tagged.body);
@@ -89,24 +90,35 @@ function planFrom(text) {
     if (value !== undefined) return value;
   }
   if (bare.length > 0) throw wrong();
-  throw new Error("SHORTS.md has no plan in it: it must hold one fenced block with the list of shorts.");
+  // The person reads this, so the markdown word "fenced block" is just "block"; the assistant knows the format.
+  throw new Error(say("SHORTS.md has no plan in it: it must hold one block with the list of shorts."));
 }
 
-function parsePiece(raw, where) {
+/** Piece number `piece` of short number `short` (both counting from 1); every refusal names where it is. */
+function parsePiece(raw, short, piece) {
+  const where = { number: short, piece };
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error(`${where}: this piece is not written correctly.`);
+    throw new Error(say("Short {number}, piece {piece}: this piece is not written correctly.", where));
   }
   const parts = clipParts(raw.clip);
-  if (!parts) throw new Error(`${where}: that clip is not a video inside this project.`);
+  if (!parts) {
+    throw new Error(say("Short {number}, piece {piece}: that clip is not a video inside this project.", where));
+  }
   const { from, to } = raw;
   if (typeof from !== "number" || typeof to !== "number" || !Number.isFinite(from) || !Number.isFinite(to)) {
-    throw new Error(`${where}: the start and the end must be numbers of seconds.`);
+    throw new Error(
+      say("Short {number}, piece {piece}: the start and the end must be numbers of seconds.", where));
   }
-  if (from < 0) throw new Error(`${where}: the start cannot be before the beginning of the clip.`);
-  if (from >= to) throw new Error(`${where}: the end must come after the start.`);
+  if (from < 0) {
+    throw new Error(
+      say("Short {number}, piece {piece}: the start cannot be before the beginning of the clip.", where));
+  }
+  if (from >= to) {
+    throw new Error(say("Short {number}, piece {piece}: the end must come after the start.", where));
+  }
   // Compared in whole hundredths, so that 8.0 to 8.5 is exactly half a second and not 0.4999999.
   if (hundredths(to) - hundredths(from) < hundredths(MIN_PIECE)) {
-    throw new Error(`${where}: a piece must be at least half a second long.`);
+    throw new Error(say("Short {number}, piece {piece}: a piece must be at least half a second long.", where));
   }
   // Cut, not refused: an overlong line is not worth losing a good plan for. One line, so SHORT.md stays tidy.
   const words = Array.from(tidy(typeof raw.words === "string" ? raw.words : "")).slice(0, MAX_WORDS).join("").trim();
@@ -121,29 +133,37 @@ function parsePiece(raw, where) {
 export function parseShortsPlan(text) {
   const plan = planFrom(text);
   if (!plan || typeof plan !== "object" || !Array.isArray(plan.shorts)) {
-    throw new Error("The shorts plan has no list of shorts.");
+    throw new Error(say("The shorts plan has no list of shorts."));
   }
-  if (plan.shorts.length === 0) throw new Error("The shorts plan has no shorts in it.");
+  if (plan.shorts.length === 0) throw new Error(say("The shorts plan has no shorts in it."));
   if (plan.shorts.length > MAX_SHORTS) {
-    throw new Error(`The shorts plan has ${plan.shorts.length} shorts; make 1 to ${MAX_SHORTS}.`);
+    throw new Error(say("The shorts plan has {count} shorts; make 1 to {max}.",
+      { count: plan.shorts.length, max: MAX_SHORTS }));
   }
   const shorts = plan.shorts.map((raw, i) => {
     const n = i + 1;
     // Letters are counted, not UTF-16 units: a Kannada or Hindi title is not "longer" for its marks.
     const title = tidy(raw?.title);
-    if (typeof raw?.title !== "string" || !title) throw new Error(`Short ${n} has no title.`);
-    if (count(title) > MAX_TITLE) throw new Error(`Short ${n} has a title longer than ${MAX_TITLE} characters.`);
-    if (!Array.isArray(raw.pieces) || raw.pieces.length === 0) throw new Error(`Short ${n} has no pieces.`);
-    if (raw.pieces.length > MAX_PIECES) {
-      throw new Error(`Short ${n} has ${raw.pieces.length} pieces; a short may have 1 to ${MAX_PIECES}.`);
+    if (typeof raw?.title !== "string" || !title) {
+      throw new Error(say("Short {number} has no title.", { number: n }));
     }
-    const pieces = raw.pieces.map((piece, j) => parsePiece(piece, `Short ${n}, piece ${j + 1}`));
+    if (count(title) > MAX_TITLE) {
+      throw new Error(
+        say("Short {number} has a title longer than {max} characters.", { number: n, max: MAX_TITLE }));
+    }
+    if (!Array.isArray(raw.pieces) || raw.pieces.length === 0) {
+      throw new Error(say("Short {number} has no pieces.", { number: n }));
+    }
+    if (raw.pieces.length > MAX_PIECES) {
+      throw new Error(say("Short {number} has {count} pieces; a short may have 1 to {max}.",
+        { number: n, count: raw.pieces.length, max: MAX_PIECES }));
+    }
+    const pieces = raw.pieces.map((piece, j) => parsePiece(piece, n, j + 1));
     const total = pieces.reduce((sum, piece) => sum + hundredths(piece.to) - hundredths(piece.from), 0);
     const seconds = Math.round(total / 10) / 10;
     if (seconds < MIN_SECONDS || seconds > MAX_SECONDS) {
-      throw new Error(
-        `Short ${n} would be ${seconds} seconds long; a short is ${MIN_SECONDS} to ${MAX_SECONDS} seconds.`,
-      );
+      throw new Error(say("Short {number} would be {seconds} seconds long; a short is {min} to {max} seconds.",
+        { number: n, seconds, min: MIN_SECONDS, max: MAX_SECONDS }));
     }
     return { title, pieces, seconds };
   });
@@ -180,23 +200,23 @@ export function readShortsPlan(dir) {
     stat = fs.statSync(file);
   } catch (error) {
     if (error?.code === "ENOENT" || error?.code === "ENOTDIR") return null;
-    throw new Error("SHORTS.md could not be opened.");
+    throw new Error(say("SHORTS.md could not be opened."));
   }
   if (!stat.isFile()) return null;
-  if (stat.size > MAX_BYTES) throw new Error("SHORTS.md is too large to be a list of shorts.");
+  if (stat.size > MAX_BYTES) throw new Error(say("SHORTS.md is too large to be a list of shorts."));
   let text;
   try {
     text = fs.readFileSync(file, "utf8");
   } catch {
-    throw new Error("SHORTS.md could not be read.");
+    throw new Error(say("SHORTS.md could not be read."));
   }
   const plan = parseShortsPlan(text);
   plan.shorts.forEach((short, i) => {
     short.pieces.forEach((piece, j) => {
       if (!plainFile(dir, piece.clip.split("/"))) {
         throw new Error(
-          `Short ${i + 1}, piece ${j + 1}: the clip "${piece.clip}" was not found in this video's folder.`,
-        );
+          say("Short {number}, piece {piece}: the clip \"{clip}\" was not found in this video's folder.",
+            { number: i + 1, piece: j + 1, clip: piece.clip }));
       }
     });
   });
@@ -381,7 +401,7 @@ function makeFolder(parentDir, name) {
       if (error?.code !== "EEXIST") throw error;
     }
   }
-  throw new Error("There are already too many folders with this short's name beside the video.");
+  throw new Error(say("There are already too many folders with this short's name beside the video."));
 }
 
 /**
@@ -392,7 +412,7 @@ function makeFolder(parentDir, name) {
  */
 export function makeShortProject(sourceDir, short, index, { parentDir = path.dirname(sourceDir) } = {}) {
   if (!fs.existsSync(sourceDir) || !fs.statSync(sourceDir).isDirectory()) {
-    throw new Error("The video's folder could not be found.");
+    throw new Error(say("The video's folder could not be found."));
   }
   const target = makeFolder(parentDir, shortFolderName(sourceDir, index, short.title));
   try {
@@ -433,12 +453,13 @@ export function makeShortProject(sourceDir, short, index, { parentDir = path.dir
   } catch (error) {
     // Half a project is worse than none: the person would open it and find it empty. Only the new folder goes.
     fs.rmSync(target, { recursive: true, force: true });
-    throw new Error(`The folder for short ${index} could not be made. Is there room on the disk?`, { cause: error });
+    throw new Error(say("The folder for short {number} could not be made. Is there room on the disk?",
+      { number: index }), { cause: error });
   }
 }
 
 /** Make every short of the plan, in order, and return their folders. */
 export function makeShorts(sourceDir, plan, options) {
-  if (!Array.isArray(plan?.shorts)) throw new Error("The shorts plan has no list of shorts.");
+  if (!Array.isArray(plan?.shorts)) throw new Error(say("The shorts plan has no list of shorts."));
   return plan.shorts.map((short, i) => makeShortProject(sourceDir, short, i + 1, options));
 }

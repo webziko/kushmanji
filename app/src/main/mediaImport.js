@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import { constants } from "node:fs";
 import path from "node:path";
+import { say } from "./say.js";
 import { kindOf, mayHoldFootage } from "./studyPlan.js";
 
 const PICTURES = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"]);
@@ -21,12 +22,14 @@ export async function mediaFilesIn(folder) {
   async function walk(dir) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
       if (++walked > 20_000) {
-        throw new Error("That folder has too many files. Choose a smaller folder of clips.");
+        throw new Error(say("That folder has too many files. Choose a smaller folder of clips."));
       }
       const file = path.join(dir, entry.name);
       if (entry.isDirectory() && mayHoldFootage(entry.name)) await walk(file);
       else if (entry.isFile() && !entry.name.startsWith(".") && isMedia(entry.name)) {
-        if (files.length >= 200) throw new Error("That folder has too many files. Choose a smaller folder of clips.");
+        if (files.length >= 200) {
+          throw new Error(say("That folder has too many files. Choose a smaller folder of clips."));
+        }
         files.push(file);
       }
     }
@@ -38,7 +41,7 @@ export async function mediaFilesIn(folder) {
 /** Copy, never move. Exclusive creation protects existing assets even when names collide. */
 export async function importMedia(dir, files) {
   if (!Array.isArray(files) || files.length === 0 || files.length > 200) {
-    throw new Error("Choose between one and 200 video, sound or picture files.");
+    throw new Error(say("Choose between one and 200 video, sound or picture files."));
   }
   if (!path.isAbsolute(dir) || !(await fs.stat(path.join(dir, "index.html"))).isFile()) {
     throw new Error("Open a video first.");
@@ -46,15 +49,17 @@ export async function importMedia(dir, files) {
   const selected = [...new Set(files)];
   for (const file of selected) {
     if (typeof file !== "string" || !path.isAbsolute(file) || !isMedia(file)) {
-      throw new Error("Choose video, sound or picture files. Other kinds of file cannot be added.");
+      throw new Error(say("Choose video, sound or picture files. Other kinds of file cannot be added."));
     }
-    if (!(await fs.lstat(file)).isFile()) throw new Error("One of the chosen files is missing, or is a shortcut.");
+    if (!(await fs.lstat(file)).isFile()) {
+      throw new Error(say("One of the chosen files is missing, or is a shortcut."));
+    }
   }
   const root = await fs.realpath(dir);
   const assets = path.join(dir, "assets");
   await fs.mkdir(assets, { recursive: true });
   if (!inside(root, await fs.realpath(assets))) {
-    throw new Error("The assets folder of this video leads outside this video, so nothing was added.");
+    throw new Error(say("The assets folder of this video leads outside this video, so nothing was added."));
   }
   const copied = [];
   for (const file of selected) {
@@ -69,7 +74,8 @@ export async function importMedia(dir, files) {
       } catch (error) {
         if (error.code === "EEXIST") continue;
         throw new Error(
-          `Could not copy ${parsed.base}. Your own files are not changed. ${copied.length} were added before it.`,
+          say("Could not copy {name}. Your own files are not changed. {count} were added before it.",
+            { name: parsed.base, count: copied.length }),
         );
       }
     }

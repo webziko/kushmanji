@@ -38,7 +38,8 @@ export function freeFile(folder, name, exists = fs.existsSync) {
     const file = path.join(folder, `${name}${n === 1 ? "" : ` (${n})`}.mp4`);
     if (!exists(file)) return file;
   }
-  throw new Error("Too many saved videos have the same name. Move some out of the Downloads folder first.");
+  throw new Error(
+    say("Too many saved videos have the same name. Move some out of the Downloads folder first."));
 }
 
 /** How far along one line of the command's output says the work is, 0 to 100, or null if it does not say. */
@@ -94,8 +95,8 @@ export class ExportManager {
     if (this.#job) {
       throw new Error(
         this.#job.dir === dir
-          ? "This video is already being saved."
-          : "Another video is being saved. Wait for it to finish, or stop it first.",
+          ? say("This video is already being saved.")
+          : say("Another video is being saved. Wait for it to finish, or stop it first."),
       );
     }
     const folder = this.#folder();

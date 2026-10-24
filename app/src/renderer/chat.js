@@ -306,7 +306,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       try {
         show(await api.agent.undo({ dir, index, id: undo.id }));
       } catch (error) {
-        note.textContent = error.message;
+        note.textContent = tFrom(error.message);
       } finally {
         button.disabled = false;
       }
@@ -417,7 +417,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         { name });
       lookDraft("Make this video match the look in STYLE.md: colours, fonts, titles, captions and the ending card.");
     } catch (error) {
-      lookNote.textContent = error.message;
+      lookNote.textContent = tFrom(error.message);
     }
   });
   lookSave.addEventListener("click", async () => {
@@ -445,7 +445,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       lookNote.textContent = t("Saved as “{name}”. Any of your videos can use it now.", { name: saved.name });
       await renderLooks();
     } catch (error) {
-      lookNote.textContent = error.message;
+      lookNote.textContent = tFrom(error.message);
     }
   });
   lookName.addEventListener("keydown", (event) => {
@@ -533,7 +533,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       versionText.textContent = tFrom(got.said);
       testButton.hidden = got.ok;
     } catch (error) {
-      versionText.textContent = error.message;
+      versionText.textContent = tFrom(error.message);
     } finally {
       testing = false;
       testButton.disabled = false;
@@ -851,7 +851,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
             await api.agent.setTeam(ticked.map((item) => item.id));
             for (const item of agents) item.inTeam = ticked.includes(item);
           } catch (error) {
-            teamNote.textContent = error.message;
+            teamNote.textContent = tFrom(error.message);
           }
           render();
         });
@@ -1188,7 +1188,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       say(added.count === 1 ? t("Added 1 clip to this video.")
         : t("Added {count} clips to this video.", { count: added.count }));
     } catch (error) {
-      say(error.message, true);
+      say(tFrom(error.message), true);
     }
   }
 

@@ -52,3 +52,9 @@ Write it as `t("The English text")` in the page's code, with `{name}` placeholde
 `t("...", { name })` for anything that changes. Never build a sentence from pieces, and never put a phrase
 that goes to an assistant (a request, a drafted message) through `t()`. Then add the new English line to both
 `kn.js` and `hi.js`, with an empty `""`, in the place it appears in the code. The test fails until you do.
+
+A sentence the main process writes for the person is marked `say("The English text {name}", { name })` instead
+(`src/main/say.js`), and the page shows it with `tFrom(sentence)`. That includes the message of an error thrown for
+a page call: `throw new Error(say("..."))`, shown as `tFrom(error.message)`. A message nobody reads (a value the
+page's menus never send, a log line) stays plain English; the test keeps a short list of those. Native windows
+(the folder pickers) cannot be marked: the page passes its translated title with the call.

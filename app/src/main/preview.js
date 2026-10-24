@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { spawnCli } from "./cli.js";
 import { killTree } from "./proc.js";
+import { say } from "./say.js";
 
 // One fixed port, so Studio keeps one origin and with it its saved theme, panel layout and export settings
 // (browser storage is per origin, and a new port is a new origin). The CLI moves up if this one is taken.
@@ -115,12 +116,14 @@ export class PreviewManager {
         clearTimeout(timer);
         act(value);
       };
+      // `message` is the first line, a sentence for the person (say()). The server's own last lines follow it,
+      // in English: the page translates the first line only (renderer/app.js, startFailure).
       const fail = (message) => {
         const tail = log.slice(-8).join("\n");
         settle(reject, new Error(tail ? `${message}\n${tail}` : message));
       };
       const timer = setTimeout(() => {
-        fail("The editor took too long to start. Press Try again.");
+        fail(say("The editor took too long to start. Press Try again."));
         killTree(child.pid);
       }, READY_TIMEOUT_MS);
 
@@ -146,10 +149,11 @@ export class PreviewManager {
         }
       });
       child.stderr.on("data", keep);
-      child.on("error", (error) => fail(`The editor could not start: ${error.message}`));
+      child.on("error", (error) =>
+        fail(say("The editor could not start: {message}", { message: error.message })));
       child.on("close", (code) => {
         const wasReady = settled;
-        fail(`The editor stopped before it was ready (code ${code}).`);
+        fail(say("The editor stopped before it was ready (code {code}).", { code }));
         // Still the open project's server: it died by itself, so the window has to know. A stop() clears the
         // session first and so never reports.
         if (this.#session?.child !== child) return;

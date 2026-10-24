@@ -1,5 +1,5 @@
 import { h } from "./dom.js";
-import { t } from "./words.js";
+import { t, tFrom } from "./words.js";
 
 const SEEN = "hfwin-help-seen-v1";
 // The editor's own word first (it stays English: the editor is not translated), then the plain word and a sentence.
@@ -103,7 +103,7 @@ export function createHelp() {
       "It has no messages, words or files in it.")),
     h("button", { class: "secondary help-report-show", type: "button", onclick: () => {
       reportNote.textContent = "";
-      window.hfwin.logs.show().catch((error) => { reportNote.textContent = error.message; });
+      window.hfwin.logs.show().catch((error) => { reportNote.textContent = tFrom(error.message); });
     } }, t("Show the problem report")),
     reportNote);
   function remember() {

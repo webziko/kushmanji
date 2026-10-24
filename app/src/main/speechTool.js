@@ -92,7 +92,11 @@ export async function download(url, file, { bytes, sha256, onBytes = () => {}, s
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const part = `${file}.part`;
   const response = await fetchImpl(url, { signal, redirect: "follow" });
-  if (!response.ok || !response.body) throw new Error(`The download answered ${response.status}.`);
+  // The person may read this (the speech tool's and FFmpeg's "Get it" show a failed download's own words).
+  if (!response.ok || !response.body) {
+    throw new Error(
+      say("The download did not work: the website answered {status}.", { status: response.status }));
+  }
   const hash = crypto.createHash("sha256");
   const out = fs.createWriteStream(part);
   let received = 0;
@@ -113,7 +117,7 @@ export async function download(url, file, { bytes, sha256, onBytes = () => {}, s
   const digest = hash.digest("hex");
   if (received !== bytes || digest !== sha256) {
     await fs.promises.rm(part, { force: true });
-    throw new Error("The download was not the file expected, so it was thrown away.");
+    throw new Error(say("The download was not the file expected, so it was thrown away."));
   }
   try {
     fs.renameSync(part, file);
@@ -125,7 +129,7 @@ export async function download(url, file, { bytes, sha256, onBytes = () => {}, s
 }
 
 /** Unpack a zip with the tar.exe every Windows 10 and 11 has (it reads zips), by its full path. FFmpeg uses it too. */
-export async function unzip(zip, into, { problem = "The speech tool could not be unpacked." } = {}) {
+export async function unzip(zip, into, { problem = say("The speech tool could not be unpacked.") } = {}) {
   const tar = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
   fs.mkdirSync(into, { recursive: true });
   const ran = await collect(spawn(tar, ["-xf", zip, "-C", into], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }),
@@ -254,7 +258,9 @@ export class SpeechTool {
       } finally {
         await fs.promises.rm(zip, { force: true });
       }
-      if (!findProgram(unpacking)) throw new Error("The speech tool's download did not hold the program.");
+      if (!findProgram(unpacking)) {
+        throw new Error(say("The speech tool's download did not hold the program."));
+      }
       await fs.promises.rm(this.#folder, { recursive: true, force: true });
       fs.mkdirSync(path.dirname(this.#folder), { recursive: true });
       fs.renameSync(unpacking, this.#folder);

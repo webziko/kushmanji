@@ -101,8 +101,8 @@ export class ShortsMaker {
 
   /** `shorts`: `[{ dir, title }]`, already made on disk. `engine`: the assistant the source video's chat uses. */
   start(dir, shorts, { engine }) {
-    if (this.#job) throw new Error("Shorts are already being made. Wait until they are done.");
-    if (!shorts.length) throw new Error("There are no shorts to make.");
+    if (this.#job) throw new Error(say("Shorts are already being made. Wait until they are done."));
+    if (!shorts.length) throw new Error(say("There are no shorts to make."));
     this.#job = { dir, shorts, engine, index: -1, made: [], waiting: false, error: null };
     this.#next();
     return this.status(dir);

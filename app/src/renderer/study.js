@@ -61,7 +61,7 @@ export function createStudyBar(dir, { onAsk } = {}) {
           .map((note) => h("p", { class: "study-notes" }, tFrom(note))),
       ].filter(Boolean));
     } catch (error) {
-      if (!destroyed && turn === request) content.textContent = error.message;
+      if (!destroyed && turn === request) content.textContent = tFrom(error.message);
     }
   }
   clipPick.addEventListener("change", showClip);

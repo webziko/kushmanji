@@ -1,4 +1,5 @@
 import { isCompositionPreview } from "./preview.js";
+import { say } from "./say.js";
 
 const ACTIONS = new Set(["state", "play", "pause", "seek", "skip", "volume"]);
 const NUMERIC = new Set(["seek", "skip", "volume"]);
@@ -62,7 +63,7 @@ export async function runPlayerCommand(frame, { action, value } = {}) {
 export async function readPlaybackMoment(frame) {
   const got = frame ? await runPlayerCommand(frame, { action: "state" }) : null;
   if (!got?.ready || !Number.isFinite(got.time) || !Number.isFinite(got.duration))
-    throw new Error("The video is loading. Wait for the picture, then send your message again.");
+    throw new Error(say("The video is loading. Wait for the picture, then send your message again."));
   const seconds = Math.floor(Math.max(0, Math.min(got.time, got.duration)) * 1000) / 1000;
   const whole = Math.floor(seconds);
   const when = `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;

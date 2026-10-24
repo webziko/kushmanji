@@ -1,5 +1,5 @@
 import { h } from "./dom.js";
-import { t } from "./words.js";
+import { t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 const clock = (seconds) => {
@@ -33,7 +33,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
       const got = await command(action, value);
       if (active && current === generation && got.ready) update(got);
     } catch (error) {
-      if (active && current === generation) note.textContent = error.message;
+      if (active && current === generation) note.textContent = tFrom(error.message);
     }
   };
   const toggle = () => control(state.playing ? "pause" : "play");
@@ -152,7 +152,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
         return;
       }
     } catch (error) {
-      if (active && current === generation && Date.now() >= deadline) { onError(error.message); return; }
+      if (active && current === generation && Date.now() >= deadline) { onError(tFrom(error.message)); return; }
     }
     if (active && current === generation)
       pollTimer = setTimeout(() => poll(current, deadline, restoring), 250);
