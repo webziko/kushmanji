@@ -86,6 +86,10 @@ Then the list further down, starting with one-click export.
       fills most of the width and its tagline is almost twice as big; and all five have quiet music, a soft
       chord pad Claude made on this PC from plain tones (nothing downloaded, so no licence question), fading in
       and out. **Please listen**: nobody here can hear it. If it is too quiet, too loud or not to your taste, say so.
+- [x] **FFmpeg with one press.** On a PC without FFmpeg, Home's "Before you start" now has a "Get it now (about
+      115 MB)" button instead of a line to paste into PowerShell. The app fetches FFmpeg's official Windows build,
+      checks it is exactly the expected file, and keeps it in its own folder. Your PC has FFmpeg already, so you
+      will not see it. Not yet pressed for real: that downloads 115 MB (see "Waiting on you").
 - [x] **Fixed for strangers' PCs**: a video folder buried very deep (over 200 characters of path) now gets a
       plain sentence asking to move it, instead of a long error; the app works with no Node installed; a taken
       port and a crash were tried and are fine.

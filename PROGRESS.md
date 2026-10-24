@@ -190,7 +190,11 @@ Do not build them.
 - [~] M5-02 App icon; Start Menu and Desktop shortcuts (Claude, 2026-10-14): the icon (M14-06) and both shortcuts
       are in the installer; to be seen on the owner's PC
 - [~] M5-03 Machines without FFmpeg or Chrome: fetch them on first run (Claude, 2026-10-24: FFmpeg with one press,
-      like Whisper; the browser already is)
+      like Whisper; the browser already is). Built: Home's "Before you start" shows one FFmpeg line with "Get it
+      now (about 115 MB)" instead of a winget line for PowerShell (seen in a self-test run with FFmpeg off PATH);
+      `ffmpegTool.js` fetches Gyan's pinned 9.0.2 essentials build (size and SHA-256 from GitHub's release API),
+      unpacks it into `<userData>/tools/ffmpeg` and sets HYPERFRAMES_FFMPEG_PATH and _FFPROBE_PATH; unit tests
+      run the whole path on a real zip. Left: one real press, which downloads 115 MB (waiting on the owner's yes)
 - [x] M5-04 First-run health check built on `hyperframes doctor` (Claude, 2026-10-14): Home shows "Before you
       start" only when something is missing: FFmpeg (with the `winget` line to copy and how to run it), the
       browser for saving videos (Kushmanji fetches it with one press), little disk space or memory. Otherwise

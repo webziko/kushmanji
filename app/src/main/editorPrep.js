@@ -35,7 +35,9 @@ export class EditorPrep {
   #shown = false;
   #timer = { show: null, hide: null, max: null };
 
-  constructor({ emit, showAfterMs = 800, quietMs = 2500, maxMs = 300_000, timers = { set: setTimeout, clear: clearTimeout } }) {
+  constructor({
+    emit, showAfterMs = 800, quietMs = 2500, maxMs = 300_000, timers = { set: setTimeout, clear: clearTimeout },
+  }) {
     this.#emit = emit;
     this.#timers = timers;
     this.#wait = { show: showAfterMs, hide: quietMs, max: maxMs };
@@ -50,14 +52,16 @@ export class EditorPrep {
     this.#dir = current.dir;
     this.#running.add(details.id);
     this.#cancel("hide");
-    if (!this.#shown && this.#timer.show === null) this.#after("show", () => this.#running.size > 0 && this.#say(true));
+    if (!this.#shown && this.#timer.show === null)
+      this.#after("show", () => this.#running.size > 0 && this.#say(true));
   }
 
   /** A request finished, failed or was cancelled. */
   ended(details) {
     if (!this.#running.delete(details?.id) || this.#running.size > 0) return;
     this.#cancel("show");
-    if (this.#shown && this.#timer.hide === null) this.#after("hide", () => this.#running.size === 0 && this.#say(false));
+    if (this.#shown && this.#timer.hide === null)
+      this.#after("hide", () => this.#running.size === 0 && this.#say(false));
   }
 
   /** The editor closed or another project opened: forget the running requests and take the note down. */

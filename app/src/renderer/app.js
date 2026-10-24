@@ -240,17 +240,30 @@ async function showHealth(box, { again = false } = {}) {
         h("p", { class: "muted" }, t("Open PowerShell (search for it in the Start menu), paste this, press Enter, " +
           "then close and open Kushmanji again.")));
     }
+    // FFmpeg (M5-03) and HyperFrames' browser for saving: the app fetches them itself, with this one press.
     if (item.get) {
-      const get = h("button", { class: "secondary small", type: "button" }, t("Get it now (about 100 MB)"));
+      const get = h("button", { class: "secondary small", type: "button" },
+        t("Get it now (about {size} MB)", { size: item.megabytes }));
+      const problem = h("p", { class: "muted", hidden: true });
+      const unwatch = item.get === "ffmpeg" ? api.on("ffmpeg:event", (status) => {
+        if (status.state === "getting") get.textContent = t("Getting it… {percent}%", { percent: status.percent });
+      }) : () => {};
       get.addEventListener("click", async () => {
         get.disabled = true;
+        problem.hidden = true;
         get.textContent = t("Getting it…");
-        const done = await api.health.getBrowser().catch(() => false);
-        if (done) return void showHealth(box, { again: true });
-        get.textContent = t("That did not work. Check the internet connection and try again.");
+        const done = await api.health.get(item.get).catch(() => null);
+        if (done?.state === "ready") {
+          unwatch();
+          return void showHealth(box, { again: true });
+        }
+        problem.textContent = done?.error ? tFrom(done.error)
+          : t("That did not work. Check the internet connection and try again.");
+        problem.hidden = false;
+        get.textContent = t("Try again");
         get.disabled = false;
       });
-      row.append(get);
+      row.append(get, problem);
     }
     return row;
   });

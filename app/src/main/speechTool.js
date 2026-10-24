@@ -124,13 +124,13 @@ export async function download(url, file, { bytes, sha256, onBytes = () => {}, s
   }
 }
 
-/** Unpack a zip with the tar.exe every Windows 10 and 11 has (it reads zips), by its full path. */
-async function unzip(zip, into) {
+/** Unpack a zip with the tar.exe every Windows 10 and 11 has (it reads zips), by its full path. FFmpeg uses it too. */
+export async function unzip(zip, into, { problem = "The speech tool could not be unpacked." } = {}) {
   const tar = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
   fs.mkdirSync(into, { recursive: true });
   const ran = await collect(spawn(tar, ["-xf", zip, "-C", into], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }),
-    { timeoutMs: 120_000 });
-  if (ran.code !== 0) throw new Error("The speech tool could not be unpacked.");
+    { timeoutMs: 300_000 });
+  if (ran.code !== 0) throw new Error(problem);
 }
 
 /** Plain words for what went wrong; the detail is for the log, not the person. */

@@ -12,7 +12,7 @@ const call =
 
 const EVENTS = new Set([
   "app:open-project", "preview:exit", "preview:changed", "preview:copies", "agent:event", "study:event", "speech:event",
-  "save:event", "shorts:event", "editor:preparing",
+  "save:event", "shorts:event", "editor:preparing", "ffmpeg:event",
 ]);
 
 contextBridge.exposeInMainWorld("hfwin", {
@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     forget: call("projects:forget"),
   },
   looks: { list: call("looks:list"), save: call("looks:save"), use: call("looks:use") },
-  health: { check: call("health:check"), getBrowser: call("health:getBrowser") },
+  health: { check: call("health:check"), get: call("health:get") },
   storage: { status: call("storage:status"), free: call("storage:free") },
   mentions: { list: call("mentions:list") },
   files: {

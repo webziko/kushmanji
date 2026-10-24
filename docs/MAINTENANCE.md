@@ -66,6 +66,17 @@ whisper --model large-v3 --language kn --json` with `HYPERFRAMES_WHISPER_PATH` s
 SHA-256 are in `https://huggingface.co/api/models/ggerganov/whisper.cpp/tree/main` (`lfs.size`, `lfs.oid`).
 If HyperFrames' `transcribe` ever builds or downloads Whisper on Windows itself (UP-01), this can go.
 
+## FFmpeg for PCs that have none (every few months)
+
+`ffmpegTool.js` pins Gyan's "essentials" build of FFmpeg 9.0.2 (`ffmpeg-9.0.2-essentials_build.zip`, the build
+`winget install Gyan.FFmpeg` installs) with its size and SHA-256; Home's "Get it now" fetches it only on a PC
+with no FFmpeg. Take numbered releases, not the dated nightlies (those are replaced). For a newer one, read the
+size and `sha256:` digest of its `-essentials_build.zip` from
+`https://api.github.com/repos/GyanD/codexffmpeg/releases/tags/<version>`, change `FFMPEG_ZIP` and the
+`megabytes` in `health.js` (a test checks they agree), then run `npm test` and `npm run smoke`. Pressing the
+button for real needs a PC (or a self-test run) without FFmpeg on PATH: `npm run smoke` with PATH stripped of
+FFmpeg shows the button on Home.
+
 ## The installer
 
 `.github/workflows/installer.yml` builds `Kushmanji-Setup-<version>.exe` for every push. When it fails after a

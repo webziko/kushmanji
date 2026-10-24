@@ -222,7 +222,8 @@ and the caller in `renderer/`.
 | `agent.choose({ dir, engine })` | Switch this project's chat to another agent, from the next message. Refused for an agent the person has not ticked |
 | `agent.undo({ dir, index })` | Undo what the reply at `index` changed, or bring it back when it was undone (M2-10). The main process runs `hyperframes history undo` on the entry it saved with that reply; the page names only the reply. Refused while a turn runs |
 | `looks.list(dir)` / `looks.save({ dir, name })` / `looks.use({ dir, name })` | Saved looks (M10-04, `kits.js`): `{ looks: [{ name }], written }`; save copies the video's `STYLE.md` into the app's `looks/` folder under a safe name; use copies one back, keeping the old one as `STYLE.before.md`. Refused while an assistant works |
-| `health.check()` / `health.getBrowser()` | Home's "Before you start" (M5-04, `health.js`): the few lines of `hyperframes doctor --json` a person needs (FFmpeg, FFprobe, the browser for saving, disk, memory) with their fix; `getBrowser` runs `hyperframes browser ensure` after the person presses the button |
+| `health.check()` / `health.get(kind)` | Home's "Before you start" (M5-04, `health.js`): the few lines of `hyperframes doctor --json` a person needs (FFmpeg, FFprobe, the browser for saving, disk, memory), each with `get` ("ffmpeg" or "browser") and its size; `get` runs after the person presses "Get it now": `"ffmpeg"` fetches FFmpeg (`ffmpegTool.js`, M5-03), `"browser"` runs `hyperframes browser ensure`. Answers `{ state, error }` |
+| event `ffmpeg:event` | `{ state, percent?, megabytes?, error? }` while FFmpeg is fetched |
 | `storage.status()` / `storage.free()` | Home's "Undo copies of your videos take ..." (M16-09): the size of HyperFrames' history folder, and what `hyperframes clean` would free (`--dry-run`); `free` runs it. `clean` gets an empty folder of its own, so it only sweeps HyperFrames' shared caches |
 | `agent.send({ ..., purpose })` | `purpose` is `null`, `"review"` or `"fix"` (M13-04): a review is told by the main process to change nothing, and what it changed anyway is named on its reply; the chat offers one review and one round of fixes |
 | `agent.checkup(engine)` | "Test it now" (M12-03): one small real turn in a new scratch folder at "Only this video", then `{ ok, said, version }`; kept in the app's settings per version, and `status()` no longer marks a version that passed as `untested` |
@@ -387,6 +388,13 @@ ends, only the clips with sound and no words are heard again (`study.run(dir, { 
 pictures are kept. The model is `large-v3` because "small" and "large-v3-turbo" wrote nonsense for Kannada
 (`studyPlan.js`). It is slow on a processor: about a minute and a half per clip, so the first study of a long
 video in such a language takes a while, and a chat message waits for it.
+
+Getting FFmpeg (`ffmpegTool.js`, M5-03) works the same way for PCs that have none. Home's "Before you start" (from
+HyperFrames' `doctor`, `health.js`) shows one line with "Get it now"; the press is the person's yes. The app
+fetches Gyan's pinned "essentials" build (SHA-256 checked) into `<userData>/tools/ffmpeg`, unpacks it with
+`tar.exe`, and sets `HYPERFRAMES_FFMPEG_PATH` and `HYPERFRAMES_FFPROBE_PATH`, which `doctor`, `render`, the
+study, the lighter copies and the assistants all read. At start the variables are set the same way when our copy
+is there and the person has no FFmpeg of their own; theirs always wins. Progress comes as `ffmpeg:event`.
 
 ## Shorts from a video (M17-04)
 

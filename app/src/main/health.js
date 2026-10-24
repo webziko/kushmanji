@@ -1,6 +1,7 @@
 // A first-run health check for people who have never used a terminal (M5-04). HyperFrames' own `doctor` looks at
 // the computer; of its many lines only a few matter to someone making videos in Kushmanji, and those are said here
-// in plain words with the one command that fixes each. The assistants' own sign-in is shown by the chat already.
+// in plain words with the one press or the one command that fixes each. The assistants' own sign-in is shown by
+// the chat already.
 import { runCli } from "./cli.js";
 import { say } from "./say.js";
 
@@ -13,30 +14,40 @@ const MEANING = {
     need: true,
     said: say("Kushmanji needs the free program FFmpeg to save your videos, study your clips and make " +
       "editing smooth."),
-    fix: "winget install --id Gyan.FFmpeg -e",
+    // Kushmanji fetches it itself, with the person's yes (ffmpegTool.js, M5-03). FFMPEG_ZIP's size, in MB.
+    get: "ffmpeg",
+    megabytes: 115,
   },
   FFprobe: {
     need: true,
     said: say("FFprobe, which comes with FFmpeg, is missing. Installing FFmpeg brings it."),
-    fix: "winget install --id Gyan.FFmpeg -e",
+    get: "ffmpeg",
+    megabytes: 115,
   },
   Chrome: {
     need: true,
     said: say("Saving a video needs a small browser that HyperFrames downloads once. It is not there yet."),
-    // Kushmanji can fetch this one itself, with the person's yes (`health:getBrowser`).
-    get: true,
+    // Kushmanji can fetch this one itself, with the person's yes (`health:get`).
+    get: "browser",
+    megabytes: 100,
   },
 };
 
-/** The few lines a person needs from doctor's answer: `{ ready, items: [{ name, ok, need, said, fix }] }`. */
+/**
+ * The few lines a person needs from doctor's answer: `{ ready, items: [{ name, ok, need, said, fix, get,
+ * megabytes }] }`. `get` names what the app can fetch itself ("ffmpeg", "browser"), `fix` a command to paste.
+ */
 export function readDoctor(answer) {
   const checks = Array.isArray(answer?.checks) ? answer.checks : [];
   const items = [];
+  // The FFmpeg download brings FFprobe too: one line, one button.
+  const ffmpegMissing = checks.some((check) => check?.name === "FFmpeg" && !check.ok);
   for (const check of checks) {
     const meaning = MEANING[check?.name];
+    if (check?.name === "FFprobe" && ffmpegMissing) continue;
     if (meaning && !check.ok) {
       items.push({ name: check.name, ok: false, need: meaning.need, said: meaning.said, fix: meaning.fix ?? null,
-        get: Boolean(meaning.get) });
+        get: meaning.get ?? null, megabytes: meaning.megabytes ?? null });
     }
   }
   const disk = checks.find((check) => check?.name === "Disk");
@@ -74,6 +85,11 @@ export async function checkHealth({ again = false } = {}) {
   kept = value.checked ? { at: Date.now(), value } : null;
   return value;
 }
+
+/** After something was fetched, the next look at the computer must not be the one kept from before. */
+export const forgetHealth = () => {
+  kept = null;
+};
 
 /** Fetch HyperFrames' browser for saving videos (about 100 MB, once). True when it is there afterwards. */
 export async function getBrowser() {

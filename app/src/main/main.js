@@ -12,7 +12,8 @@ import { cliVersion } from "./cli.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
-import { checkHealth, getBrowser } from "./health.js";
+import { checkHealth, forgetHealth, getBrowser } from "./health.js";
+import { FfmpegTool } from "./ffmpegTool.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
@@ -132,6 +133,8 @@ const study = new FootageStudy({
 });
 /** Whisper, fetched only when the person asks (speechTool.js). Made once the settings folder is final. */
 let speech = null;
+/** FFmpeg, fetched only when the person presses "Get it now" (ffmpegTool.js). Made with the speech tool. */
+let ffmpeg = null;
 const agent = new AgentRunner({
   emit: (payload) => {
     const { event } = payload;
@@ -410,7 +413,13 @@ function registerIpc() {
     return useKit(looks(), dir, String(name ?? ""));
   });
   handle("health:check", (options) => checkHealth({ again: options?.again === true }));
-  handle("health:getBrowser", () => getBrowser());
+  // What Home's "Before you start" can fetch with one press: FFmpeg (ours), or HyperFrames' browser for saving.
+  // Answers `{ state, error }`; the next health check looks again.
+  handle("health:get", async (kind) => {
+    forgetHealth();
+    if (kind === "ffmpeg") return ffmpeg.get();
+    return (await getBrowser()) ? { state: "ready" } : { state: "failed", error: null };
+  });
   handle("storage:status", () => storageStatus());
   handle("storage:free", () => freeUpSpace());
   handle("player:command", ({ dir, action, value } = {}) => {
@@ -587,6 +596,12 @@ if (!app.requestSingleInstanceLock()) {
       emit: (status) => win?.webContents.send("speech:event", status),
     });
     speech.useIfPresent();
+    // Before anything looks for FFmpeg: the health check, the study, the lighter copies and every assistant.
+    ffmpeg = new FfmpegTool({
+      folder: path.join(app.getPath("userData"), "tools", "ffmpeg"),
+      emit: (status) => win?.webContents.send("ffmpeg:event", status),
+    });
+    ffmpeg.useIfPresent();
     registerIpc();
     await createWindow();
 
