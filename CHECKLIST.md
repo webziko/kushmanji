@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-24. The app is now called **Kushmanji**._
+_Updated 2026-10-25. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -13,6 +13,11 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
+- [ ] **Sign Claude Code in again** (it signed itself out on this PC on the night of 24 October, so Kushmanji
+      cannot use Claude): open PowerShell, type `claude auth login`, press Enter, and sign in in the browser
+      window that opens. Then tell me, and Claude's trailer gets made.
+- [ ] **Watch the trailer test** in `reviews\READY\Kushmanji trailer test` and read `COMPARISON.md` there:
+      Gemini's two (with its pictures) and ChatGPT's (fully drawn, the screen changing shape for "Any size").
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
       right, too quiet or too loud? Nobody on the AI side can hear it.
 - [ ] **Optional, about 10 s faster per Gemini message:** the "Google Cloud Data Agent Kit" add-on in the
@@ -39,7 +44,7 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 - [ ] **Are the Kannada words right?** The app now writes down Kannada speech by itself (with Whisper). Your
       clip 01 came out as "ಎಲ್ಲಾರಗಿ ನಮ್ಮಸ್ಕಾರಾ ನಾನು ನಿನಗೆ ವಿಷಾಯ ಹಿರ್ವಿಕು ... ಫುಲ್ ಬೋರ್". Nobody here can check Kannada.
 - [ ] **Does moving around feel smooth now?** Close Kushmanji and open it again (it now uses HyperFrames
-      0.8.169, which is smoother in the editor), open a video and drag the playhead.
+      0.8.193, smoother again in the editor), open a video and drag the playhead.
 - [x] **A logo and colours for Kushmanji.** You picked A, "Friendly": the app is now coral and cream with the
       smiling play-button icon. "unofficial" at the top opens "About Kushmanji"
 - [ ] **Which access level should a new person start on?** Today: "Only this video". My advice: "Also cut my clips".
@@ -70,6 +75,30 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 7. [~] **An editing guide every assistant follows** (the first version is in; it grows from what you send back)
 
 Then the list further down, starting with one-click export.
+
+## New on the night of 24 to 25 October (you were asleep)
+
+- [x] **The trailer test, through Kushmanji's own chat.** Gemini made its pictures with its own picture tool
+      and built two trailers around them (wide and upright, 10 s). You said it was not real motion design, so
+      the next ones are fully drawn: ChatGPT made one (14 s, wide, the upright one following), where "Any size"
+      changes the video's own screen. Claude's waits for you to sign it in. All in
+      `reviews\READY\Kushmanji trailer test` with a comparison.
+- [x] **Your seventeen links, researched in full** (two helpers read every one, plus Openverse). What matters is
+      kept in `docs\RESEARCH.md`, and the lessons went into a **motion-design guide** that every video now
+      carries and every assistant reads before titles, animation or trailers.
+- [x] **HyperFrames updated to 0.8.193** (from 0.8.169): safer on Windows (antivirus file locks, folders with
+      any letters, USB drives), Kannada shows right in checks, motion blur, a seek bar in the editor's preview,
+      and its undo copies no longer fill your disk. Smoothness measured before and after: the same or a little
+      better.
+- [x] **Every error message in Kannada and Hindi**, and the titles of the folder windows too.
+- [x] **The assistants name the menus the way you see them**: in Kannada they say the Kannada name, with the
+      English in brackets.
+- [x] **A signed-out assistant is said plainly** ("Claude is signed out ... claude auth login"), and its sign-in
+      card no longer hides the message box in a small window (it also printed a stray "false"; gone).
+- [x] **ChatGPT still works on your plan's lower models** (GPT-6-Luna): proven twice through the chat.
+- [x] **Everything we found missing is written down** as tasks in `PROGRESS.md` (Openverse free pictures and
+      sounds, safer cuts, Gemini's pictures landing in the video by themselves, API keys for other services,
+      one-press sign-in, "Add my files", making the upright version, and more).
 
 ## New on 24 October
 

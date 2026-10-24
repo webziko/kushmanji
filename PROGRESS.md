@@ -801,6 +801,8 @@ M10 and M17 lines is `docs/RESEARCH.md`.
 - [ ] M10-24 A beat grid in motion projects (`hyperframes beats` from the music, or 120 beats a minute)
 - [ ] M10-25 "Add my files": a logo, music, pictures and fonts in one plain button and by dropping, and a saved look
       that carries its files (M10-04 keeps STYLE.md only; the trailer's logo, GSAP and music were copied by hand)
+      and its font: BRAND.md names Nunito, which Windows does not have, so every trailer fell back to Segoe UI.
+      Ship Nunito (SIL Open Font Licence) in the kit with an @font-face pointing at that file
 - [ ] M10-26 The check after a turn must catch what stops saving. Gemini wrote a music fade as `{"volume":[...]}`;
       `lint` and Gemini's own check passed it, and `render` stopped: "Unsupported automation version". Validate
       `data-automation`, or run the render's audio stage, in `turnCheck.js`

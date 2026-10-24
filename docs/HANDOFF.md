@@ -5,6 +5,41 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-25 (night) · Claude · Trailer test, research, HyperFrames 0.8.193, M14-16, M14-17, M16-11
+
+**Trailer test** (`reviews/kushmanji-trailer`, results in `reviews/READY/Kushmanji trailer test` with
+`COMPARISON.md`; reviews/ is never committed). Every job went through the app's chat (`HFWIN_SMOKE_JUST_ASK`).
+Gemini at "Only this video" made pictures with `generate_image` (saved to `~/.gemini/antigravity-cli/brain/<conv>/`,
+JPG) but agy's sandboxed terminal could not copy them into the video ("Access ... is denied"); raising access to
+get round that was refused by the session's safety check, so the pictures were copied in by hand (M8-15). Its
+music fade `{"volume":[...]}` passed lint and its own check but stopped `render` (M10-26). The owner judged the
+picture-based version "not motion design"; Claude's full-motion brief (14 s, "Any size" = the screen's own shape)
+then went to ChatGPT, because **Claude Code is signed out on the owner's PC** (`claude auth status`: loggedIn
+false; the owner must run `claude auth login`). Claude's trailer is still to do.
+
+**Research**: two Sonnet helpers read all seventeen links and Openverse; curated in `docs/RESEARCH.md` (the full
+reports are in the session notes folder). From it, `.hyperframes/MOTION_GUIDE.md` (`craft.js`, M16-11), plus a
+font lesson from ChatGPT's trailer (an @font-face for installed Segoe UI hid its bold). New tasks for everything
+found that night: PROGRESS.md, "Found on the night of 24 to 25 October".
+
+**Code**: M2-12 ("OAuth session expired" said plainly), M2-04 (the sign-in card fits 960x600 and no longer prints
+"false"), M5-05 (HyperFrames 0.8.193; FINDINGS has the measurement; UP-02 looks fixed), M14-16 (by a Sonnet helper
+in a worktree, reviewed and fast-forwarded: 82 error sentences through `say()`, `dialogTitle.js` for the folder
+windows, a test that fails on new unmarked errors), M14-17 (`agents/language.js`: the page sends its language
+with each message; the note with 28 names as shown goes with the access and mode notes).
+
+**What would surprise you**
+- A Bash tool shell sitting inside `app/.smoke-<name>` makes the next run with that name die at once with EPERM
+  (the script deletes that folder first). Two runs were lost before this was noticed (M9-15).
+- `HFWIN_SMOKE_EXPECT` must be text the edit adds; for a request that changes nothing in index.html (Gemini's
+  picture step) any text already there works.
+- The research helper left a copy of upstream's `desktopApp.ts` in the repo root (`src/`); it was moved to the
+  session's scratchpad. The official HyperFrames desktop app has no Windows build yet, but its code is preparing
+  one (`docs/RESEARCH.md`).
+- The owner's running Kushmanji still has the old code until it is closed and opened again.
+
+---
+
 ## 2026-10-24 · Claude · Disk space, then the owner's list from M9-13
 
 **M9-13 done** (self-test only): the "PC in use" failure was a minimized test window. Covering it, VLC full screen
