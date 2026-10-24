@@ -214,7 +214,12 @@ Do not build them.
       making, playing, editing, studying and saving. Still untried: a Windows user name with such letters
       (HyperFrames' cache and the browser live under it; Whisper's known fault there is said plainly, UP-03)
 - [ ] M6-02 Projects inside OneDrive or a redirected Documents folder
-- [ ] M6-03 Paths longer than 260 characters
+- [x] M6-03 Paths longer than 260 characters (Claude, 2026-10-24). Windows' old limit still holds for the
+      HyperFrames CLI (Electron's Node is not long-path aware): with the self-test's projects 245 characters deep,
+      making a project failed with "ENOENT ... mkdtemp" although LongPathsEnabled is on. A video's folder may now
+      be at most 200 characters (`projects.js`, MAX_FOLDER_CHARS); deeper, opening or making one says so plainly
+      and suggests moving it, for example to C:\Videos. Studio's thumbnails need up to 116 characters inside the
+      folder, so past about 140 only they go missing. `HFWIN_SMOKE_PROJECTS_ROOT` runs the self-test elsewhere
 - [x] M6-04 Clean up a leftover Studio server after the app crashed (Claude, 2026-10-24: nothing to clean). Tried
       on Windows 11: a parent that starts `hyperframes preview` the app's way (Electron's Node, piped output) was
       killed with `Stop-Process -Force`; within four seconds nothing listened on the port any more, because the
@@ -569,10 +574,17 @@ now comes first**: it changes what every later feature looks like. The review it
       Dates follow the language. Choosing one reloads the page through `app:reload`, because the window
       refuses a reload the page starts itself (found on the owner's PC). The self-test switches to Kannada and
       back. Nobody who reads Kannada or Hindi has checked the words yet
-- [~] M14-15 (Claude, 2026-10-24) The words that come from the main process are still English in Kannada and Hindi: the access
+- [x] M14-15 (Claude, 2026-10-24; done with `main/say.js` and `tFrom()`, see HANDOFF) The words that come from the main process are still English in Kannada and Hindi: the access
       levels and ways of working with their explanations, the line under the chat box, the clips strip's notes,
       Home's health lines, the speech tool's and the shorts' messages. A second list, passed through `t()` on
       the page by a function the test allows to take a variable
+- [ ] M14-16 The error messages the main process throws (`new Error(...)`, 102 of them) are still English in
+      Kannada and Hindi; several reach the screen (opening a project, adding clips, the study's and the shorts'
+      problems). `throw new Error(say(...))` and `tFrom` where the page shows `error.message`. Also the native
+      folder windows' titles (main.js, `dialog.showOpenDialog`): the page would pass them in, translated
+- [ ] M14-17 An assistant's notes quote the English menu names ("choose 'Also cut my clips'"), so in Kannada or
+      Hindi it may name a choice the person cannot find. Tell the assistant the person's language and the names
+      as shown, or have it quote both
 
 ## M15 · Spend less: smaller models, and a team you choose
 

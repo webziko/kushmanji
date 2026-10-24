@@ -190,6 +190,16 @@ async function languageStep({ result, inPage, shot }) {
   result.language = { kannadaButtons: words.filter((text) => /[ಀ-೿]/.test(text)).length };
   if (result.language.kannadaButtons < 3) throw new Error("After choosing Kannada, Home's buttons were not in Kannada.");
   await shot("home-kannada");
+  // A sentence the main process writes (M14-15): the line under the chat box, about what the assistant may do.
+  await inPage("document.querySelector('.carry-go')?.click()");
+  if (!(await until(() => inPage("Boolean(document.querySelector('.access-about')?.textContent)"), { timeoutMs: 30_000 })))
+    throw new Error("The video did not open in Kannada.");
+  result.language.accessLine = await inPage("document.querySelector('.access-about').textContent");
+  if (!/[ಀ-೿]/.test(result.language.accessLine))
+    throw new Error("In Kannada, the line under the chat box was still English.");
+  await shot("chat-kannada");
+  await inPage("document.querySelector('.back')?.click() ?? [...document.querySelectorAll('button')].find((b) => /←/.test(b.textContent))?.click()");
+  if (!(await showing("kn"))) throw new Error("Could not return Home in Kannada.");
   await choose("en");
   if (!(await showing("en"))) throw new Error("Choosing English again did not draw the app again.");
 }

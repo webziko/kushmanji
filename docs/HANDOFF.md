@@ -17,6 +17,25 @@ the built-in browser on a throwaway six-clip project) through the session's webR
 listeners in `lockDownSession`. Filmstrip fetches repeat on every open (207 over 40 s after a reload), so a
 broader rule would show the note every time. New self-test mode `HFWIN_SMOKE_FIRST_OPEN`.
 
+**M14-15 done**: `main/say.js` marks a sentence the main process writes for the person; the page shows it with
+`tFrom()` (renderer/words.js), matching a filled sentence by its line's pattern. Translation happens at display
+time: chat history, study notes and test results stay English on disk, because assistants read them. Part 2
+(71 lines, all eight areas, translations included) was done by a Sonnet helper in a worktree and reviewed.
+Patterns need at least 9 fixed characters, or a page line like "{start} to {end}" would garble raw assistant
+text. Left in English on purpose: thrown `Error` messages (102 of them; several reach the screen, a task of its
+own), the assistants' own words, and the native folder dialogs' titles (main does not know the language).
+
+**Motion videos round two**: sent through the app's chat to Codex (`HFWIN_SMOKE_JUST_ASK`, one job per level,
+3 to 10 minutes each). Set `HFWIN_SMOKE_EXPECT` to a text the edit will contain, or every run reports "the project
+file did not change" although it did. The music is a pad made with FFmpeg from sine tones (`aevalsrc`, C-G-Am-F,
+12.8 s, -20 LUFS) and plays at volume 0.5, about -26 LUFS in the videos. Rendered with the CLI on Electron's Node,
+not "Save video", which would raise it to YouTube loudness. Codex at "Only this video" cannot start npm (EPERM),
+so it cannot run `hyperframes check` itself; the app's own check after the turn found nothing.
+
+**Fresh-PC checks**: M5-06 (no Node: the full self-test passes), M6-04 (a crash leaves no server), M6-05 (a taken
+port moves the editor up; it then forgets its layout and remembered sound pictures), M6-01 (every self-test now
+runs under "my projects José ಕನ್ನಡ"), M6-03 (folders deeper than 200 characters are refused plainly).
+
 **Disk space.** The owner asked to remove the videos made here to free space (C: had
 31 GB free), chose "leftovers, the finished vlog, its shorts and the project; keep the Kushmanji motion videos
 and `C:\Creators`". Moved to the Recycle Bin, not deleted: `reviews/city-centre-vlog`, the three

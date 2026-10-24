@@ -75,6 +75,20 @@ Then the list further down, starting with one-click export.
       says HyperFrames is preparing the sound of every clip and that moving around can be slow until the note
       goes away. It goes by itself; the next time you open the same video it does not appear. In Kannada and
       Hindi too. Please tell me if it stays up for long on your own videos.
+- [x] **Kannada and Hindi everywhere.** The sentences that still came in English now change too: what the
+      assistant may do and how it works with you, what it is doing in the chat ("Looking at your files"),
+      why it stopped, "Test it now" results, the notes on your clips, Home's "Before you start" lines, and the
+      speech tool's, saving's and shorts' messages. Please read a few in Kannada and tell me what sounds wrong.
+      Still English: a few rarer error messages, and the titles of Windows' own folder windows.
+- [x] **The five motion videos, round two**, saved again over the old ones in
+      `reviews\READY\Kushmanji motion videos` (changed by ChatGPT through the app's chat, checked by Claude
+      picture by picture): level 1 now ends on clean cream (only the logo and words fade); level 5's timeline
+      fills most of the width and its tagline is almost twice as big; and all five have quiet music, a soft
+      chord pad Claude made on this PC from plain tones (nothing downloaded, so no licence question), fading in
+      and out. **Please listen**: nobody here can hear it. If it is too quiet, too loud or not to your taste, say so.
+- [x] **Fixed for strangers' PCs**: a video folder buried very deep (over 200 characters of path) now gets a
+      plain sentence asking to move it, instead of a long error; the app works with no Node installed; a taken
+      port and a crash were tried and are fine.
 
 ## New on the night of 17 to 18 October (you were asleep)
 
