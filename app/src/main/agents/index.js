@@ -193,6 +193,37 @@ export class AgentRunner {
     if (!teamOf(readState()).includes(engine)) throw new Error("Tick that assistant under \"Your assistants\" first.");
     writeChat(dir, { ...readChat(dir), engine });
     updateState({ agent: engine });
+    void this.prewarm(dir);
+  }
+
+  /**
+   * Start this video's assistant before the person sends anything, when its bridge can (Gemini: its start-up is
+   * about 12 s, antigravity.js). The next message's conversation, model and access are guessed the way `send`
+   * chooses them, with the model for a small change under Auto, as most chat messages are. A wrong guess costs
+   * only the early start: `send` then starts its own.
+   */
+  async prewarm(dir) {
+    try {
+      const chat = readChat(dir);
+      const { engine } = chat;
+      const bridge = BRIDGES[engine];
+      if (!bridge?.prewarm || this.#active || !teamOf(readState()).includes(engine)) return;
+      const resumed = (chat.turns?.[engine] ?? 0) < FRESH_AFTER ? chat.sessions[engine] ?? null : null;
+      let model = chosenModel(readState().models, engine);
+      if (model === AUTO) {
+        const offered = await bridge.models().catch(() => []);
+        model = sizeModel({ engine, models: offered, text: "Change one word.", mode: chat.mode }).model;
+      }
+      if (this.#active) return;
+      bridge.prewarm({ dir, model, access: accessFor(readState().access, dir), sessionId: resumed });
+    } catch {
+      // Starting early is only a head start; the message itself still starts the assistant.
+    }
+  }
+
+  /** Close the assistants kept running for the open video: it closed, or the app quits. */
+  release({ sync = false } = {}) {
+    for (const bridge of Object.values(BRIDGES)) bridge.closeAll?.({ sync });
   }
 
   /** Pick the model an agent uses, everywhere. `model` null means the agent's own default, AUTO the app's choice. */
@@ -209,6 +240,7 @@ export class AgentRunner {
    *  record of what was done to them, are untouched. */
   reset(dir) {
     if (this.#active?.dir === dir) this.stop();
+    for (const bridge of Object.values(BRIDGES)) bridge.forget?.(dir);
     const { engine, mode } = readChat(dir);
     writeChat(dir, { ...emptyChat(), engine, mode });
   }

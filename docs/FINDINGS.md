@@ -276,3 +276,26 @@ The self-test needed two fixes that the new Studio brought out, both in the test
 small live thumbnail of the video beside the player, with the same address, so the editor checks now take the
 largest preview (or the one that plays); and its Play is greyed out for a moment while a first open loads, so the
 arrow-key check waits until Play can be pressed. Gemini could not be tried: see the add-on in CHECKLIST.md.
+
+## Why Gemini was slow in Kushmanji (measured 2026-10-24, agy 1.4.7)
+
+The owner noticed Gemini answering slowly in Kushmanji and fast in the Antigravity app: "which model am I using"
+took 45 s, "what can you do on this blank screen" 67 s.
+
+- **The model is fast.** A tiny request ("reply with one word") straight to agy, from an empty folder: 13 s before
+  agy is ready, 24 s in its "user input" step, 3 s for the answer itself. Thinking level is a small part: Flash
+  High against Low differed by about 5 s.
+- **Most of the start is the person's own Antigravity set-up.** agy starts every MCP server and plugin configured
+  for Antigravity on each launch (on this PC: four Google Cloud "Data Cloud" proxies, Firebase and GitHub via
+  `npx`, n8n, Supabase, a science viewer; seven plugins, 49 skills). Tried one at a time, for this run only and
+  without changing the person's settings: an `npx` that fails at once changed nothing; keeping only the four Data
+  Cloud proxies (`mcp_proxy_bundle.js ... -antigravityide`, from the Antigravity IDE extension) from starting cut
+  the "user input" step from about 20 s to about 10 s on every message. The rest of that step is agy's own; no
+  switch was found for it (`--disable-slash-commands` changed nothing; `mcp_enabled` is a server-side setting).
+- **Starting agy once per video halves it.** `--input-format stream-json` keeps one agy and its conversation open.
+  Through the bridge, two one-word messages: 42.1 and 41.6 s before; 46.7 and 23.9 s kept running; 28.1 and 23.2
+  s kept running and started 20 s before the first message. Through the app's real chat (`HFWIN_SMOKE_JUST_ASK`,
+  a video without clips): 52.9 and 41.7 s before; 29.5 and 24.9 s after, with the 20 s a person takes to type
+  (`HFWIN_SMOKE_THINK_SECONDS=20`); 48.6 and 23.4 s when sending at once.
+- **What is left is the person's to decide:** switching off Google Cloud Data Cloud in Antigravity, if they do
+  not use it, should save about 10 s more on every Gemini message.

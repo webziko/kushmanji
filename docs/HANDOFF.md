@@ -38,6 +38,13 @@ with FFmpeg's folders taken off PATH; it downloads into the run's own `user-data
 on the downloaded build. The self-test now finds FFmpeg as the app does (`realTool` in `smoke.js`: the variable
 first, then PATH), or its own test clip would have been made without it.
 
+**M12-07, Gemini's speed** (the owner asked, "without changing my Antigravity settings"): `antigravity.js` now keeps
+one agy per video on `--input-format stream-json` and `AgentRunner.prewarm` starts it when a video opens or the
+chat switches to Gemini; numbers in FINDINGS. The input shape `{"event":"user","message":{"role":"user",
+"content":...}}` is undocumented, found from agy's errors and the strings in agy.exe: a future agy may change it.
+Gemini is the authority on this bridge (AGENTS.md); when it can edit again, it should look this over. The self-test
+gained `HFWIN_SMOKE_THEN_REQUEST` and `HFWIN_SMOKE_THINK_SECONDS`, and records `turnSeconds` per chat turn.
+
 **Fresh-PC checks**: M5-06 (no Node: the full self-test passes), M6-04 (a crash leaves no server), M6-05 (a taken
 port moves the editor up; it then forgets its layout and remembered sound pictures), M6-01 (every self-test now
 runs under "my projects José ಕನ್ನಡ"), M6-03 (folders deeper than 200 characters are refused plainly).

@@ -469,6 +469,13 @@ stopped running commands (M2-22). The owner asked for a bigger answer than fixin
 - [ ] M12-06 For whoever maintains the app: one command that runs all three agents' tests against what is
       installed and writes the result into `docs/MAINTENANCE.md`; and the fix card shows the command that goes
       back to the last version that worked
+- [x] M12-07 (Claude, 2026-10-24) Gemini was slow in Kushmanji and fast in Antigravity (the owner: 45 s for "which
+      model am I using"). Each message started agy afresh, which also starts every MCP server and plugin the
+      person set up for Antigravity. Gemini's bridge now keeps one agy running per video (`--input-format
+      stream-json`) and starts it when the video opens. Through the real chat, two one-word replies: 52.9 and 41.7
+      s before, 29.5 and 24.9 s after. About 10 s more per message is the owner's Google Cloud Data Cloud add-on
+      in Antigravity, theirs to switch off (docs/FINDINGS.md, last section). Not yet seen: a long real edit kept
+      running; Gemini cannot edit on this PC until its telemetry add-on is off (CHECKLIST)
 
 ## M13 · Three agents as a team on one video
 

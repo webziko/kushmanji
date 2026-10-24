@@ -15,6 +15,13 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
       right, too quiet or too loud? Nobody on the AI side can hear it.
+- [ ] **Close Kushmanji and open it again**, so the faster Gemini is used (the copy that is open started before).
+- [ ] **A GitHub key is stored in plain text** in `C:\Users\kish\.gemini\settings.json` (Gemini's settings, for its
+      GitHub helper). Anything that can read your user folder can read it. Safer: on github.com, Settings →
+      Developer settings → Personal access tokens, delete that one and make a new one with only what it needs.
+- [ ] **Optional, about 10 s faster per Gemini message:** the Google Cloud "Data Cloud" add-on in Antigravity
+      starts four helpers on every Gemini message. If you do not use Google Cloud data tools, switching that
+      add-on off in Antigravity saves the time. Claude did not touch your Antigravity settings.
 
 - [ ] **Empty the Recycle Bin once more** (right-click it on the Desktop → Empty Recycle Bin). On 24 October,
       as you asked, the City Centre vlog, its three shorts, their projects and old test folders went into it,
@@ -69,6 +76,11 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 Then the list further down, starting with one-click export.
 
 ## New on 24 October
+
+- [x] **Gemini answers in about half the time.** Each message used to start Gemini afresh, and with it every
+      helper you set up in Antigravity. Now Kushmanji keeps one Gemini running for the open video and starts it
+      as soon as the video opens. Measured through the chat, two one-word replies: 53 and 42 seconds before, 30
+      and 25 seconds now. Your Antigravity settings were not changed.
 
 - [x] **The self-test no longer fails while you use the PC.** Its window had been minimized: Windows does not
       draw a minimized window, so the video in it hardly moved. Now it puts itself back without taking your

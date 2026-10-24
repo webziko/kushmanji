@@ -280,10 +280,20 @@ with `-c sandbox_mode=...` and the folder with the process's working directory. 
 `item.started` / `item.completed` (`agent_message`, `command_execution`, `file_change`, `error`),
 `turn.completed` and `turn.failed`. `codex login status` prints "Logged in using ChatGPT" or "Not logged in".
 
-Antigravity specifics, measured here (agy 1.3.3): `agy -p <text> --output-format stream-json`; `--conversation
-<id>` continues; `agy models` lists `id<TAB>name`. Every event nests its payload under a key named after the
-event. Tool steps carry `tool_name` (`view_file`, `replace_file_content`, `run_command`) and
-`tool_info.parameters`. There is no command that reports sign-in.
+Antigravity specifics, measured here (agy 1.3.3 to 1.4.7): `--output-format stream-json`; `--conversation <id>`
+continues; `agy models` lists `id<TAB>name`. Every event nests its payload under a key named after the event.
+Tool steps carry `tool_name` (`view_file`, `replace_file_content`, `run_command`) and `tool_info.parameters`.
+There is no command that reports sign-in.
+
+Unlike the other two bridges, Gemini's is kept running per video (since 2026-10-24): every agy start costs about
+12 s, and it also loads whatever MCP servers and plugins the person has set up for Antigravity. `agy -p=
+--input-format stream-json` reads one message per stdin line, `{"event":"user","message":{"role":"user",
+"content":"..."}}` (agy's own undocumented shape, found in its error messages), and runs a turn for each in one
+conversation; the message never goes on the command line. A running agy is used again only for the same folder,
+model, access and conversation (or, before its first turn, a new conversation); anything else closes it and starts
+its own. `AgentRunner.prewarm` starts one when a video opens or the chat switches to Gemini, guessing the model
+Auto picks for a small change; "Start over" forgets it (`forget`), and closing the video, 15 idle minutes or
+quitting closes it (`closeAll`). Measurements: `docs/FINDINGS.md`, last section.
 
 ## Access levels
 

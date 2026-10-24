@@ -40,6 +40,10 @@ async function chatTurn({ result, inPage, engine, request }) {
     result.agentNotice = await inPage("document.querySelector('.chat-notice')?.innerText ?? ''");
     throw new Error(`The agent "${engine}" never became ready. ${result.agentNotice}`);
   }
+  // HFWIN_SMOKE_THINK_SECONDS: the time a person takes to read and type before sending, for timing assistants that
+  // start early (Gemini, antigravity.js `prewarm`).
+  await wait((Number(process.env.HFWIN_SMOKE_THINK_SECONDS) || 0) * 1000);
+  const sent = Date.now();
   await inPage(
     `(() => { const box = document.querySelector('.composer textarea'); box.value = ${inJs(request)}; box.form.requestSubmit(); })()`,
   );
@@ -49,6 +53,8 @@ async function chatTurn({ result, inPage, engine, request }) {
   const turnMs = (Number(process.env.HFWIN_SMOKE_TURN_MINUTES) || 7) * 60_000;
   if (!(await until(() => inPage("document.body.dataset.agent === 'idle'"), { timeoutMs: turnMs, everyMs: 500 })))
     throw new Error("The agent run never finished.");
+  // From Send to the finished reply, as the person waits for it: how fast each assistant answers in the app.
+  (result.turnSeconds ??= []).push(Math.round((Date.now() - sent) / 100) / 10);
   return inPage("[...document.querySelectorAll('.msg.agent')].pop()?.innerText ?? ''");
 }
 
@@ -842,7 +848,8 @@ async function agentStep({ result, inPage, shot, dir }) {
     result,
     inPage,
     engine: second,
-    request:
+    // HFWIN_SMOKE_THEN_REQUEST asks something else, for example a reply to time with no files read.
+    request: process.env.HFWIN_SMOKE_THEN_REQUEST ||
       "Do not change anything. In one short sentence: which agent last changed this video before you, and what did it change?",
   });
   await shot("chat-handover");

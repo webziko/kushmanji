@@ -354,10 +354,13 @@ function registerIpc() {
     // After Studio is up, so the two do not compete while the person is waiting for the editor.
     study.open(dir);
     lightCopies.start(dir);
+    // The chat's assistant starts now, while the person looks at the video (Gemini's start-up is about 12 s).
+    void agent.prewarm(dir);
     return started;
   });
   handle("projects:close", () => {
     agent.stop();
+    agent.release();
     study.close();
     lightCopies.stop();
     editorPrep.reset();
@@ -565,6 +568,7 @@ if (!app.requestSingleInstanceLock()) {
   // Synchronous: an async kill started here is abandoned when the process exits, leaving the server running.
   app.on("will-quit", () => {
     agent.stop({ sync: true });
+    agent.release({ sync: true });
     exporter.stop({ sync: true });
     study.close({ sync: true });
     lightCopies.stop({ sync: true });
