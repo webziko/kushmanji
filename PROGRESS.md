@@ -273,13 +273,14 @@ is making sure each one runs on Windows from inside the app, and making it easy 
 - [ ] M9-09 Version numbers and a changelog. Committing has started (2026-10-13); from here on one task per commit
 - [ ] M9-10 Outside security review before any wider release
 - [ ] M9-11 Run the self-test in CI too (needs FFmpeg and Chrome on the runner)
-- [ ] M9-13 The self-test's editor arrow-key check fails while the owner uses the PC (2026-10-18 morning, VLC
-      playing maximized on the main screen): the editor's video reports playing but moves 0.03 s in 0.7 s, so
-      the right arrow seems not to skip. It passed twice on HyperFrames 0.8.169 the same night with the PC idle,
-      and by hand in a separate window the same project plays at normal speed (2.1 s in 2 s). Tried without
-      success: `backgroundThrottling: false`, `disable-backgrounding-occluded-windows`, opening the test window
-      on the second screen, keeping the display on. Next: watch the test window while it runs; try
-      `win.setAlwaysOnTop` for the length of the editor check only
+- [x] M9-13 The self-test's editor arrow-key check failed while the owner used the PC (Claude, 2026-10-24).
+      Cause: the test window had been minimized. Windows draws nothing for a minimized window, so the editor's
+      video moved a frame at a time ("20.04 to 20.07, playing true"), and `editorKeys.js` rightly leaves arrows
+      alone in a minimized window. Reproduced by minimizing it once (`ShowWindow(SW_MINIMIZE)` on the Electron
+      that `smoke.mjs` starts); a window covering it, VLC playing full screen in front, and all 16 cores busy
+      all passed. Fix, in the test only: a minimized self-test window comes back with `showInactive()` (the
+      person keeps their keyboard), and its title says "Kushmanji self-test (closes by itself in about a
+      minute)". `result.restoredFromMinimized` counts it. A window minimized every two seconds still fails
 - [ ] M9-12 Reproduce a rare self-test delay opening the saved clip picture. One M14 run exceeded its
       ten-second image deadline; later runs passed without changing the study reader. Failure diagnostics
       now record the image's loading state and bounds. Do not guess at a fix before reproducing it

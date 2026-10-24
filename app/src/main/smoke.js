@@ -1019,6 +1019,17 @@ export async function runSmoke({ win, outDir }) {
   page.on("console-message", (event) => {
     if (event.level === "error") result.consoleErrors.push(event.message);
   });
+  // The window pops up over whatever the person is doing, and looks like their own Kushmanji, so they may
+  // minimize it. Windows draws nothing for a minimized window: its videos move a frame at a time, and the editor's
+  // arrow check failed on the owner's PC while they used it (M9-13: 20.04 s to 20.07 s, "playing"). The title
+  // says what it is, and a minimized test window comes back without taking the person's keyboard.
+  win.on("page-title-updated", (event) => event.preventDefault());
+  win.setTitle("Kushmanji self-test (closes by itself in about a minute)");
+  result.restoredFromMinimized = 0;
+  win.on("minimize", () => {
+    result.restoredFromMinimized += 1;
+    setTimeout(() => { if (!win.isDestroyed()) win.showInactive(); }, 200);
+  });
   const shot = async (name) => {
     try {
       // An occluded Windows window can otherwise give the last painted frame of a long assistant turn.

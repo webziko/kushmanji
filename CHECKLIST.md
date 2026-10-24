@@ -65,6 +65,13 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 
 Then the list further down, starting with one-click export.
 
+## New on 24 October
+
+- [x] **The self-test no longer fails while you use the PC.** Its window had been minimized: Windows does not
+      draw a minimized window, so the video in it hardly moved. Now it puts itself back without taking your
+      keyboard, and its title bar says "Kushmanji self-test (closes by itself in about a minute)". It passed
+      with a window over it, with VLC playing full screen in front, and with the processor fully busy.
+
 ## New on the night of 17 to 18 October (you were asleep)
 
 - [x] **The app in Kannada and Hindi.** Home has a Language menu at the top right: English, ಕನ್ನಡ, हिन्दी.

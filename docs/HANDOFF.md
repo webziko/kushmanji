@@ -5,9 +5,14 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
-## 2026-10-24 · Claude · Disk space: the City Centre vlog and old test folders to the Recycle Bin
+## 2026-10-24 · Claude · Disk space, then the owner's list from M9-13
 
-No code changed and no task was started. The owner asked to remove the videos made here to free space (C: had
+**M9-13 done** (self-test only): the "PC in use" failure was a minimized test window. Covering it, VLC full screen
+in front and a fully busy processor all pass; one minimize reproduces "20.04 to 20.07, playing true" exactly.
+A minimized self-test window now comes back with `showInactive()`. The scratch scripts that imitate a person
+(`cover.ps1`, `minimize.ps1`, `keep-display.ps1`) were in this session's scratchpad only.
+
+**Disk space.** The owner asked to remove the videos made here to free space (C: had
 31 GB free), chose "leftovers, the finished vlog, its shorts and the project; keep the Kushmanji motion videos
 and `C:\Creators`". Moved to the Recycle Bin, not deleted: `reviews/city-centre-vlog`, the three
 `city-centre-vlog-short-*` projects, the vlog and shorts and posting note in `reviews/READY`, `video2-review`,
