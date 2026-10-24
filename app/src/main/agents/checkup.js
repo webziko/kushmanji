@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { say } from "../say.js";
 
 export const CHECK_REQUEST =
   "This is a check-up by the Kushmanji app, not a video request. Do exactly these two things and nothing else: " +
@@ -34,15 +35,22 @@ export function makeScratch(cliVersion) {
 
 /** The check-up's result in plain words: `{ ok, said }`. `name` is the assistant's plain name. */
 export function judge(name, { ok, stopped, error, limited, changedFile, ranCommand }) {
-  if (stopped) return { ok: false, said: `The test of ${name} was stopped before it finished.` };
-  if (limited) return { ok: false, said: `${name} has used up its allowance for now, so it could not be tested.` };
-  if (!ok) return { ok: false, said: `${name} did not finish the test: ${error || "it stopped with an error"}.` };
-  if (!changedFile) return { ok: false, said: `${name} answered, but could not change a file. Editing videos will not work.` };
-  if (!ranCommand) {
-    return { ok: false, said: `${name} changed a file but did not run a program. It can edit, but may not be able to ` +
-      "check or save videos." };
+  // Kept in English with the saved result; the page shows them in the chosen language (say.js).
+  const failed = (said) => ({ ok: false, said });
+  if (stopped) return failed(say("The test of {name} was stopped before it finished.", { name }));
+  if (limited) return failed(say("{name} has used up its allowance for now, so it could not be tested.", { name }));
+  if (!ok) {
+    return failed(error ? say("{name} did not finish the test: {error}.", { name, error })
+      : say("{name} did not finish the test: it stopped with an error.", { name }));
   }
-  return { ok: true, said: `${name} works with Kushmanji: it changed a file and ran a program.` };
+  if (!changedFile) {
+    return failed(say("{name} answered, but could not change a file. Editing videos will not work.", { name }));
+  }
+  if (!ranCommand) {
+    return failed(say("{name} changed a file but did not run a program. It can edit, but may not be able to " +
+      "check or save videos.", { name }));
+  }
+  return { ok: true, said: say("{name} works with Kushmanji: it changed a file and ran a program.", { name }) };
 }
 
 /** Whether a version was already tested and found working: `checkups` is the app's saved results. */

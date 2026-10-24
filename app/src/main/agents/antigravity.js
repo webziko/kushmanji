@@ -4,6 +4,7 @@ import { collect, killTree } from "../proc.js";
 import { withHouseNote } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
 import { mediaToolsEnv } from "./mediaTools.js";
+import { say } from "../say.js";
 
 // The Antigravity bridge: Google's `agy` command-line agent, the way to use Gemini models. It replaced the
 // Gemini CLI, which Google switched off for personal accounts ("This client is no longer supported ... please
@@ -76,11 +77,11 @@ export async function models() {
 
 /** Tool names are agy's own and change between versions, so the label is read off the name itself. */
 function labelFor(toolName = "") {
-  if (/read|view|list|search|grep|find|glob/i.test(toolName)) return "Looking at your files";
-  if (/write|edit|replace|create|patch|delete/i.test(toolName)) return "Changing your files";
-  if (/command|terminal|shell|exec|run/i.test(toolName)) return "Running a program";
-  if (/browser|web|url|fetch/i.test(toolName)) return "Looking on the web";
-  return "Working";
+  if (/read|view|list|search|grep|find|glob/i.test(toolName)) return say("Looking at your files");
+  if (/write|edit|replace|create|patch|delete/i.test(toolName)) return say("Changing your files");
+  if (/command|terminal|shell|exec|run/i.test(toolName)) return say("Running a program");
+  if (/browser|web|url|fetch/i.test(toolName)) return say("Looking on the web");
+  return say("Working");
 }
 
 /** The file or command a step is about, as seen in agy 1.3.3: AbsolutePath, TargetFile, CommandLine. */
@@ -104,8 +105,8 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
   const prompt = withHouseNote(text, !sessionId);
   if (!tool || prompt.length > MAX_PROMPT) {
     const error = tool
-      ? "That message is too long for Gemini. Shorten it and send again."
-      : "Gemini is not on this computer yet.";
+      ? say("That message is too long for Gemini. Shorten it and send again.")
+      : say("{name} is not on this computer yet.", { name: about.label });
     queueMicrotask(() => done({ ok: false, error }));
     return { stop() {} };
   }
@@ -157,20 +158,22 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
       done({
         ok: false,
         error: /authentication required/i.test(error)
-          ? "Gemini is not signed in. Open PowerShell, type agy, press Enter and sign in with Google."
-          : error || "Gemini could not finish this change.",
+          ? say("Gemini is not signed in. Open PowerShell, type agy, press Enter and sign in with Google.")
+          : error || say("{name} could not finish this change.", { name: about.label }),
       });
     }
   });
 
   let errors = "";
   child.stderr.on("data", (chunk) => (errors = (errors + chunk).slice(-4000)));
-  child.on("error", (error) => done({ ok: false, error: `Gemini could not start: ${error.message}` }));
+  child.on("error", (error) => done({ ok: false,
+    error: say("{name} could not start: {message}", { name: about.label, message: error.message }) }));
   child.on("close", (code) => {
     if (stopped) return done({ ok: false, stopped: true });
     // agy writes its routine log to stderr ("logging before google.Init"); those lines are not the reason.
     const reason = lastLine(errors.split(/\r?\n/).filter((line) => !/logging before google\.Init/.test(line)).join("\n"));
-    done({ ok: false, error: reason || `Gemini stopped unexpectedly (code ${code}).` });
+    done({ ok: false,
+      error: reason || say("{name} stopped unexpectedly (code {code}).", { name: about.label, code }) });
   });
 
   return {

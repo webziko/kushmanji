@@ -113,7 +113,8 @@ function usageNote(name, usage) {
 function agentMessage({
   name, text, activities, ok, stopped, error, plan, touched, actions, limited, resets, changed, undoAction, usage,
 }) {
-  const steps = [name, ...(activities ?? [])].filter(Boolean);
+  // The labels are saved in English (main/say.js); they are shown in the chosen language.
+  const steps = [name, ...(activities ?? []).map(tFrom)].filter(Boolean);
   return h(
     "div",
     { class: "msg agent" },
@@ -134,7 +135,8 @@ function agentMessage({
     // The review round's buttons (M13-04) and anything else a settled reply offers.
     !plan && !limited && actions,
     !ok && !stopped && !limited &&
-      h("div", { class: "msg-note error" }, error || t("The assistant could not finish this change.")),
+      h("div", { class: "msg-note error" },
+        error ? tFrom(error) : t("The assistant could not finish this change.")),
     undoAction,
     usageNote(name, usage),
   );
@@ -154,7 +156,8 @@ function liveMessage(name) {
     reply: () => text,
     onEvent(event) {
       if (event.type === "activity") {
-        steps.textContent = [name, event.label, event.detail].filter(Boolean).join(" · ");
+        // Each part on its own: the detail is usually a file name or a command, which tFrom leaves as it is.
+        steps.textContent = [name, tFrom(event.label), tFrom(event.detail)].filter(Boolean).join(" · ");
         if (!activities.includes(event.label)) activities.push(event.label);
       } else if (event.type === "text") {
         text += event.text;
@@ -527,7 +530,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       const got = await api.agent.checkup(agent.id);
       agent.untested = !got.ok;
       agent.checkup = got;
-      versionText.textContent = got.said;
+      versionText.textContent = tFrom(got.said);
       testButton.hidden = got.ok;
     } catch (error) {
       versionText.textContent = error.message;
@@ -815,7 +818,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       ? [
         t("Your copy of {name} (version {version}) is newer than the one this app was tested with ({tested}). " +
           "It should still work.", { name: agent.product ?? agent.name, version: agent.version, tested: agent.tested }),
-        agent.checkup?.version === agent.version && t("Last test: {said}", { said: agent.checkup.said }),
+        agent.checkup?.version === agent.version &&
+          t("Last test: {said}", { said: tFrom(agent.checkup.said) }),
       ].filter(Boolean).join(" ")
       : "";
     if (!checked || !agent || agent.state === "ready") notice.hidden = true;

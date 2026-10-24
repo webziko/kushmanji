@@ -3,7 +3,7 @@
 // makes each short as its own video (main/shorts.js) and asks the assistant to build them one by one
 // (main/shortsMaker.js). The card says how far that has got.
 import { h } from "./dom.js";
-import { locale, t } from "./words.js";
+import { locale, t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 
@@ -43,7 +43,8 @@ export function createShortsCard(dir) {
         t("Your {count} shorts are made. Open them from My videos to watch and save each one.",
           { count: status.total })));
     } else if (status?.state === "stopped") {
-      lines.push(h("p", { class: "shorts-problem" }, status.error ?? t("Making the shorts stopped.")));
+      lines.push(h("p", { class: "shorts-problem" },
+        status.error != null ? tFrom(status.error) : t("Making the shorts stopped.")));
     } else if (plan?.error) {
       lines.push(h("p", { class: "shorts-problem" }, [
         t("The plan for shorts cannot be used yet: {problem}", { problem: plan.error }),

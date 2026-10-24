@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cliVersion } from "../cli.js";
 import { readJson, writeJson } from "../jsonFile.js";
+import { say } from "../say.js";
 import { readState, updateState } from "../state.js";
 import { accessFor, accessNote, LEVELS, withAccess } from "./access.js";
 import * as antigravity from "./antigravity.js";
@@ -229,12 +230,14 @@ export class AgentRunner {
     let result;
     try {
       state = await bridge.status().catch(() => ({ state: "broken" }));
-      if (state.state !== "ready") return { ok: false, said: `${name} can be tested once it is installed and signed in.` };
+      if (state.state !== "ready") {
+        return { ok: false, said: say("{name} can be tested once it is installed and signed in.", { name }) };
+      }
       let model = chosenModel(readState().models, engine);
       if (model === AUTO) {
         model = sizeModel({ engine, models: await bridge.models().catch(() => []), text: "Change one word." }).model;
       }
-      if (turn.stopped) return { ok: false, said: `The test of ${name} was stopped.` };
+      if (turn.stopped) return { ok: false, said: say("The test of {name} was stopped.", { name }) };
       dir = makeScratch(cliVersion);
       turn.dir = dir;
       let text = "";
@@ -363,7 +366,9 @@ export class AgentRunner {
       handle: null,
     };
     this.#active = turn;
-    if (fresh) this.#onEvent(turn, { type: "activity", label: "A fresh conversation, to save your allowance" });
+    if (fresh) {
+      this.#onEvent(turn, { type: "activity", label: say("A fresh conversation, to save your allowance") });
+    }
     const begin = async () => {
       let model = chosenModel(readState().models, engine);
       if (model === AUTO) {
@@ -372,7 +377,7 @@ export class AgentRunner {
         model = sized.model;
         if (sized.small) {
           const name = offered.find((item) => item.id === model)?.name ?? model;
-          this.#onEvent(turn, { type: "activity", label: `${name} for a small change` });
+          this.#onEvent(turn, { type: "activity", label: say("{name} for a small change", { name }) });
         }
       }
       if (turn.stopped) return this.#onEvent(turn, { type: "done", ok: false, stopped: true });

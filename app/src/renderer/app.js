@@ -8,7 +8,7 @@ import { createAbout } from "./about.js";
 import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
-import { LANGUAGES, language, setLanguage, t } from "./words.js";
+import { LANGUAGES, language, setLanguage, t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
@@ -231,7 +231,7 @@ async function showHealth(box, { again = false } = {}) {
     return;
   }
   const rows = health.items.map((item) => {
-    const row = h("li", {}, h("p", {}, item.said));
+    const row = h("li", {}, h("p", {}, tFrom(item.said)));
     if (item.fix) {
       const copy = h("button", { class: "ghost small", type: "button" }, t("Copy"));
       copy.addEventListener("click", () =>

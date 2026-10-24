@@ -3,7 +3,7 @@
 // person say which language is spoken, and says in plain words when a clip could not be studied. The person
 // reads "The app has watched your clips" (docs/UX.md, "The words").
 import { h } from "./dom.js";
-import { t } from "./words.js";
+import { t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 
@@ -58,7 +58,7 @@ export function createStudyBar(dir, { onAsk } = {}) {
           : [h("p", { class: "muted" }, t("No words were written down for this clip."))]),
         ...(clip.notes ?? [])
           .filter((note) => !forAssistants(note))
-          .map((note) => h("p", { class: "study-notes" }, note)),
+          .map((note) => h("p", { class: "study-notes" }, tFrom(note))),
       ].filter(Boolean));
     } catch (error) {
       if (!destroyed && turn === request) content.textContent = error.message;
@@ -105,7 +105,7 @@ export function createStudyBar(dir, { onAsk } = {}) {
       return;
     }
     if (speech.state === "blocked") {
-      speechLine.replaceChildren(h("span", { class: "study-speech-problem" }, speech.error));
+      speechLine.replaceChildren(h("span", { class: "study-speech-problem" }, tFrom(speech.error)));
       return;
     }
     const amount = speech.megabytes >= 1000
@@ -128,7 +128,8 @@ export function createStudyBar(dir, { onAsk } = {}) {
           renderSpeech();
         });
       } }, t("Get it")),
-      speech.state === "failed" && speech.error && h("span", { class: "study-speech-problem" }, speech.error),
+      speech.state === "failed" && speech.error &&
+        h("span", { class: "study-speech-problem" }, tFrom(speech.error)),
     ].filter(Boolean));
   }
   const element = h("div", { class: "study", hidden: true }, line, controls, speechLine, notes);
@@ -170,9 +171,10 @@ export function createStudyBar(dir, { onAsk } = {}) {
         if (!forAssistants(note)) byNote.set(note, [...(byNote.get(note) ?? []), clip.file]);
       }
     }
+    // Grouped by the note as the main process wrote it (English); only what is shown is translated.
     const problems = [...byNote].map(([note, files]) =>
-      (files.length === 1 ? t("“{name}”: {note}", { name: names.get(files[0]), note })
-        : t("{count} clips: {note}", { count: files.length, note })));
+      (files.length === 1 ? t("“{name}”: {note}", { name: names.get(files[0]), note: tFrom(note) })
+        : t("{count} clips: {note}", { count: files.length, note: tFrom(note) })));
     const lines = [
       ...problems.slice(0, 3).map((problem) => h("li", {}, problem)),
       problems.length > 3 && h("li", {}, t("…and {count} more.", { count: problems.length - 3 })),

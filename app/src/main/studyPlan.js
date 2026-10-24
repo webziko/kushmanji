@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
+import { say } from "./say.js";
 
 // The decisions behind the footage study, kept free of files and programs so they can be unit-tested. The work
 // itself is in study.js. What the study is for and where it lives is in docs/ARCHITECTURE.md ("The study").
@@ -194,9 +195,9 @@ export function chooseEngine({ language, parakeet, whisper }) {
     return {
       engine: null,
       problem: parakeetSpeaks(language)
-        ? "No speech tool is on this computer yet, so the words in this clip were not written down."
-        : "This language needs a speech tool (Whisper) that is not on this computer yet, so the words in this clip " +
-          "were not written down.",
+        ? say("No speech tool is on this computer yet, so the words in this clip were not written down.")
+        : say("This language needs a speech tool (Whisper) that is not on this computer yet, so the words " +
+          "in this clip were not written down."),
     };
   }
   // Left to the app. Parakeet works the language out itself, but only among its own (English and 24 other
@@ -206,6 +207,6 @@ export function chooseEngine({ language, parakeet, whisper }) {
   if (whisper) return { engine: "whisper", args: ["--engine", "whisper", "--model", WHISPER_MODEL], sure: true };
   return {
     engine: null,
-    problem: "No speech tool is on this computer yet, so the words in this clip were not written down.",
+    problem: say("No speech tool is on this computer yet, so the words in this clip were not written down."),
   };
 }

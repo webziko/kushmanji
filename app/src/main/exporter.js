@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawnCli } from "./cli.js";
 import { evenLoudness } from "./loudness.js";
 import { killTree } from "./proc.js";
+import { say } from "./say.js";
 
 // "Save video": the app makes the video file itself, with HyperFrames' own `render`, and puts it in the
 // person's Downloads folder. The owner asked for it in so many words ("this export everything i want ai to do"):
@@ -163,13 +164,14 @@ export class ExportManager {
           ? { state: "stopped" }
           : {
               state: "failed",
-              message: problem ?? "The video could not be saved.",
+              message: problem ?? say("The video could not be saved."),
               detail: job.tail.slice(-6).join("\n"),
             };
       this.#last = { dir, file: made ? file : null, status };
       this.#emit({ dir, status });
     };
-    child.on("error", (error) => void finish(1, `The video could not be saved: ${error.message}`));
+    child.on("error", (error) =>
+      void finish(1, say("The video could not be saved: {message}", { message: error.message })));
     child.on("close", (code) => void finish(code));
     this.#tell(job);
     return this.status(dir);

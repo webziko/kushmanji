@@ -5,12 +5,14 @@ import fs from "node:fs";
 import vm from "node:vm";
 import { test } from "node:test";
 import { readDoctor } from "../src/main/health.js";
+import { say } from "../src/main/say.js";
 
 function load(answer) {
   const calls = [];
   const source = fs.readFileSync(new URL("../src/main/health.js", import.meta.url), "utf8")
     .replace(/^import .+;\r?$/gm, "").replace(/^export (async )?(function|const)/gm, "$1$2");
   const api = vm.runInNewContext(`${source}\n({ checkHealth, getBrowser });`, {
+    say,
     runCli: async (args, options) => {
       calls.push({ args, options });
       return typeof answer === "function" ? answer(args) : answer;

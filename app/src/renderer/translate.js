@@ -19,6 +19,7 @@ export function translate(text, table, values) {
 
 const PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9]*)\}/g;
 const escape = (text) => text.replace(/[.*+?^$()|[\]\\{}]/g, "\\$&");
+const MIN_FIXED = 9;
 /** Per list: each line with placeholders as a pattern, the most fixed words first, so the closest one wins. */
 const patterns = new WeakMap();
 
@@ -32,8 +33,10 @@ function patternsOf(table) {
         const source = text.split(PLACEHOLDER).map((part, index) => (index % 2 ? "([\\s\\S]+?)" : escape(part))).join("");
         return { text, names, fixed: fixed.length, pattern: new RegExp(`^${source}$`) };
       })
-      // A line that is nothing but placeholders would match any sentence at all.
-      .filter((entry) => entry.fixed > 0)
+      // A line with little fixed text would match ordinary sentences: "{start} to {end}" fits "Could not
+      // connect to the server". Raw text (an assistant's own words, a file name) goes through here too, and
+      // must come out as it went in. The shortest line the main process needs is "clip {number} of {total}".
+      .filter((entry) => entry.fixed >= MIN_FIXED)
       .sort((a, b) => b.fixed - a.fixed);
     patterns.set(table, made);
   }

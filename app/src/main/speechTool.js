@@ -12,6 +12,7 @@ import os from "node:os";
 import path from "node:path";
 import { whereAll as defaultWhereAll } from "./agents/launcher.js";
 import { collect } from "./proc.js";
+import { say } from "./say.js";
 import { WHISPER_MODEL } from "./studyPlan.js";
 
 /**
@@ -79,8 +80,8 @@ export function whisperReady({ program = process.env.HYPERFRAMES_WHISPER_PATH?.t
 export function homeProblem(home = os.homedir()) {
   return /^[\x20-\x7e]*$/.test(modelFile(home))
     ? null
-    : "The speech tool cannot work on this computer yet: your Windows user folder's name has letters it cannot " +
-      "read. This is a fault in Whisper itself, not in your video.";
+    : say("The speech tool cannot work on this computer yet: your Windows user folder's name has letters " +
+      "it cannot read. This is a fault in Whisper itself, not in your video.");
 }
 
 /**
@@ -135,13 +136,13 @@ async function unzip(zip, into) {
 /** Plain words for what went wrong; the detail is for the log, not the person. */
 function plain(error, folder) {
   const code = error?.code ?? error?.cause?.code;
-  if (code === "ENOSPC") return "There is not enough free space on this computer for the speech tool.";
+  if (code === "ENOSPC") return say("There is not enough free space on this computer for the speech tool.");
   if (code === "EPERM" || code === "EACCES" || code === "EBUSY")
-    return `The app could not write into ${folder}. An antivirus may be blocking it.`;
-  if (error?.name === "AbortError") return "Getting the speech tool was stopped.";
+    return say("The app could not write into {folder}. An antivirus may be blocking it.", { folder });
+  if (error?.name === "AbortError") return say("Getting the speech tool was stopped.");
   if (error instanceof TypeError || /fetch|network|ENOTFOUND|ECONN|ETIMEDOUT/i.test(String(error?.message ?? "")))
-    return "The speech tool could not be downloaded. Check the internet connection and try again.";
-  return error?.message ?? "Getting the speech tool did not work.";
+    return say("The speech tool could not be downloaded. Check the internet connection and try again.");
+  return error?.message ?? say("Getting the speech tool did not work.");
 }
 
 /**

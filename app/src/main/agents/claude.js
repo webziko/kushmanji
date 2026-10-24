@@ -6,6 +6,7 @@ import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./lau
 import { CLAUDE_LOOK_TOOL, claudeLookArgs } from "./lookTool.js";
 import { fromClaude } from "./usage.js";
 import { mediaToolsEnv } from "./mediaTools.js";
+import { say } from "../say.js";
 
 // The Claude Code bridge, and the reference for the agent bridge contract in docs/ARCHITECTURE.md.
 // Claude Code runs headless (`-p`) in the project folder and reports what it does as one JSON object per line.
@@ -75,22 +76,23 @@ const ACCESS = {
   full: ["--permission-mode", "bypassPermissions"],
 };
 
+// Shown in the chat while the agent works, and kept in English in the saved chat; the page translates them.
 const LABELS = {
-  Read: "Looking at your files",
-  Grep: "Looking at your files",
-  Glob: "Looking at your files",
-  Edit: "Changing your files",
-  Write: "Changing your files",
-  MultiEdit: "Changing your files",
-  NotebookEdit: "Changing your files",
-  Bash: "Running a program",
-  PowerShell: "Running a program",
-  WebFetch: "Looking on the web",
-  WebSearch: "Looking on the web",
-  Task: "Working on one part",
-  Agent: "Working on one part",
-  TodoWrite: "Planning",
-  Skill: "Using one of its skills",
+  Read: say("Looking at your files"),
+  Grep: say("Looking at your files"),
+  Glob: say("Looking at your files"),
+  Edit: say("Changing your files"),
+  Write: say("Changing your files"),
+  MultiEdit: say("Changing your files"),
+  NotebookEdit: say("Changing your files"),
+  Bash: say("Running a program"),
+  PowerShell: say("Running a program"),
+  WebFetch: say("Looking on the web"),
+  WebSearch: say("Looking on the web"),
+  Task: say("Working on one part"),
+  Agent: say("Working on one part"),
+  TodoWrite: say("Planning"),
+  Skill: say("Using one of its skills"),
 };
 
 // Anthropic's installer puts the .exe here and does not always add the folder to PATH.
@@ -123,7 +125,7 @@ function activityFor(block) {
     : (input.command ?? input.skill ?? input.description ?? input.pattern ?? input.query ?? "");
   return {
     type: "activity",
-    label: LABELS[block.name] ?? "Working",
+    label: LABELS[block.name] ?? say("Working"),
     detail: String(detail).split(/\r?\n/)[0].slice(0, 80),
   };
 }
@@ -143,7 +145,8 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
 
   const tool = findClaude();
   if (!tool) {
-    queueMicrotask(() => done({ ok: false, error: "Claude is not on this computer yet." }));
+    queueMicrotask(() =>
+      done({ ok: false, error: say("{name} is not on this computer yet.", { name: about.label }) }));
     return { stop() {} };
   }
 
@@ -187,16 +190,24 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
     } else if (event.type === "result") {
       const usage = fromClaude(event);
       if (event.subtype === "success" && !event.is_error) done({ ok: true, usage });
-      else done({ ok: false, error: String(event.result || "Claude could not finish this change."), usage });
+      else {
+        const error = event.result ? String(event.result)
+          : say("{name} could not finish this change.", { name: about.label });
+        done({ ok: false, error, usage });
+      }
     }
   });
 
   let errors = "";
   child.stderr.on("data", (chunk) => (errors = (errors + chunk).slice(-2000)));
-  child.on("error", (error) => done({ ok: false, error: `Claude could not start: ${error.message}` }));
+  child.on("error", (error) => done({ ok: false,
+    error: say("{name} could not start: {message}", { name: about.label, message: error.message }) }));
   child.on("close", (code) => {
     if (stopped) done({ ok: false, stopped: true });
-    else done({ ok: false, error: lastLine(errors) || `Claude stopped unexpectedly (code ${code}).` });
+    else {
+      const stoppedBy = say("{name} stopped unexpectedly (code {code}).", { name: about.label, code });
+      done({ ok: false, error: lastLine(errors) || stoppedBy });
+    }
   });
 
   return {

@@ -1,5 +1,5 @@
 import { h } from "./dom.js";
-import { t } from "./words.js";
+import { t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 
@@ -38,7 +38,7 @@ export function createSaveVideo(dir) {
     }
     else if (state === "stopped") status.textContent = t("Saving stopped. No file was kept.");
     else if (state === "failed") {
-      status.textContent = next.message;
+      status.textContent = tFrom(next.message);
       if (next.detail) status.title = next.detail;
     } else status.textContent = "";
   }

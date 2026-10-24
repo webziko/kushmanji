@@ -7,6 +7,7 @@ import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./lau
 import { codexLookArgs } from "./lookTool.js";
 import { fromCodex } from "./usage.js";
 import { mediaToolsEnv } from "./mediaTools.js";
+import { say } from "../say.js";
 
 // The Codex bridge (ChatGPT's coding agent). Same contract as claude.js; see docs/ARCHITECTURE.md.
 // `codex exec --json` runs one turn and prints one JSON object per line. Replies arrive whole, not as deltas.
@@ -106,16 +107,20 @@ function innerCommand(command) {
 function activityFor(item) {
   if (item.type === "command_execution") {
     const command = innerCommand(item.command);
-    const label = READS.test(command) ? "Looking at your files" : "Running a program";
+    const label = READS.test(command) ? say("Looking at your files") : say("Running a program");
     return { type: "activity", label, detail: command };
   }
   if (item.type === "file_change") {
     const first = item.changes?.[0]?.path;
-    return { type: "activity", label: "Changing your files", detail: first ? path.basename(first) : "" };
+    return { type: "activity", label: say("Changing your files"), detail: first ? path.basename(first) : "" };
   }
-  if (item.type === "web_search") return { type: "activity", label: "Looking on the web", detail: item.query ?? "" };
-  if (item.type === "todo_list") return { type: "activity", label: "Planning", detail: "" };
-  if (item.type === "mcp_tool_call") return { type: "activity", label: "Using a tool", detail: item.tool ?? "" };
+  if (item.type === "web_search") {
+    return { type: "activity", label: say("Looking on the web"), detail: item.query ?? "" };
+  }
+  if (item.type === "todo_list") return { type: "activity", label: say("Planning"), detail: "" };
+  if (item.type === "mcp_tool_call") {
+    return { type: "activity", label: say("Using a tool"), detail: item.tool ?? "" };
+  }
   return null;
 }
 
@@ -128,12 +133,13 @@ function explain(message) {
     // Already a plain sentence.
   }
   if (/model\b.*\b(not supported|not found|does not exist)/i.test(text)) {
-    return (
-      "ChatGPT's tool (Codex) is older than the version chosen in its settings. To update it, open PowerShell, " +
-      `paste this line and press Enter: npm install -g @openai/codex@latest\n${text}`
-    );
+    // The command and Codex's own words are values, so a translation can neither change the line to paste nor
+    // lose the reason Codex gave.
+    return say("ChatGPT's tool (Codex) is older than the version chosen in its settings. To update it, " +
+      "open PowerShell, paste this line and press Enter: {command}\n{text}",
+    { command: "npm install -g @openai/codex@latest", text });
   }
-  return text || "ChatGPT could not finish this change.";
+  return text || say("{name} could not finish this change.", { name: about.label });
 }
 
 // Codex's Windows sandbox failing to start, as it reports it on a command that never ran. Seen with 0.162.1:
@@ -147,8 +153,8 @@ const SANDBOX_FALLBACK = ["-c", 'windows.sandbox="unelevated"'];
 /** True once the default sandbox has failed in this run of the app. Later turns then skip straight to the other. */
 let plainSandbox = false;
 const SANDBOX_HELP =
-  "ChatGPT could not run any program, because neither of its two safety boxes would start. If the Codex app is " +
-  "open, close it and send your message again. Or pick another assistant in the menu above.";
+  say("ChatGPT could not run any program, because neither of its two safety boxes would start. If the " +
+    "Codex app is open, close it and send your message again. Or pick another assistant in the menu above.");
 
 const findCodex = () => resolveTool("codex");
 
@@ -178,7 +184,8 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
 
   const tool = findCodex();
   if (!tool) {
-    queueMicrotask(() => done({ ok: false, error: "ChatGPT is not on this computer yet." }));
+    queueMicrotask(() =>
+      done({ ok: false, error: say("{name} is not on this computer yet.", { name: about.label }) }));
     return { stop() {} };
   }
 
@@ -221,7 +228,7 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
             // turn again with the sandbox that still works, and use that one until the app is closed.
             abandoned = true;
             plainSandbox = true;
-            onEvent({ type: "activity", label: "Starting again, another way", detail: "" });
+            onEvent({ type: "activity", label: say("Starting again, another way"), detail: "" });
             killTree(mine.pid);
             return attempt(true);
           }
@@ -251,13 +258,14 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
 
     let errors = "";
     mine.stderr.on("data", (chunk) => (errors = (errors + chunk).slice(-2000)));
-    mine.on("error", (error) =>
-      abandoned || done({ ok: false, error: `ChatGPT could not start: ${error.message}` }));
+    mine.on("error", (error) => abandoned || done({ ok: false,
+      error: say("{name} could not start: {message}", { name: about.label, message: error.message }) }));
     mine.on("close", (code) => {
       if (abandoned) return;
       if (stopped) return done({ ok: false, stopped: true });
       const reason = failure || lastLine(errors);
-      done({ ok: false, error: reason ? explain(reason) : `ChatGPT stopped unexpectedly (code ${code}).` });
+      done({ ok: false, error: reason ? explain(reason)
+        : say("{name} stopped unexpectedly (code {code}).", { name: about.label, code }) });
     });
   };
   attempt(plainSandbox);

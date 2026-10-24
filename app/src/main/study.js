@@ -6,6 +6,7 @@ import { whereAll } from "./agents/launcher.js";
 import { spawnCli } from "./cli.js";
 import { readJson, writeJson } from "./jsonFile.js";
 import { collect, killTree } from "./proc.js";
+import { say } from "./say.js";
 import { whisperReady } from "./speechTool.js";
 import {
   chooseEngine,
@@ -376,7 +377,9 @@ export class FootageStudy {
       source: { size: clip.size, modifiedMs: Math.round(clip.modifiedMs) },
     };
     if (!tools.ffmpeg || !tools.ffprobe) {
-      entry.notes.push("The free tool FFmpeg is not on this computer yet, so the app could not watch this clip.");
+      // These notes are read by the assistants (in English) and shown to the person (in their language).
+      entry.notes.push(
+        say("The free tool FFmpeg is not on this computer yet, so the app could not watch this clip."));
       return entry;
     }
 
@@ -387,7 +390,7 @@ export class FootageStudy {
     const audio = info?.streams?.find((stream) => stream.codec_type === "audio");
     const seconds = Number(info?.format?.duration);
     if (!info || !(seconds > 0)) {
-      entry.notes.push("The app could not open this file as a video or a sound.");
+      entry.notes.push(say("The app could not open this file as a video or a sound."));
       return entry;
     }
     entry.seconds = Math.round(seconds * 100) / 100;
@@ -411,7 +414,7 @@ export class FootageStudy {
       this.#tell(job);
       entry.sheets = await this.#sheets(job, { source, folder, seconds, tall: video.height > video.width, tools });
       for (const sheet of entry.sheets) sheet.file = inProject(sheet.file);
-      if (entry.sheets.length === 0) entry.notes.push("The app could not take pictures from this clip.");
+      if (entry.sheets.length === 0) entry.notes.push(say("The app could not take pictures from this clip."));
     }
 
     // The words are written afresh every time. Old ones left behind (the language was changed, and no engine
@@ -560,8 +563,8 @@ export class FootageStudy {
     if (!reply?.ok || !Array.isArray(words)) {
       return {
         problem: ran.timedOut
-          ? "Writing down what is said in this clip took too long, so it was stopped."
-          : "The app could not write down what is said in this clip.",
+          ? say("Writing down what is said in this clip took too long, so it was stopped.")
+          : say("The app could not write down what is said in this clip."),
       };
     }
     const phrases = phrasesFrom(words);

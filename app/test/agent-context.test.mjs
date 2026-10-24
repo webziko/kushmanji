@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { test } from "node:test";
 import { usageLimit } from "../src/main/agents/limits.js";
 import { plainProblem } from "../src/main/agents/problems.js";
+import { say } from "../src/main/say.js";
 import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "../src/main/agents/checkup.js";
 
@@ -34,7 +35,7 @@ function runner({ state = {}, history, bridgeRun, check } = {}) {
     LEVELS: [], withAccess() {},
     DEFAULT_MODE: "build", knownMode: (value) => value, modeNote: () => "", MODES: [],
     handoverNote: () => "", recapNote: () => "RECAP of the latest work", recordTurn: (_dir, turn) => turns.push(turn),
-    usageLimit, plainProblem, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
+    say, usageLimit, plainProblem, filesChangedSince: () => ["index.html", "subtitles.json"], AUTO, sizeModel,
     fs, cliVersion: "0.8.149", CHECK_REQUEST, judge, makeScratch, testedOk,
     claude: bridge, codex: bridge, antigravity: bridge,
   });

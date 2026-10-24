@@ -2,6 +2,7 @@
 // the computer; of its many lines only a few matter to someone making videos in Kushmanji, and those are said here
 // in plain words with the one command that fixes each. The assistants' own sign-in is shown by the chat already.
 import { runCli } from "./cli.js";
+import { say } from "./say.js";
 
 const GB = 1024 ** 3;
 
@@ -10,17 +11,18 @@ const GB = 1024 ** 3;
 const MEANING = {
   FFmpeg: {
     need: true,
-    said: "Kushmanji needs the free program FFmpeg to save your videos, study your clips and make editing smooth.",
+    said: say("Kushmanji needs the free program FFmpeg to save your videos, study your clips and make " +
+      "editing smooth."),
     fix: "winget install --id Gyan.FFmpeg -e",
   },
   FFprobe: {
     need: true,
-    said: "FFprobe, which comes with FFmpeg, is missing. Installing FFmpeg brings it.",
+    said: say("FFprobe, which comes with FFmpeg, is missing. Installing FFmpeg brings it."),
     fix: "winget install --id Gyan.FFmpeg -e",
   },
   Chrome: {
     need: true,
-    said: "Saving a video needs a small browser that HyperFrames downloads once. It is not there yet.",
+    said: say("Saving a video needs a small browser that HyperFrames downloads once. It is not there yet."),
     // Kushmanji can fetch this one itself, with the person's yes (`health:getBrowser`).
     get: true,
   },
@@ -41,14 +43,15 @@ export function readDoctor(answer) {
   const free = Number(/([\d.]+)\s*GB free/.exec(disk?.detail ?? "")?.[1]);
   if (Number.isFinite(free) && free < 10) {
     items.push({ name: "Disk", ok: false, need: false,
-      said: `Only ${free} GB of space is left on this computer. Videos and their copies need room: 10 GB or more is ` +
-        "comfortable." });
+      said: say("Only {free} GB of space is left on this computer. Videos and their copies need room: " +
+        "10 GB or more is comfortable.", { free }) });
   }
   const memory = checks.find((check) => check?.name === "Memory");
   const total = Number(/([\d.]+)\s*GB total/.exec(memory?.detail ?? "")?.[1]);
   if (Number.isFinite(total) && total * GB < 6 * GB) {
     items.push({ name: "Memory", ok: false, need: false,
-      said: `This computer has ${total} GB of memory. Editing works, but long videos may be slow.` });
+      said: say("This computer has {total} GB of memory. Editing works, but long videos may be slow.",
+        { total }) });
   }
   return { ready: !items.some((item) => item.need), items, checked: checks.length > 0 };
 }

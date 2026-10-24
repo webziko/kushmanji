@@ -233,13 +233,17 @@ test("a sentence from the main process is found by its exact line, or by the pat
   const table = {
     "Whisper is ready": "Whisper ಸಿದ್ಧ",
     "Studied {done} of {total} clips": "{total} ರಲ್ಲಿ {done} ಕ್ಲಿಪ್",
-    "{count} clips": "{count} ಕ್ಲಿಪ್‌ಗಳು",
+    "Studied {count} clips": "{count} ಕ್ಲಿಪ್‌ಗಳನ್ನು ನೋಡಿದೆ",
+    "{start} to {end}": "{start} ರಿಂದ {end}",
     "{name}": "only placeholders",
   };
   assert.equal(translateFrom("Whisper is ready", table), "Whisper ಸಿದ್ಧ");
   assert.equal(translateFrom(say("Studied {done} of {total} clips", { done: 3, total: 19 }), table), "19 ರಲ್ಲಿ 3 ಕ್ಲಿಪ್");
   assert.equal(translateFrom("Studied 3 of 19 clips", table), "19 ರಲ್ಲಿ 3 ಕ್ಲಿಪ್", "the line with the most fixed words wins");
   assert.equal(translateFrom("Something new", table), "Something new", "a line that is only placeholders matches nothing");
+  // An assistant's own words and a command go through too, and must come out as they went in.
+  assert.equal(translateFrom("Could not connect to the server", table), "Could not connect to the server",
+    "a line with little fixed text is not a pattern");
   assert.equal(translateFrom("Whisper is ready", null), "Whisper is ready", "English has no table");
   assert.equal(translateFrom(undefined, table), undefined);
 });

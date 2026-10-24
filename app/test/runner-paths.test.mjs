@@ -12,6 +12,7 @@ import { test } from "node:test";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "../src/main/agents/checkup.js";
 import { usageLimit } from "../src/main/agents/limits.js";
 import { plainProblem } from "../src/main/agents/problems.js";
+import { say } from "../src/main/say.js";
 import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
 import { isNewer } from "../src/main/agents/versions.js";
 import { DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles } from "../src/main/agents/working.js";
@@ -46,7 +47,7 @@ function harness({ state = {}, history, check, prepare, bridge: overrides = {}, 
     accessFor: () => "project", accessNote: () => "Project only.", LEVELS: [], withAccess() {},
     DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles,
     handoverNote: () => "", recapNote: () => "RECAP", recordTurn: (_dir, turn) => turns.push(turn),
-    usageLimit, plainProblem, filesChangedSince: () => ["index.html"], AUTO, sizeModel, isNewer,
+    say, usageLimit, plainProblem, filesChangedSince: () => ["index.html"], AUTO, sizeModel, isNewer,
     fs: fsOverride ?? fs, cliVersion: "0.8.149", CHECK_REQUEST, judge, makeScratch, testedOk,
     claude: bridge, codex: bridge, antigravity: bridge,
   });

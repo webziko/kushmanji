@@ -37,6 +37,7 @@ import {
 } from "./projects.js";
 import { makeShorts, readShortsPlan } from "./shorts.js";
 import { madeRecord, recordMade, ShortsMaker } from "./shortsMaker.js";
+import { say } from "./say.js";
 import { runSmoke } from "./smoke.js";
 import { SpeechTool } from "./speechTool.js";
 import { FootageStudy } from "./study.js";
@@ -150,7 +151,8 @@ const agent = new AgentRunner({
   prepare: async (dir, onStep) => {
     studyStep = ({ dir: studied, status }) => {
       if (studied !== dir || !status.running || !status.current) return;
-      onStep("The app is watching your clips", `clip ${status.done + 1} of ${status.total}`);
+      onStep(say("The app is watching your clips"),
+        say("clip {number} of {total}", { number: status.done + 1, total: status.total }));
     };
     try {
       await study.ready(dir);

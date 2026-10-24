@@ -11,6 +11,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { readJson, writeJson } from "./jsonFile.js";
+import { say } from "./say.js";
 
 const RECORD = [".hyperframes", "shorts-made.json"];
 const planHash = (dir) => {
@@ -110,7 +111,7 @@ export class ShortsMaker {
   /** Stop after the short that is being built now. The person's Stop in a chat stops that short itself. */
   stop() {
     if (!this.#job) return;
-    this.#end("stopped", "Stopped. The shorts made so far are kept.");
+    this.#end("stopped", say("Stopped. The shorts made so far are kept."));
   }
 
   agentEvent({ dir, event } = {}) {
@@ -121,10 +122,16 @@ export class ShortsMaker {
     const current = job.shorts[job.index];
     if (!current || dir !== current.dir) return;
     if (!event.ok) {
-      const why = event.limited ? "the assistant ran out of its allowance" : event.stopped ? "it was stopped"
-        : "the assistant could not finish it";
-      return this.#end("stopped", `Short ${job.index + 1}, "${current.title}", was not finished: ${why}. ` +
-        "Open it from My videos to carry on.");
+      // One whole sentence per reason, not one with a reason slotted in, so each can be translated.
+      const values = { number: job.index + 1, title: current.title };
+      return this.#end("stopped", event.limited
+        ? say("Short {number}, \"{title}\", was not finished: the assistant ran out of its allowance. " +
+          "Open it from My videos to carry on.", values)
+        : event.stopped
+          ? say("Short {number}, \"{title}\", was not finished: it was stopped. " +
+            "Open it from My videos to carry on.", values)
+          : say("Short {number}, \"{title}\", was not finished: the assistant could not finish it. " +
+            "Open it from My videos to carry on.", values));
     }
     job.made.push(current);
     this.#next();
@@ -145,7 +152,8 @@ export class ShortsMaker {
         job.waiting = true;
         return this.#tell();
       }
-      return this.#end("stopped", `Short ${job.index + 1} could not start: ${error?.message ?? error}`);
+      return this.#end("stopped", say("Short {number} could not start: {message}",
+        { number: job.index + 1, message: error?.message ?? error }));
     }
     this.#tell();
   }
