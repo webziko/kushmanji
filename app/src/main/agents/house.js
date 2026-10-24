@@ -14,6 +14,8 @@ export const HOUSE_PROMPT =
   "Open a sheet to see what is in a clip, and cut by those times instead of guessing. " +
   "Before you cut, arrange or re-time footage, read .hyperframes/EDITING_GUIDE.md and edit by it: no repeated " +
   "takes, soft joins of picture and sound, and everything after a moved clip moved with it. " +
+  "Before you make or change titles, animation, a logo sting, a trailer or any motion design, read " +
+  ".hyperframes/MOTION_GUIDE.md and work by it. " +
   "Read FOOTAGE_REVIEW.md when it exists: it may contain a verified orientation and sound review. A portrait " +
   "file can contain a sideways landscape picture: inspect its frames before cropping or adding side fills. " +
   "Correct rotation first. Preserve the originals and make separate prepared files for sound or picture fixes. " +

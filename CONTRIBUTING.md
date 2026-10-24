@@ -122,7 +122,7 @@ app/src/main/            the main process (Node): the only code with file and pr
     versions.js          "is the installed agent newer than we tested?"
     access.js            the three access levels and which one a project is on
     working.js           the three ways of working, and the plan that waits for a yes
-    craft.js             the editing guide written into every project
+    craft.js             the editing and motion guides written into every project
     limits.js            recognises an assistant stopped by its usage limit
     sizing.js            "Auto": a smaller model for a small change
     turnHistory.js       "Undo this change": each turn is one entry in HyperFrames' history
@@ -137,7 +137,7 @@ app/src/preload/         preload.cjs: the only bridge between page and main proc
 app/src/renderer/        the page: Home, the project view, the chat (plain DOM, no build step)
 app/scripts/             check.mjs, test.mjs, smoke.mjs, test-vlog.mjs (a practice project for measuring)
 app/test/                unit tests (Node's built-in test runner, on Electron's own Node: see test.mjs)
-docs/                    ARCHITECTURE, FINDINGS, MAINTENANCE, HANDOFF
+docs/                    ARCHITECTURE, FINDINGS, MAINTENANCE, HANDOFF, RESEARCH (what other projects teach)
 ```
 
 Read `docs/ARCHITECTURE.md` before changing how the parts talk to each other, and `SECURITY.md` before touching
