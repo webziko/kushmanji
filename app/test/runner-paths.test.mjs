@@ -16,6 +16,7 @@ import { say } from "../src/main/say.js";
 import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
 import { isNewer } from "../src/main/agents/versions.js";
 import { DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles } from "../src/main/agents/working.js";
+import { knownLanguage, languageNote } from "../src/main/agents/language.js";
 
 const settled = () => new Promise((done) => setImmediate(done));
 const later = (ms = 5) => new Promise((done) => setTimeout(done, ms));
@@ -45,7 +46,7 @@ function harness({ state = {}, history, check, prepare, bridge: overrides = {}, 
     readState: () => state,
     updateState: (patch) => Object.assign(state, patch),
     accessFor: () => "project", accessNote: () => "Project only.", LEVELS: [], withAccess() {},
-    DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles,
+    DEFAULT_MODE, knownMode, modeNote, MODES, readPlan, strayFiles, knownLanguage, languageNote,
     handoverNote: () => "", recapNote: () => "RECAP", recordTurn: (_dir, turn) => turns.push(turn),
     say, usageLimit, plainProblem, filesChangedSince: () => ["index.html"], AUTO, sizeModel, isNewer,
     fs: fsOverride ?? fs, cliVersion: "0.8.149", CHECK_REQUEST, judge, makeScratch, testedOk,

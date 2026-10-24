@@ -7,7 +7,7 @@ import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
 import { createShortsCard } from "./shorts.js";
-import { locale, t, tFrom } from "./words.js";
+import { language, locale, t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 
@@ -730,7 +730,9 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     append(live.el);
     setRunning(true);
     try {
-      const accepted = await api.agent.send({ dir, text, pointing: Boolean(about), moment: Boolean(watched), purpose });
+      const accepted = await api.agent.send({
+        dir, text, pointing: Boolean(about), moment: Boolean(watched), purpose, language: language(),
+      });
       sent.replaceWith(userMessage({ text, pointing: about, moment: accepted?.moment }));
     } catch (error) {
       live.finish({ ok: false, error: error.message });

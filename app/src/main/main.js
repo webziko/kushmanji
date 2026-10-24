@@ -509,7 +509,8 @@ function registerIpc() {
   // `pointing` only says whether to include the selection. The selection itself is read here, from Studio's
   // server, at the moment of sending: the page is not trusted to describe an element.
   // `moment` likewise requests a fresh root-player snapshot, not a time or note supplied by the page.
-  handle("agent:send", async ({ dir, text, pointing, moment = false, purpose = null } = {}) => {
+  // `language` is the page's own language id; anything but a known one is taken as English (agents/language.js).
+  handle("agent:send", async ({ dir, text, pointing, moment = false, purpose = null, language = "en" } = {}) => {
     dir = requireProject(dir);
     if (samePath(exporter.dir, dir)) {
       throw new Error(
@@ -532,6 +533,7 @@ function registerIpc() {
       moment: captured,
       // A review by another assistant, or the fixes after it (M13-04); the runner checks the value.
       purpose: typeof purpose === "string" ? purpose : null,
+      language: typeof language === "string" ? language : "en",
     });
     return { moment: captured ? { seconds: captured.seconds, when: captured.when } : null };
   });

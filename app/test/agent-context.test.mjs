@@ -8,6 +8,7 @@ import { plainProblem } from "../src/main/agents/problems.js";
 import { say } from "../src/main/say.js";
 import { AUTO, sizeModel } from "../src/main/agents/sizing.js";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "../src/main/agents/checkup.js";
+import { knownLanguage, languageNote } from "../src/main/agents/language.js";
 
 // The assistant starts once its model is chosen, a moment after the message is saved.
 const settled = () => new Promise((done) => setImmediate(done));
@@ -31,7 +32,7 @@ function runner({ state = {}, history, bridgeRun, check } = {}) {
     readJson: (file, fallback) => files.get(file) ?? fallback,
     writeJson: (file, data) => files.set(file, structuredClone(data)),
     readState: () => state, updateState() {},
-    accessFor: () => "project", accessNote: () => "Project only.",
+    accessFor: () => "project", accessNote: () => "Project only.", knownLanguage, languageNote,
     LEVELS: [], withAccess() {},
     DEFAULT_MODE: "build", knownMode: (value) => value, modeNote: () => "", MODES: [],
     handoverNote: () => "", recapNote: () => "RECAP of the latest work", recordTurn: (_dir, turn) => turns.push(turn),
@@ -56,6 +57,17 @@ test("the runner saves a moment beside the request and tells the chosen assistan
   requests[0].onEvent({ type: "done", ok: true });
   assert.match(turns[0].asked, /At 0:42/);
   assert.match(turns[0].asked, /Change the title here\./);
+});
+
+test("a person reading the app in Kannada is named the menus as they see them; English adds nothing", async () => {
+  const kannada = runner();
+  kannada.agent.send({ dir: "video", text: "Cut the first clip.", language: "kn" });
+  await settled();
+  assert.match(kannada.requests[0].text, /reads Kushmanji in Kannada/);
+  const english = runner();
+  english.agent.send({ dir: "video", text: "Cut the first clip.", language: "nonsense" });
+  await settled();
+  assert.doesNotMatch(english.requests[0].text, /reads Kushmanji in/);
 });
 
 test("messages without a moment keep the existing selection context", async () => {

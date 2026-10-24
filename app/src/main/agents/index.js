@@ -5,6 +5,7 @@ import { readJson, writeJson } from "../jsonFile.js";
 import { say } from "../say.js";
 import { readState, updateState } from "../state.js";
 import { accessFor, accessNote, LEVELS, withAccess } from "./access.js";
+import { knownLanguage, languageNote } from "./language.js";
 import * as antigravity from "./antigravity.js";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "./checkup.js";
 import * as claude from "./claude.js";
@@ -351,7 +352,7 @@ export class AgentRunner {
    * `{ name, kind, when, note }`: what the chat shows beside their message, and what the agent is told.
    * `moment` is the main process's `{ seconds, when, note }` snapshot from the watching screen at Send.
    */
-  send({ dir, text, pointing = null, moment = null, purpose = null }) {
+  send({ dir, text, pointing = null, moment = null, purpose = null, language = "en" }) {
     if (this.#active) {
       throw new Error(say("The assistant is still working. Press Stop, or wait for it to finish."));
     }
@@ -380,10 +381,12 @@ export class AgentRunner {
     const access = accessFor(readState().access, dir);
     // The agent hears its limits and the way of working at the start of a conversation, and again whenever the
     // person changes either.
+    // The person's language goes with them (M14-17): the names the assistant quotes must be the ones on screen.
     const { mode } = chat;
-    const terms = `${access}/${mode}`;
+    const shown = knownLanguage(language);
+    const terms = `${access}/${mode}/${shown}`;
     const told = chat.sessions[engine] && chat.told[engine] === terms;
-    const limits = told ? "" : [accessNote(access), modeNote(mode)].join("\n\n");
+    const limits = told ? "" : [accessNote(access), modeNote(mode), languageNote(shown)].filter(Boolean).join("\n\n");
     chat.told = { ...chat.told, [engine]: terms };
     const pointed = pointing ? { name: pointing.name, kind: pointing.kind, when: pointing.when } : null;
     const watched = moment ? { seconds: moment.seconds, when: moment.when } : null;
