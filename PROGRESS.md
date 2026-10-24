@@ -673,6 +673,16 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       The measurement now also times jumps, a drag, opening the editor and memory, and
       `scripts/test-vlog.mjs` makes a practice project. Measured in the cloud on a practice vlog, not yet on
       the owner's PC: see M16-08. Numbers: `docs/FINDINGS.md`, last section
+- [x] M16-11 A motion-design guide for the assistants (Claude, 2026-10-25): `.hyperframes/MOTION_GUIDE.md`, written
+      into every video beside the editing guide (`craft.js`) and named in the house note. From the owner's
+      seventeen links (`docs/RESEARCH.md`) and the trailer test: plan and beat grid, a look as a contract, a small
+      easing vocabulary, transitions grown from content, rigs and walks, parallax and light, a banned list, word
+      sizes and reading time, "Any size" as the screen's own shape, HyperFrames' only music-fade shape, and how to
+      check. Not yet tried on a real request
+- [ ] M16-12 Add the research's editing lines to the editing guide (hook in three seconds, cut padding, captions
+      two frames early, effects with a cause, measured loudness): `docs/RESEARCH.md`, the session's report
+- [ ] M16-13 "Pick a look": 12 to 15 ready looks written as STYLE.md (with M10-04's presets)
+- [ ] M16-14 "Smooth motion" (HyperFrames 0.8.191's motion blur) and "Slow motion into the beat" (speed ramps)
 - [x] M16-08 Measure the lighter copies on the owner's PC with the real vlog (Claude, 2026-10-14). Watching: a
       jump shows its picture in 54 ms (slowest 79), a drag shows 31 pictures a second. Editor: 133 ms (slowest
       366), 30 a second. Opening: 2.6 s, the editor 1.3 s. More keyframes were tried by a helper (every 0.2 s,
@@ -756,6 +766,58 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       ("browser access was denied"), so it works from the footage study's pictures and says so. It built a
       good short that way, with two faults a look would have caught (lips not matching the words, a strip
       across the top). Find a way for Codex to take still frames inside its sandbox (with M2-21)
+
+## Found on the night of 24 to 25 October (the trailer test, the owner's questions, the research)
+
+The owner asked to "note it down what we might need extra". Each line is a task; the research behind the M8,
+M10 and M17 lines is `docs/RESEARCH.md`.
+
+- [ ] M8-12 "Find free pictures and sounds" from Openverse (no key), downloaded one by one into
+      `assets/free-media/` with a ledger and `CREDITS.md`, filtered to public domain and CC BY by default
+- [ ] M8-13 Quiet music made in code (an MIT synthesiser, no Python) as the answer to M8-09: audition first
+- [ ] M8-14 "Put the title behind me": HyperFrames `remove-background` (a 168 MB model, only on the person's yes)
+- [ ] M8-15 Pictures an assistant makes land in the video by themselves. Gemini's `generate_image` saves to
+      `~/.gemini/antigravity-cli/brain/<conversation>/` (JPG), and at "Only this video" agy's sandboxed terminal
+      may not write in the video ("Access ... is denied", proven through the chat); its file tool writes text only.
+      The owner: "ai have to fully do it". Copy new pictures from that folder into `assets/` after a Gemini turn,
+      or find an agy setting that lets the tool save into the workspace
+- [ ] M2-23 For Gemini "Also cut my clips" passes agy the same switches as "Only this video" (antigravity.js), and
+      agy 1.4.7's sandboxed terminal could not write in the video at all. Re-prove M10-08 for Gemini (a clip cut
+      at "Also cut my clips"); if it fails, Gemini's middle level needs another way
+- [ ] M10-19 Safe cuts in the FFmpeg path: only between words, 30 to 200 ms of air, 20 to 30 ms sound fades at each
+      join, sound joined uncompressed and compressed once, the filter in a file (Windows' command-line limit)
+- [ ] M10-20 "Show the cut plan first": pauses over 0.55 s found from the study's words (keep a 0.14 to 0.24 s
+      breath), with the time saved and per-item approval
+- [ ] M10-21 Steadier transcripts: whisper.cpp `--vad` (a 0.9 MB model), no words inside a final silence, junk
+      tokens mean retry; try on Kannada and Hindi first
+- [ ] M10-22 Repeated takes found from the words (most content words shared), both shown, the person picks
+- [ ] M10-23 "Check my cuts" after saving: frames either side of each cut, the words heard again at each cut,
+      loudness and true peak, the first 2.5 seconds
+- [ ] M10-24 A beat grid in motion projects (`hyperframes beats` from the music, or 120 beats a minute)
+- [ ] M10-25 "Add my files": a logo, music, pictures and fonts in one plain button and by dropping, and a saved look
+      that carries its files (M10-04 keeps STYLE.md only; the trailer's logo, GSAP and music were copied by hand)
+- [ ] M10-26 The check after a turn must catch what stops saving. Gemini wrote a music fade as `{"volume":[...]}`;
+      `lint` and Gemini's own check passed it, and `render` stopped: "Unsupported automation version". Validate
+      `data-automation`, or run the render's audio stage, in `turnCheck.js`
+- [ ] M2-24 A new video's starter loads GSAP from cdn.jsdelivr.net (`hyperframes init`); offline, or where the
+      check's browser is blocked (M2-21), its animation does not load. Put GSAP in the video's own `assets/`
+- [ ] M7-05 "Connections" in Settings (with M7-03): keys for services the person pays for themselves (ElevenLabs
+      voices, AI video makers, other AIs, M8-07's Gemini images), kept in Electron's `safeStorage` (Windows'
+      own protection), never in a video's folder. The three assistants keep using the person's subscription
+- [ ] M10-27 Connecting the assistants with one press (with M10-09): install and sign in from inside the app, not
+      by typing in PowerShell. Seen on 2026-10-25: Claude Code's sign-in had expired on the owner's PC
+- [ ] M13-07 A second assistant's review scored on seven points (look, idea, motion, type, finish, sound,
+      technical), with numbered fixes and times (extends M13-04)
+- [ ] M14-18 The engine's files in a video's folder (`hyperframes.json`, `meta.json`, `package.json`, `AGENTS.md`,
+      `CLAUDE.md`) puzzle the owner ("i thoght we completely removed hyperframes"). They are needed; hide them
+      from the person's view where Kushmanji shows files, and say in Help what they are
+- [ ] M17-10 A shorts rubric for "Make shorts": opens cold, one idea, ends on a finished thought, nothing outside
+      the clip needed, 20 to 60 s; plus the phone safe zones
+- [ ] M17-11 "Make the upright version" (and square) of a design: today a copy by hand and a second request
+- [ ] M9-14 Keep the repository easy for people and AIs to find their way in: CONTRIBUTING's file map true, a
+      tidy-up pass (with M9-05)
+- [ ] M9-15 The self-test deletes `app/.smoke-<name>` at its start and stops with a raw EPERM when a shell sits
+      inside that folder (two runs lost that night). Say so plainly (test only)
 
 ## Upstream
 

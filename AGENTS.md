@@ -69,7 +69,7 @@ PROGRESS.md       every task, with who has it
 AGENTS.md         this file          CLAUDE.md   imports this file
 CONTRIBUTING.md   how to work on the code, with the file map
 SECURITY.md       what the app is trusted with and what limits it
-docs/             ARCHITECTURE.md  FINDINGS.md  PARITY.md  MAINTENANCE.md  HANDOFF.md
+docs/             ARCHITECTURE.md  FINDINGS.md  PARITY.md  MAINTENANCE.md  HANDOFF.md  RESEARCH.md
 .github/          CI workflow
 app/              the Electron app
   src/main/         main process: window, security rules, projects, preview server
