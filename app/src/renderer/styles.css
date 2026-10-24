@@ -1803,6 +1803,12 @@ dialog[open]::backdrop {
   background: var(--raised);
   box-shadow: var(--shadow-sm);
   user-select: text;
+  /* In a short window a long card (an assistant to install or sign in) scrolls inside itself instead of pushing
+     the message box off the bottom (found 2026-10-25 with Claude signed out, at the smallest window). */
+  flex: 0 1 auto;
+  min-height: 72px;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 .chat-notice p {

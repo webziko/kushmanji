@@ -769,7 +769,8 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     notice.hidden = false;
     notice.replaceChildren(
       h("p", {}, text),
-      agent.state === "broken" && agent.detail && h("p", { class: "muted" }, agent.detail),
+      // A spread, not `a && b`: replaceChildren writes a plain `false` out as the word "false".
+      ...(agent.state === "broken" && agent.detail ? [h("p", { class: "muted" }, agent.detail)] : []),
       ...commands.map((command) =>
         h(
           "div",
