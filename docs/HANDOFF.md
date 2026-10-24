@@ -5,6 +5,32 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-24 · Claude · Disk space: the City Centre vlog and old test folders to the Recycle Bin
+
+No code changed and no task was started. The owner asked to remove the videos made here to free space (C: had
+31 GB free), chose "leftovers, the finished vlog, its shorts and the project; keep the Kushmanji motion videos
+and `C:\Creators`". Moved to the Recycle Bin, not deleted: `reviews/city-centre-vlog`, the three
+`city-centre-vlog-short-*` projects, the vlog and shorts and posting note in `reviews/READY`, `video2-review`,
+`m14-actions`, `m14-help`, `m14-moment-live`, `m14-player`, `review-launch`, and the Desktop shortcut
+"Kushmanji - City Centre vlog". The project's hard links only joined it to its own shorts.
+
+**What would surprise you**
+- The Recycle Bin on C: is capped at 24.7 GB and already held about 20 GB. Past the cap Windows purges its
+  oldest items for good, so the move stopped with 0.5 GB to spare. Still waiting for the owner to empty it:
+  `%USERPROFILE%\.cache\hyperframes\history` (4 GB of Studio undo copies, 2.9 GB of it for the vlog), and
+  `reviews/shisha-shorts`, `review-profile`, `m16-playback`, `m14-reopen`. Check the bin's room again before
+  moving them (`$Recycle.Bin\<SID>` on disk against `BitBucket\Volume\{guid}\MaxCapacity`).
+- The vlog's path is still in the app's `recentFolders`; Home skips folders that are gone, so it just
+  disappears from the list. M10-14 (no sound in the preview) can no longer be re-checked on that vlog.
+- `C:\Creators` (26 GB, the channel workspace of another chat) and `C:\lamjingshai` (5.6 GB of horror videos)
+  were measured but not touched. Windows' temporary folder holds 23 GB spread over thousands of small items
+  from browsers and other programs; the app's own leftovers there are tiny.
+
+The owner's order of work from the start of this session still stands: M9-13, M16-10, M14-15, the five motion
+videos, then the editor tasks.
+
+---
+
 ## 2026-10-18 (night) · Claude · Kannada and Hindi, HyperFrames 0.8.169, an unattended night on the owner's PC
 
 The owner went to sleep and asked for the app to be finished as far as possible, testing with their videos;

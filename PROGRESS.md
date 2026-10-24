@@ -386,7 +386,8 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       (`HFWIN_SMOKE_SOUND=1` with `HFWIN_SMOKE_REAL_PROJECT`), and Windows shows the app unmuted. Likely cause
       found in the video, not the app: the first draft had six clips at `data-volume="0.28"`, starting at 0:41,
       right where the owner's screenshot was taken. The second version has every clip at 1. Waiting on the
-      owner to play it again
+      owner to play it again. (2026-10-24: the owner moved the vlog to the Recycle Bin, so this can only be
+      re-checked on another of their videos, or closed if it never comes back)
 - [ ] M10-07 A video from only an idea. Prove Home's "Make it" end to end with upstream's ready workflows:
       explainer from text, product video from a website, short motion graphic, music video
 - [x] M10-08 An "editing tools" access level between "project only" and "full": cut, convert and grade footage

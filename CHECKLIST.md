@@ -4,16 +4,23 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-18, morning. The app is now called **Kushmanji**._
+_Updated 2026-10-24. The app is now called **Kushmanji**._
 
 ## How to open it
 
-Two shortcuts are on your Desktop:
-
-- **Kushmanji** opens the app on its Home screen.
-- **Kushmanji - City Centre vlog** opens it straight on your video. The vlog is also on the Home screen now.
+The **Kushmanji** shortcut on your Desktop opens the app on its Home screen. (The second one, "Kushmanji - City
+Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
+
+- [ ] **Empty the Recycle Bin to get the space back** (right-click it on the Desktop → Empty Recycle Bin). On
+      24 October, as you asked, the City Centre vlog, its three shorts, their projects and old test folders
+      (4.5 GB) went into it. Files in the Recycle Bin still take room until it is emptied. It also holds about
+      20 GB of things deleted earlier, which go for good too: look inside first if you are unsure.
+      The bin was nearly full, so 4.8 GB more is waiting for room. Once it is empty, tell Claude "move the rest":
+      HyperFrames' undo copies (4 GB, in `%USERPROFILE%\.cache\hyperframes\history`) and four old folders in
+      `reviews` (`shisha-shorts`, `review-profile`, `m16-playback`, `m14-reopen`). Moving more into a full bin
+      would make Windows delete its oldest things for good, which is why Claude stopped
 
 - [ ] **Gemini cannot change files again.** A Google Cloud usage-reporting add-on inside Antigravity switched
       itself back on (13 October) and stops every edit on Windows. Claude was not allowed to switch a reporting
@@ -231,11 +238,12 @@ Claude measured your vlog playing in the real app, picture by picture.
       and an ending card with "Subscribe for more happy days". A little music on those two cards only. 4 min 13 s
 - [x] **Three shorts** for YouTube Shorts and Instagram Reels, upright and full screen: "Boring day? Mall
       time!" (27 s), "So pretty!" (19 s), "Day out: done!" (21 s)
-- [x] **All four are saved as video files** in `C:\hyperframewindows\reviews\READY`, with a note of title ideas
-- **Earlier versions are saved** inside the project, in `.hyperframes/versions`: ChatGPT's first draft, and the
-  second version before the noise pass
-- **Open it:** the Desktop shortcut, or `C:\hyperframewindows\reviews\city-centre-vlog`
-- **Watch the first draft:** `C:\hyperframewindows\reviews\city-centre-vlog\renders\city-centre-draft.mp4`
+- [x] **All four were saved as video files** in `C:\hyperframewindows\reviews\READY`, with a note of title ideas.
+      You posted them yourself
+- **Moved to the Recycle Bin on 24 October, as you asked, to free space:** the vlog and the three shorts in
+  `READY`, the project `reviews\city-centre-vlog` (with its earlier versions and her clips), the three shorts'
+  projects and the Desktop shortcut. Until the bin is emptied, any of them can be put back: open the Recycle
+  Bin, right-click → Restore. Your original footage in `C:\Creators\happywithshisha` was not touched
 
 ## Everything, one by one
 
@@ -287,6 +295,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | Whisper's speech model, large-v3 (3.1 GB, from huggingface.co, checked), 14 October | `%USERPROFILE%\.cache\hyperframes\whisper\models` | Delete `ggml-large-v3.bin` |
 | The Whisper program (9 MB, whisper.cpp's own Windows build), fetched by the app's "Get it" | `%APPDATA%\Kushmanji\tools\whisper` | Delete that folder |
 | The two Kushmanji Desktop shortcuts now show the Kushmanji icon, 14 October | Your Desktop (OneDrive) | Shortcut → Properties → Change Icon |
+| The "Kushmanji - City Centre vlog" shortcut moved to the Recycle Bin with the vlog, 24 October, as you asked | Your Desktop (OneDrive) | Recycle Bin → Restore (before it is emptied) |
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.
