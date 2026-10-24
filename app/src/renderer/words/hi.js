@@ -71,6 +71,7 @@ export default {
   "The editor opened, but the video's picture did not finish loading. Try again.": "एडिटर खुल गया, पर वीडियो की तस्वीर पूरी लोड नहीं हुई। फिर कोशिश करें।",
   "Making clips smooth to edit ({done} of {total})": "क्लिप को एडिट के लिए स्मूद बनाया जा रहा है ({total} में से {done})",
   "Clips are smooth to edit": "क्लिप एडिट के लिए स्मूद हैं",
+  "Getting the editor ready. The first time, HyperFrames prepares the sound of every clip, so moving around can be slow until this note goes away.": "एडिटर तैयार हो रहा है। पहली बार HyperFrames हर क्लिप की आवाज़ तैयार करता है, इसलिए जब तक यह संदेश नहीं हटता, वीडियो में आगे-पीछे जाना धीमा हो सकता है।",
   "Copy clips into this video. Your own files are not changed.": "क्लिप इस वीडियो में कॉपी करें। आपकी अपनी फ़ाइलें नहीं बदलतीं।",
   "1 file added": "1 फ़ाइल जोड़ी गई",
   "{count} files added": "{count} फ़ाइलें जोड़ी गईं",

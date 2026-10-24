@@ -51,6 +51,14 @@ the keyboard is in the chat box, and when the editor's focus is on anything that
 box, a slider, a menu, an open dialog). Whether a key is ours has to be answered at once, so what the editor
 is doing is asked four times a second while an editor is on screen. Nothing is added to the editor's page.
 
+**"Getting the editor ready"** (M16-10, `main/editorPrep.js`). The first time Studio opens a project it asks its
+server for every clip's sound picture (`/api/projects/:id/waveform/...` and `/peaks/...`), and on the owner's PC
+the editor was slow for a minute or two. Its page remembers them, so a later open asks for none. The session's
+`onBeforeRequest`, `onCompleted` and `onErrorOccurred` (one listener each, shared with the lighter copies) count
+those requests for the running preview; once some have run for 0.8 s the page gets `editor:preparing` and shows
+a bar above the editor, and once none has run for 2.5 s it goes away (at most five minutes). Filmstrip pictures
+are decoded on every open and thumbnails are redrawn after every change, so neither counts.
+
 **Lighter copies for watching and editing** (M16-07, `main/lightCopies.js`). Phone footage (1080p, about 16
 Mbps, a keyframe every second) made every jump to a moment decode up to a second of full-size pictures. A few
 seconds after a project opens, the main process makes a 720p copy of each heavy video the project's pages use
@@ -222,6 +230,7 @@ and the caller in `renderer/`.
 | `agent.chooseModel({ engine, model })` | The model an agent uses, everywhere; `null` is the agent's own default, `"auto"` (also the value when nothing was chosen) sizes each request (`agents/sizing.js`). Otherwise only an id from that agent's `models()` is accepted |
 | `logs.show()` | Help's "Show the problem report" (M9-07, `log.js`): shows the newest log file in File Explorer and returns `true`, or opens the logs folder and returns `false` when no file has been written yet; refused with a plain sentence when there is neither. The page names no path |
 | event `preview:copies` | `{ dir, status: { state, done, total, failed } }`: the lighter copies for watching and editing (`lightCopies.js`) |
+| event `editor:preparing` | `{ dir, preparing }`: Studio is still preparing a first open, so the editor shows "Getting the editor ready" (`editorPrep.js`) |
 | `agent.stop()` / `agent.reset(dir)` | Stop the run / forget the conversation (project files untouched) |
 | `save.start(dir)` | Make the project's video file with the CLI's own `render`, in the person's Downloads folder, named after the project and the time. Its sound is then brought to about -14 LUFS (`loudness.js`; the picture is copied). One at a time; refused while an assistant works. Returns the status below |
 | `save.stop()` / `save.status(dir)` / `save.show()` | Stop saving (no half-made file is kept) / `{ state: idle, saving, busy, saved, stopped or failed, percent?, name?, megabytes?, message? }` / show the file this app last finished in File Explorer |

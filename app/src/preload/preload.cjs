@@ -12,7 +12,7 @@ const call =
 
 const EVENTS = new Set([
   "app:open-project", "preview:exit", "preview:changed", "preview:copies", "agent:event", "study:event", "speech:event",
-  "save:event", "shorts:event",
+  "save:event", "shorts:event", "editor:preparing",
 ]);
 
 contextBridge.exposeInMainWorld("hfwin", {

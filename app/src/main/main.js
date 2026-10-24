@@ -16,6 +16,7 @@ import { checkHealth, getBrowser } from "./health.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
+import { EditorPrep } from "./editorPrep.js";
 import { createLog, errorDetails } from "./log.js";
 import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
@@ -74,10 +75,15 @@ function lockDownSession() {
   session.defaultSession.setPermissionCheckHandler((_contents, permission, origin) => allowed(permission, origin));
   // A video Studio's preview asks for is answered with its lighter copy when one is ready (lightCopies.js).
   // Electron keeps one listener per event: anything else that needs onBeforeRequest has to share this one.
-  session.defaultSession.webRequest.onBeforeRequest({ urls: ["http://127.0.0.1/api/projects/*"] }, (details, respond) => {
+  // The same requests show when Studio is still preparing a project's first open (editorPrep.js).
+  const filter = { urls: ["http://127.0.0.1/api/projects/*"] };
+  session.defaultSession.webRequest.onBeforeRequest(filter, (details, respond) => {
+    editorPrep.started(details, preview.current);
     const redirectURL = details.method === "GET" ? lightCopies.redirect(details.url, preview.current) : null;
     respond(redirectURL ? { redirectURL } : {});
   });
+  session.defaultSession.webRequest.onCompleted(filter, (details) => editorPrep.ended(details));
+  session.defaultSession.webRequest.onErrorOccurred(filter, (details) => editorPrep.ended(details));
 }
 
 /** Studio's own server. Anything else that asks for a window is the web and goes to the person's browser. */
@@ -111,6 +117,8 @@ const lightCopies = new LightCopies({
   }),
   emit: (payload) => win?.webContents.send("preview:copies", payload),
 });
+/** "Getting the editor ready" while Studio prepares a project's first open. */
+const editorPrep = new EditorPrep({ emit: (payload) => win?.webContents.send("editor:preparing", payload) });
 /** Set while a chat turn waits for the footage study, so the chat can show which clip is being studied. */
 let studyStep = null;
 const study = new FootageStudy({
@@ -344,6 +352,7 @@ function registerIpc() {
     agent.stop();
     study.close();
     lightCopies.stop();
+    editorPrep.reset();
     preview.stop();
   });
   handle("projects:ready", async (dir) => {

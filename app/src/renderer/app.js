@@ -577,8 +577,16 @@ async function openProject(dir, { request } = {}) {
       smoothTimer = setTimeout(() => { smooth.textContent = ""; }, 6000);
     } else smooth.textContent = "";
   });
+  // The first time a video opens in the editor, Studio prepares every clip's sound picture and moving around is
+  // slow for a minute or two (main/editorPrep.js). Shown on the editor screen only.
+  const preparing = h("p", { class: "editor-prep", role: "status", hidden: true },
+    h("span", { class: "spinner", "aria-hidden": "true" }),
+    h("span", {}, t("Getting the editor ready. The first time, HyperFrames prepares the sound of every clip, so moving around can be slow until this note goes away.")));
+  const unwatchPreparing = api.on("editor:preparing", ({ dir: changed, preparing: busy }) => {
+    if (changed === dir && open === project) preparing.hidden = !busy;
+  });
   const destroy = project.destroy;
-  project.destroy = () => { unwatchSmooth(); clearTimeout(smoothTimer); destroy(); };
+  project.destroy = () => { unwatchSmooth(); unwatchPreparing(); clearTimeout(smoothTimer); destroy(); };
   const addMedia = h("button", {
     class: "ghost", title: t("Copy clips into this video. Your own files are not changed."),
     onclick: async () => {
@@ -622,7 +630,8 @@ async function openProject(dir, { request } = {}) {
       help.button,
     ),
     h("main", { class: "project" },
-      h("div", { class: "stage" }, player.element, createEditorWords(), frame, overlay), project.chat.element),
+      h("div", { class: "stage" }, player.element, createEditorWords(), preparing, frame, overlay),
+      project.chat.element),
   );
   help.firstTime();
 

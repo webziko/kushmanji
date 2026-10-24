@@ -12,6 +12,11 @@ in front and a fully busy processor all pass; one minimize reproduces "20.04 to 
 A minimized self-test window now comes back with `showInactive()`. The scratch scripts that imitate a person
 (`cover.ps1`, `minimize.ps1`, `keep-display.ps1`) were in this session's scratchpad only.
 
+**M16-10 done**: `main/editorPrep.js` counts Studio's `waveform`/`peaks` requests (first open only; measured with
+the built-in browser on a throwaway six-clip project) through the session's webRequest events, now three
+listeners in `lockDownSession`. Filmstrip fetches repeat on every open (207 over 40 s after a reload), so a
+broader rule would show the note every time. New self-test mode `HFWIN_SMOKE_FIRST_OPEN`.
+
 **Disk space.** The owner asked to remove the videos made here to free space (C: had
 31 GB free), chose "leftovers, the finished vlog, its shorts and the project; keep the Kushmanji motion videos
 and `C:\Creators`". Moved to the Recycle Bin, not deleted: `reviews/city-centre-vlog`, the three

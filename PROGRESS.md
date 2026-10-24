@@ -637,9 +637,14 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       366), 30 a second. Opening: 2.6 s, the editor 1.3 s. More keyframes were tried by a helper (every 0.2 s,
       every picture) and made no difference, so the copies stay as they are. Numbers: `docs/FINDINGS.md`, last
       sections. Not yet asked: whether it now feels smooth to the owner
-- [ ] M16-10 The editor's first open of a project: for a minute or two jumps take 1 to 5 s, while Studio makes
+- [x] M16-10 The editor's first open of a project: for a minute or two jumps take 1 to 5 s, while Studio makes
       its filmstrips, thumbnails and sound pictures and the footage study listens to every clip (measured on
-      the owner's PC, M16-08). Say so on screen ("Getting the editor ready"), or start that work earlier
+      the owner's PC, M16-08). Done (Claude, 2026-10-24): "Getting the editor ready" shows above the editor
+      while Studio's first-open requests for the clips' sound pictures run (`main/editorPrep.js`; which requests
+      and why in ARCHITECTURE). On a fresh six-clip project it came at 2.8 s and went at 7.6 s; a second open
+      showed none. `HFWIN_SMOKE_FIRST_OPEN=1` with `HFWIN_SMOKE_REAL_PROJECT=<a folder>` times it on any
+      project. Not done: starting that work earlier, and the footage study's own share of the slowness. Not yet
+      seen on the owner's real footage
 - [x] M16-09 (Claude, 2026-10-14; done as below) HyperFrames keeps a second full copy of every video in its undo history
       (`%USERPROFILE%\.cache\hyperframes\history`, see UP-02). Show the owner how much room it takes, and offer
       to clear the history of projects that are gone (upstream has `pruneGoneProjectHistories`). Done: Home's foot says "Undo copies of your videos take 666 MB on this computer", and when

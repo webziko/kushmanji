@@ -71,6 +71,7 @@ export default {
   "The editor opened, but the video's picture did not finish loading. Try again.": "ಎಡಿಟರ್ ತೆರೆಯಿತು, ಆದರೆ ವಿಡಿಯೋದ ಚಿತ್ರ ಪೂರ್ತಿ ಲೋಡ್ ಆಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   "Making clips smooth to edit ({done} of {total})": "ಕ್ಲಿಪ್‌ಗಳನ್ನು ಎಡಿಟ್ ಮಾಡಲು ಸುಲಭವಾಗುವಂತೆ ಸಿದ್ಧಪಡಿಸುತ್ತಿದೆ ({total} ರಲ್ಲಿ {done})",
   "Clips are smooth to edit": "ಕ್ಲಿಪ್‌ಗಳು ಎಡಿಟ್ ಮಾಡಲು ಸಿದ್ಧ",
+  "Getting the editor ready. The first time, HyperFrames prepares the sound of every clip, so moving around can be slow until this note goes away.": "ಎಡಿಟರ್ ಸಿದ್ಧವಾಗುತ್ತಿದೆ. ಮೊದಲ ಬಾರಿ HyperFrames ಪ್ರತಿ ಕ್ಲಿಪ್‌ನ ಸೌಂಡ್ ಸಿದ್ಧಪಡಿಸುತ್ತದೆ, ಹಾಗಾಗಿ ಈ ಸೂಚನೆ ಹೋಗುವವರೆಗೆ ವಿಡಿಯೋದಲ್ಲಿ ಮುಂದೆ-ಹಿಂದೆ ಹೋಗುವುದು ನಿಧಾನವಾಗಬಹುದು.",
   "Copy clips into this video. Your own files are not changed.": "ಕ್ಲಿಪ್‌ಗಳನ್ನು ಈ ವಿಡಿಯೋಗೆ ಕಾಪಿ ಮಾಡಿ. ನಿಮ್ಮ ಫೈಲ್‌ಗಳು ಬದಲಾಗುವುದಿಲ್ಲ.",
   "1 file added": "1 ಫೈಲ್ ಸೇರಿಸಲಾಗಿದೆ",
   "{count} files added": "{count} ಫೈಲ್‌ಗಳನ್ನು ಸೇರಿಸಲಾಗಿದೆ",

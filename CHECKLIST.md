@@ -71,6 +71,10 @@ Then the list further down, starting with one-click export.
       draw a minimized window, so the video in it hardly moved. Now it puts itself back without taking your
       keyboard, and its title bar says "Kushmanji self-test (closes by itself in about a minute)". It passed
       with a window over it, with VLC playing full screen in front, and with the processor fully busy.
+- [x] **"Getting the editor ready".** The first time a video opens in "Edit by hand", a bar above the editor
+      says HyperFrames is preparing the sound of every clip and that moving around can be slow until the note
+      goes away. It goes by itself; the next time you open the same video it does not appear. In Kannada and
+      Hindi too. Please tell me if it stays up for long on your own videos.
 
 ## New on the night of 17 to 18 October (you were asleep)
 

@@ -84,6 +84,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   state.js  jsonFile.js  settings and safe file writes
   selection.js           what is selected in the editor, for the chat's "Pointing at"
   editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
+  editorPrep.js          "Getting the editor ready" while Studio prepares a project's first open
   exporter.js            "Save video": the video file, made into the Downloads folder
   log.js                 the problem report: a daily log file with nothing private in it (`redact`)
   lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them

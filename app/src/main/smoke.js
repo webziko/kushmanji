@@ -1005,6 +1005,47 @@ async function soundProbe({ win, outDir, result, shot }) {
   fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
 }
 
+/**
+ * `HFWIN_SMOKE_FIRST_OPEN` with `HFWIN_SMOKE_REAL_PROJECT`: open that project in "Edit by hand" and time the
+ * "Getting the editor ready" note (M16-10). Use a project Studio has not opened on this computer yet, or a copy of
+ * one in a new folder: on a later open the note should not appear at all.
+ */
+async function firstOpenProbe({ result, inPage, shot, page }) {
+  page.send("app:open-project", { dir: process.env.HFWIN_SMOKE_REAL_PROJECT });
+  if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 180_000 })))
+    throw new Error("The project did not open.");
+  await inPage("document.querySelector('.editor-toggle').click()");
+  const opened = Date.now();
+  const seconds = () => Math.round((Date.now() - opened) / 100) / 10;
+  const showing = () => inPage("Boolean(document.querySelector('.editor-prep:not([hidden])'))");
+  const probe = { shownAt: null, hiddenAt: null };
+  while (seconds() < 180) {
+    const now = await showing();
+    if (now && probe.shownAt === null) {
+      probe.shownAt = seconds();
+      await shot("first-open-preparing");
+    } else if (!now && probe.shownAt !== null) {
+      probe.hiddenAt = seconds();
+      break;
+    } else if (!now && seconds() > 30) break;
+    await wait(200);
+  }
+  await wait(1000);
+  await shot("first-open-ready");
+  // Back to watching and into the editor again: Studio remembers the clips now, so no note.
+  await inPage("document.querySelector('.editor-toggle').click()");
+  await until(() => inPage("document.body.dataset.screen === 'watch' && document.body.dataset.studio === 'loaded'"),
+    { timeoutMs: 60_000 });
+  await inPage("document.querySelector('.editor-toggle').click()");
+  const again = Date.now();
+  probe.shownOnSecondOpen = false;
+  while (Date.now() - again < 20_000 && !probe.shownOnSecondOpen) {
+    probe.shownOnSecondOpen = await showing();
+    await wait(200);
+  }
+  result.firstOpen = probe;
+}
+
 export async function runSmoke({ win, outDir }) {
   fs.mkdirSync(outDir, { recursive: true });
   const result = {
@@ -1073,6 +1114,12 @@ export async function runSmoke({ win, outDir }) {
     }
     if (process.env.HFWIN_SMOKE_PLAYBACK && process.env.HFWIN_SMOKE_REAL_PROJECT) {
       await playbackProbe({ win, outDir, result, shot });
+      result.ok = true;
+      fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
+      return app.exit(0);
+    }
+    if (process.env.HFWIN_SMOKE_FIRST_OPEN && process.env.HFWIN_SMOKE_REAL_PROJECT) {
+      await firstOpenProbe({ result, inPage, shot, page });
       result.ok = true;
       fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
       return app.exit(0);
