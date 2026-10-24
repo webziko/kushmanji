@@ -189,7 +189,8 @@ Do not build them.
       on the owner's PC; it is not signed, so SmartScreen warns
 - [~] M5-02 App icon; Start Menu and Desktop shortcuts (Claude, 2026-10-14): the icon (M14-06) and both shortcuts
       are in the installer; to be seen on the owner's PC
-- [ ] M5-03 Machines without FFmpeg or Chrome: fetch them on first run
+- [~] M5-03 Machines without FFmpeg or Chrome: fetch them on first run (Claude, 2026-10-24: FFmpeg with one press,
+      like Whisper; the browser already is)
 - [x] M5-04 First-run health check built on `hyperframes doctor` (Claude, 2026-10-14): Home shows "Before you
       start" only when something is missing: FFmpeg (with the `winget` line to copy and how to run it), the
       browser for saving videos (Kushmanji fetches it with one press), little disk space or memory. Otherwise
@@ -203,11 +204,20 @@ Do not build them.
 
 ## M6 · Windows hardening
 
-- [ ] M6-01 Spaces and non-English characters in user names and project paths
+- [ ] M6-01 Spaces and non-English characters in user names and project paths. Project paths: since 2026-10-24
+      every self-test run keeps its projects under "my projects José ಕನ್ನಡ" (`scripts/smoke.mjs`), and passed:
+      making, playing, editing, studying and saving. Still untried: a Windows user name with such letters
+      (HyperFrames' cache and the browser live under it; Whisper's known fault there is said plainly, UP-03)
 - [ ] M6-02 Projects inside OneDrive or a redirected Documents folder
 - [ ] M6-03 Paths longer than 260 characters
-- [ ] M6-04 Clean up a leftover Studio server after the app crashed
-- [ ] M6-05 The port is already taken by something else
+- [x] M6-04 Clean up a leftover Studio server after the app crashed (Claude, 2026-10-24: nothing to clean). Tried
+      on Windows 11: a parent that starts `hyperframes preview` the app's way (Electron's Node, piped output) was
+      killed with `Stop-Process -Force`; within four seconds nothing listened on the port any more, because the
+      server ends when its pipes close. Reopen if a leftover is ever seen after a hang rather than a crash
+- [x] M6-05 The port is already taken by something else (Claude, 2026-10-24: works). With 48620 held by another
+      running editor server, the full self-test passed on 48621: the CLI moves up by itself. What is lost for that
+      session is only what Studio keeps per address (its layout, theme, export settings and the clips' sound
+      pictures, so "Getting the editor ready" shows again)
 - [ ] M6-06 High-DPI and more than one monitor
 - [ ] M6-07 SmartScreen and antivirus behaviour with an unsigned installer
 
@@ -554,7 +564,7 @@ now comes first**: it changes what every later feature looks like. The review it
       Dates follow the language. Choosing one reloads the page through `app:reload`, because the window
       refuses a reload the page starts itself (found on the owner's PC). The self-test switches to Kannada and
       back. Nobody who reads Kannada or Hindi has checked the words yet
-- [ ] M14-15 The words that come from the main process are still English in Kannada and Hindi: the access
+- [~] M14-15 (Claude, 2026-10-24) The words that come from the main process are still English in Kannada and Hindi: the access
       levels and ways of working with their explanations, the line under the chat box, the clips strip's notes,
       Home's health lines, the speech tool's and the shorts' messages. A second list, passed through `t()` on
       the page by a function the test allows to take a variable
