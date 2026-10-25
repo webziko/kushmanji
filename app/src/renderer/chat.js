@@ -268,7 +268,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
         } }, t("Ask to fix them")),
         // The check's own words are for the assistant; whoever is curious can read them.
         h("details", { class: "msg-check-details" }, h("summary", {}, t("Show them")),
-          ...mistakes.map((mistake) => h("p", {}, mistake.text)))));
+          ...mistakes.map((mistake) => h("p", {}, tFrom(mistake.text))))));
   }
 
   /**

@@ -133,6 +133,7 @@ app/src/main/            the main process (Node): the only code with file and pr
     sizing.js            "Auto": a smaller model for a small change
     turnHistory.js       "Undo this change": each turn is one entry in HyperFrames' history
     turnCheck.js         the app's check for mistakes after each change
+    automationCheck.js   the check that sound fades and automation will not stop "Save video"
     checkup.js           "Test it now" for an assistant newer than the app was tried with
     lookTool.js          how each assistant is given the "look at the video" tool
     mediaTools.js        puts the FFmpeg check on an agent's PATH

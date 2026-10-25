@@ -824,7 +824,9 @@ M10 and M17 lines is `docs/RESEARCH.md`.
       that carries its files (M10-04 keeps STYLE.md only; the trailer's logo, GSAP and music were copied by hand)
       and its font: BRAND.md names Nunito, which Windows does not have, so every trailer fell back to Segoe UI.
       Ship Nunito (SIL Open Font Licence) in the kit with an @font-face pointing at that file
-- [ ] M10-26 The check after a turn must catch what stops saving. Gemini wrote a music fade as `{"volume":[...]}`;
+- [x] M10-26 (Gemini, 2026-10-25, reviewed by Claude: `agents/automationCheck.js` checks every data-automation in
+      index.html and compositions/ by the rules HyperFrames' renderer enforces, and the after-turn check lists what
+      it finds first) The check after a turn must catch what stops saving. Gemini wrote a music fade as `{"volume":[...]}`;
       `lint` and Gemini's own check passed it, and `render` stopped: "Unsupported automation version". Validate
       `data-automation`, or run the render's audio stage, in `turnCheck.js`
 - [ ] M2-24 A new video's starter loads GSAP from cdn.jsdelivr.net (`hyperframes init`); offline, or where the

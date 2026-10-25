@@ -156,6 +156,7 @@ export default {
   "The app checked your video and found {count} mistakes.": "ಆ್ಯಪ್ ನಿಮ್ಮ ವಿಡಿಯೋ ಪರಿಶೀಲಿಸಿ {count} ತಪ್ಪುಗಳನ್ನು ಕಂಡುಹಿಡಿದಿದೆ.",
   "Ask to fix them": "ಸರಿಪಡಿಸಲು ಹೇಳಿ",
   "Show them": "ತೋರಿಸಿ",
+  "A sound's fade is written in a form the video cannot be saved with.": "ಧ್ವನಿಯ ಫೇಡ್ ಅನ್ನು ವಿಡಿಯೋ ಸೇವ್ ಮಾಡಲು ಆಗದ ರೂಪದಲ್ಲಿ ಬರೆಯಲಾಗಿದೆ.",
   "Bring it back": "ಮರಳಿ ತನ್ನಿ",
   "Undo this change": "ಈ ಬದಲಾವಣೆ ಹಿಂದಕ್ಕೆ ಪಡೆಯಿರಿ",
   "Put back what the assistant changed.": "ಅಸಿಸ್ಟೆಂಟ್ ಬದಲಾಯಿಸಿದ್ದನ್ನು ಮೊದಲಿನಂತೆ ಮಾಡಿ.",
