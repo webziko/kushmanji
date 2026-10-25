@@ -80,7 +80,14 @@ Do not build them.
 - [x] M1-08 Real thumbnails on the Home cards (now a letter on a dark tile) (Claude, 2026-10-14: done by M14-07's
       pictures, `covers.js`)
 - [ ] M1-09 Follow Studio's light and dark toggle in the frame around it
-- [~] M1-10 Rename a project; delete one to the Recycle Bin (Claude, with a Sonnet helper, 2026-10-25)
+- [x] M1-10 Rename a project; delete one to the Recycle Bin (Claude, 2026-10-25; built by a Sonnet helper in a worktree,
+      reviewed). Each Home card has "⋯": Rename (the name in `meta.json`, shown everywhere; the folder too when it
+      is in the app's own projects folder and not in use, with remembered paths and the access level moved),
+      "Remove from list" for folders opened from elsewhere, and "Move to the Recycle Bin" after a question that
+      names the folder and the way back (`shell.trashItem`; refused while the video is open, saving or being
+      edited, and for a folder that holds more than one video). `videoManage.js`, `renderer/videoActions.js`.
+      Not yet tried: a real move to the Recycle Bin (faked in tests; the self-test never trashes). "Save video"
+      still names the file after the folder
 - [x] M1-11 Project names in any language (a name with no Latin letters becomes "untitled" today) (Claude,
       2026-10-14): letters of any script keep themselves ("ನನ್ನ ಊರಿನ ವ್ಲಾಗ್" becomes the folder
       `ನನ್ನ-ಊರಿನ-ವ್ಲಾಗ್`); Latin accents are still dropped. A video in a Kannada folder was opened, edited by
