@@ -9,6 +9,7 @@ import { createAbout } from "./about.js";
 import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
+import { askTrash, askVideoName } from "./videoActions.js";
 import { LANGUAGES, language, setLanguage, t, tFrom } from "./words.js";
 
 const api = window.hfwin;
@@ -81,13 +82,110 @@ function carryOnCard(project) {
       when && h("p", { class: "carry-when" }, t("Changed {when}", { when })),
       h("button", {
         class: "primary carry-go", type: "button", "aria-label": t("Carry on with {name}", { name: project.name }),
-        onclick: () => openProject(project.dir),
+        onclick: () => openProject(project.dir, { name: project.name }),
       }, t("Carry on")),
     ),
   );
 }
 
+/** A short note under the start cards that is not a problem: what happened to a video (M1-10). */
+function showNote(message) {
+  if (!home.note) return;
+  home.note.hidden = !message;
+  home.note.textContent = message ?? "";
+  if (message && home.note.isConnected) home.note.scrollIntoView({ block: "nearest" });
+}
+
+/** "Rename" on a card: ask for the name, then the main process changes it (the folder's too, for its own videos). */
+async function renameCard(project) {
+  const name = await askVideoName(project.name);
+  if (!name || name === project.name) return;
+  showError("");
+  showNote("");
+  try {
+    const done = await api.projects.rename({ dir: project.dir, name });
+    await refreshProjects();
+    // The name is changed either way; the sentence is for a folder that kept its old name.
+    if (done.note) showNote(tFrom(done.note));
+  } catch (error) {
+    showError(tFrom(error.message));
+  }
+}
+
+/** "Move to the Recycle Bin" on a card: only after the person says yes. The files can be restored from there. */
+async function trashCard(project) {
+  if (!(await askTrash(project))) return;
+  showError("");
+  showNote(t("Moving to the Recycle Bin…"));
+  try {
+    await api.projects.trash(project.dir);
+    await refreshProjects();
+    showNote(t("“{name}” is in the Recycle Bin.", { name: project.name }));
+  } catch (error) {
+    showNote("");
+    showError(tFrom(error.message));
+  }
+}
+
+let menus = 0;
+
+/**
+ * A card's "⋯" button and its menu (M1-10): Rename, Remove from list (only for a folder opened from elsewhere)
+ * and Move to the Recycle Bin. The menu is a popover, drawn above everything, so the card's rounded edge cannot
+ * clip it, and a click anywhere else or Escape closes it. Returns [the button, the menu].
+ */
+function cardMenu(project) {
+  const id = `card-menu-${++menus}`;
+  const choose = (action) => () => {
+    menu.hidePopover();
+    void action();
+  };
+  const item = (label, action, { title, danger = false } = {}) => h("button", {
+    class: danger ? "card-menu-item danger-text" : "card-menu-item", type: "button", role: "menuitem", title,
+    onclick: choose(action),
+  }, label);
+  const menu = h("div", { class: "card-menu", id, role: "menu", popover: "auto" },
+    item(t("Rename"), () => renameCard(project)),
+    project.external && item(t("Remove from list"), async () => {
+      await api.projects.forget(project.dir);
+      await refreshProjects();
+    }, { title: t("Take this video off the list. Its files are not deleted.") }),
+    item(t("Move to the Recycle Bin"), () => trashCard(project), {
+      danger: true, title: t("It goes to the Recycle Bin; you can restore it from there."),
+    }));
+  const more = h("button", {
+    class: "ghost small card-more", type: "button", popovertarget: id, "aria-haspopup": "menu",
+    title: t("More actions for {name}", { name: project.name }),
+    "aria-label": t("More actions for {name}", { name: project.name }),
+  }, "⋯");
+  const items = () => [...menu.querySelectorAll("button")];
+  // Under the button, lined up with its right edge; above it when the card is near the bottom of the window.
+  menu.addEventListener("beforetoggle", (event) => {
+    if (event.newState !== "open") return;
+    const box = more.getBoundingClientRect();
+    menu.style.top = `${box.bottom + 4}px`;
+    menu.style.right = `${Math.max(8, document.documentElement.clientWidth - box.right)}px`;
+  });
+  menu.addEventListener("toggle", (event) => {
+    if (event.newState !== "open") return;
+    const box = more.getBoundingClientRect();
+    if (box.bottom + 4 + menu.offsetHeight > document.documentElement.clientHeight - 8) {
+      menu.style.top = `${Math.max(8, box.top - 4 - menu.offsetHeight)}px`;
+    }
+    items()[0]?.focus();
+  });
+  menu.addEventListener("keydown", (event) => {
+    const step = { ArrowDown: 1, ArrowUp: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const all = items();
+    all[(all.indexOf(document.activeElement) + step + all.length) % all.length]?.focus();
+  });
+  return [more, menu];
+}
+
 function projectCard(project) {
+  const [more, menu] = cardMenu(project);
   const actions = h(
     "div",
     { class: "card-actions" },
@@ -101,26 +199,17 @@ function projectCard(project) {
       },
       t("Show folder"),
     ),
-    project.external &&
-      h(
-        "button",
-        {
-          class: "ghost small",
-          title: t("Take this video off the list. Its files are not deleted."),
-          onclick: async () => {
-            await api.projects.forget(project.dir);
-            await refreshProjects();
-          },
-        },
-        t("Remove from list"),
-      ),
+    more,
   );
   return h(
     "li",
     { class: "card" },
     h(
       "button",
-      { class: "card-open", onclick: () => openProject(project.dir), title: project.dir },
+      {
+        class: "card-open", title: project.dir,
+        onclick: () => openProject(project.dir, { name: project.name }),
+      },
       cover(project),
       h("span", { class: "card-name" }, project.name),
       h(
@@ -130,6 +219,7 @@ function projectCard(project) {
       ),
     ),
     actions,
+    menu,
   );
 }
 
@@ -190,7 +280,7 @@ async function pickFolder() {
   try {
     // The native window's title comes from here: the main process does not know the language (M14-16).
     const project = await api.projects.pickFolder(t("Open the folder of a video"));
-    if (project) await openProject(project.dir);
+    if (project) await openProject(project.dir, { name: project.name });
   } catch (error) {
     showError(tFrom(error.message));
   }
@@ -401,6 +491,7 @@ function showHome() {
       }, t("Open a folder")),
     ),
     home.error,
+    home.note = h("p", { class: "home-note", hidden: true, role: "status" }),
     home.health = h("section", { class: "health", hidden: true, role: "status" }),
     h("h2", { class: "my-videos" }, t("My videos")),
     home.grid,
@@ -490,11 +581,12 @@ function startFailure(message) {
   return [tFrom(sentence), ...printed].join("\n");
 }
 
-async function openProject(dir, { request } = {}) {
+async function openProject(dir, { request, name } = {}) {
   // Moving to another video from an open one: keep the picture of the one being left first.
   if (open) await keepPicture();
   open?.destroy();
-  const project = { dir, name: folderName(dir) };
+  // The name the person gave the video, when the caller knows it. The main process answers with it too (below).
+  const project = { dir, name: name || folderName(dir) };
   const save = createSaveVideo(dir);
   project.chat = createChat(dir, { onEdit: () => { if (!project.editing) edit.click(); }, onSave: () => save.start() });
   open = project;
@@ -630,12 +722,13 @@ async function openProject(dir, { request } = {}) {
     },
   }, t("Add clips"));
 
+  const nameLabel = h("span", { class: "project-name", title: dir }, project.name);
   app.replaceChildren(
     h(
       "header",
       { class: "topbar" },
       h("button", { class: "ghost", onclick: goHome, title: t("Back to your videos") }, "← ", t("My videos")),
-      h("span", { class: "project-name", title: dir }, project.name),
+      nameLabel,
       mediaStatus,
       smooth,
       save.status,
@@ -665,6 +758,7 @@ async function openProject(dir, { request } = {}) {
     const started = await api.projects.open(dir);
     if (open !== project) return;
     project.started = started;
+    if (started.title) nameLabel.textContent = project.name = started.title;
     player.open(started);
   } catch (error) {
     if (open === project) project.fail("failed", startFailure(error.message));

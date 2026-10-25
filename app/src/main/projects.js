@@ -1,9 +1,11 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { runCli } from "./cli.js";
 import { folderNameFor } from "./folderName.js";
 import { say } from "./say.js";
 import { projectsRoot, readState, updateState } from "./state.js";
+import { nameOf, renameVideo, trashVideo } from "./videoManage.js";
 
 const MAX_RECENT = 30;
 
@@ -40,7 +42,9 @@ function describe(dir, external) {
   } catch {
     // Listed a moment ago and gone now; it sorts last and the next listing drops it.
   }
-  return { dir, name: path.basename(dir), modifiedAt, external };
+  // The name the person gave it (meta.json), not the folder's: the two differ after a rename of a video that was
+  // opened from elsewhere, whose folder keeps its name.
+  return { dir, name: nameOf(dir), modifiedAt, external };
 }
 
 /** Projects made in the app, then folders opened from elsewhere, newest first. */
@@ -104,4 +108,21 @@ export function forgetFolder(dir) {
   updateState({
     recentFolders: readState().recentFolders.filter((other) => pathKey(other) !== key),
   });
+}
+
+const settings = { read: readState, update: updateState };
+
+/**
+ * A new name for a video (M1-10). For one inside the app's own folder the folder is renamed too, and what the app
+ * remembers by folder moves with it (videoManage.js). `why(dir)` says whether the video is in use. Resolves to
+ * the video as Home shows it now, and a sentence when its folder kept the old name.
+ */
+export async function renameProject(dir, name, { why } = {}) {
+  const done = await renameVideo(dir, name, { root: projectsRoot(), state: settings, why, tooDeep });
+  return { project: projectAt(done.dir), note: done.note };
+}
+
+/** Moves a video's folder to the Windows Recycle Bin (`trashItem` is Electron's), then forgets it. */
+export function trashProject(dir, { trashItem, why } = {}) {
+  return trashVideo(dir, { trashItem, why, root: projectsRoot(), home: os.homedir(), state: settings });
 }

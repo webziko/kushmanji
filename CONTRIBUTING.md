@@ -88,6 +88,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   main.js                window, security rules, the list of calls the page may make
   projects.js            list, create, open a project
   folderName.js          a new video's folder name, in any script
+  videoManage.js         a card's "Rename" (the name, and the folder of a video the app made) and "Move to the Recycle Bin"
   mediaImport.js         safe footage copies and bounded folder scanning
   preview.js             start and stop the HyperFrames preview server
   cli.js                 run the HyperFrames CLI with Electron's own Node
