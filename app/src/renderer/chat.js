@@ -762,15 +762,27 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const who = menuName(agent);
     const text =
       agent.state === "not-installed"
-        ? t("{name} is not on this computer yet. To add it, open PowerShell (search for it in the Start menu), " +
-          "paste each line below and press Enter after each one. The last line signs you in:", { name: who })
+        ? t("{name} is not on this computer yet.", { name: who })
         : agent.state === "not-signed-in"
-          ? t("{name} needs you to sign in first. Open PowerShell (search for it in the Start menu), " +
-            "paste the line below and press Enter:", { name: who })
+          ? t("{name} needs you to sign in first.", { name: who })
           : t("{name} is on this computer, but it will not start.", { name: who });
+    // One press instead of typing (M10-27): the main process opens PowerShell running exactly these lines.
+    const step = agent.state === "not-installed" ? "install" : agent.state === "not-signed-in" ? "signIn" : null;
+    const openForMe = step && commands.length
+      ? [
+        h("button", {
+          class: "primary small", type: "button",
+          onclick: () => api.agent.openSetup({ engine: agent.id, step }).catch(() => {}),
+        }, t("Open PowerShell for me")),
+        h("p", { class: "muted" }, t("A window opens and does it for you. When it has finished, come back here " +
+          "and press Check again. To do it yourself instead, open PowerShell (search for it in the Start menu) " +
+          "and type the lines below.")),
+      ]
+      : [];
     notice.hidden = false;
     notice.replaceChildren(
       h("p", {}, text),
+      ...openForMe,
       // A spread, not `a && b`: replaceChildren writes a plain `false` out as the word "false".
       ...(agent.state === "broken" && agent.detail ? [h("p", { class: "muted" }, agent.detail)] : []),
       ...commands.map((command) =>

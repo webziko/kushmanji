@@ -540,6 +540,7 @@ function registerIpc() {
   handle("agent:choose", ({ dir, engine } = {}) => agent.choose(requireProject(dir), String(engine)));
   handle("agent:setTeam", (engines) => agent.setTeam(engines));
   handle("agent:checkup", (engine) => agent.checkup(String(engine)));
+  handle("agent:openSetup", ({ engine, step } = {}) => agent.openSetup(String(engine), String(step)));
   handle("agent:chooseModel", ({ engine, model } = {}) =>
     agent.chooseModel(String(engine), model == null ? null : String(model)),
   );

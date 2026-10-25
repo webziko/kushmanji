@@ -811,8 +811,13 @@ M10 and M17 lines is `docs/RESEARCH.md`.
 - [ ] M7-05 "Connections" in Settings (with M7-03): keys for services the person pays for themselves (ElevenLabs
       voices, AI video makers, other AIs, M8-07's Gemini images), kept in Electron's `safeStorage` (Windows'
       own protection), never in a video's folder. The three assistants keep using the person's subscription
-- [ ] M10-27 Connecting the assistants with one press (with M10-09): install and sign in from inside the app, not
-      by typing in PowerShell. Seen on 2026-10-25: Claude Code's sign-in had expired on the owner's PC
+- [~] M10-27 Connecting the assistants with one press (with M10-09): install and sign in from inside the app, not
+      by typing in PowerShell. Seen on 2026-10-25: Claude Code's sign-in had expired on the owner's PC. First part
+      done (Claude, 2026-10-25): the chat's card for an assistant that is not installed or not signed in has "Open
+      PowerShell for me", which opens a visible PowerShell window already running that assistant's own lines
+      (`agents/setup.js`; installer, PATH refreshed, then sign-in); the person presses "Check again" after. Proven
+      that the window opens, shows and runs its line; not yet pressed for a real sign-in (the owner's to do).
+      Open: the same on Home's "Before you start", Codex's need for Node, and noticing the sign-in by itself
 - [ ] M13-07 A second assistant's review scored on seven points (look, idea, motion, type, finish, sound,
       technical), with numbered fixes and times (extends M13-04)
 - [ ] M14-18 The engine's files in a video's folder (`hyperframes.json`, `meta.json`, `package.json`, `AGENTS.md`,

@@ -6,6 +6,7 @@ import { say } from "../say.js";
 import { readState, updateState } from "../state.js";
 import { accessFor, accessNote, LEVELS, withAccess } from "./access.js";
 import { knownLanguage, languageNote } from "./language.js";
+import { openSetupWindow, setupScript, STEPS } from "./setup.js";
 import * as antigravity from "./antigravity.js";
 import { CHECK_REQUEST, judge, makeScratch, testedOk } from "./checkup.js";
 import * as claude from "./claude.js";
@@ -148,6 +149,19 @@ export class AgentRunner {
         };
       }),
     );
+  }
+
+  /**
+   * "Open PowerShell for me" (M10-27): a window running the assistant's own install or sign-in commands. The id
+   * and step are checked against this app's own lists; the commands come from the bridge, never from the page.
+   */
+  openSetup(engine, step) {
+    const bridge = Object.hasOwn(BRIDGES, engine) ? BRIDGES[engine] : null;
+    if (!bridge) throw new Error("That assistant is not known to this app.");
+    const script = STEPS.includes(step) ? setupScript(bridge.about, step) : null;
+    if (!script) throw new Error("That choice is not known to this app.");
+    openSetupWindow(script);
+    return true;
   }
 
   history(dir) {

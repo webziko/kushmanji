@@ -74,6 +74,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     choose: call("agent:choose"),
     setTeam: call("agent:setTeam"),
     checkup: call("agent:checkup"),
+    openSetup: call("agent:openSetup"),
     chooseModel: call("agent:chooseModel"),
     chooseAccess: call("agent:chooseAccess"),
     chooseMode: call("agent:chooseMode"),

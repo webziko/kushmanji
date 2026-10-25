@@ -118,6 +118,8 @@ app/src/main/            the main process (Node): the only code with file and pr
   agents/
     index.js             runs chat turns, keeps each project's conversation
     launcher.js          start any agent tool without a shell
+    setup.js             "Open PowerShell for me": an assistant's own install or sign-in, in a visible window
+    language.js          the person's language and the menu names as shown, for the assistant
     journal.js           the project's shared memory across agents
     house.js             the note every agent is given
     versions.js          "is the installed agent newer than we tested?"
