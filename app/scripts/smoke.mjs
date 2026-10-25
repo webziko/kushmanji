@@ -40,8 +40,9 @@ const run = spawnSync(electron, [appDir], {
     ...(withSpeech ? { HFWIN_SMOKE_STUDY: "speech" } : {}),
   },
   // Up to two real agent turns, and some agents take minutes over one. Speech has to be made, then transcribed.
+  // The plain run takes about four and a half minutes since the drawing, rename and Settings steps (2026-10-25).
   timeout:
-    (Number(process.env.HFWIN_SMOKE_TURN_MINUTES) || 0) * 60_000 + (withAgent ? 1_500_000 : withSpeech ? 900_000 : 300_000),
+    (Number(process.env.HFWIN_SMOKE_TURN_MINUTES) || 0) * 60_000 + (withAgent ? 1_500_000 : withSpeech ? 900_000 : 480_000),
 });
 
 let result = null;
