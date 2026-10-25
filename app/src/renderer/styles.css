@@ -2641,6 +2641,89 @@ dialog[open]::backdrop {
   font: 12.5px / 1.4 var(--mono);
 }
 
+/* "Connect an assistant" (M10-09): the same raised card as "Before you start", one row for each assistant. The row's
+   name and state sit on the left and its install or sign-in card on the right, so three of them are not three
+   screens tall; below 760px they stack. */
+.connect {
+  margin-block: 24px 0;
+  padding: 16px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.connect h2 {
+  margin: 0 0 4px;
+  font-size: var(--fs-lg);
+}
+
+.connect-about {
+  margin: 0 0 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.connect-ready {
+  margin: 0;
+  font-weight: 500;
+}
+
+.connect-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.connect-assistant {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: start;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.connect-who {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+
+.connect-who p,
+.connect-fix p {
+  margin: 0;
+}
+
+.connect-state {
+  color: var(--text-2);
+}
+
+.connect-fix {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.connect-failed {
+  margin: 0 0 12px;
+}
+
+/* "Everything it needs" cannot sit under a card that says an assistant is still needed. */
+.connect[data-state="needed"] ~ .health[data-fine] {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .connect-assistant {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* How much of the allowance a reply used (M15-05). */
 .msg-usage {
   margin-top: 0;

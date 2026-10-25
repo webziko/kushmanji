@@ -8,8 +8,8 @@ import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
 import { createShortsCard } from "./shorts.js";
 import {
-  ASSISTANTS_CHANGED, brokenDetail, changeTeam, commandLines, confirmTest, fixSentence, GOOD_FOR, lastTestText,
-  menuName, openForMe, STATE_NOTES, testingText,
+  ASSISTANTS_CHANGED, changeTeam, confirmTest, fixCard, fixSentence, GOOD_FOR, lastTestText, menuName, STATE_NOTES,
+  testingText,
 } from "./assistants.js";
 import { language, locale, t, tFrom } from "./words.js";
 
@@ -739,14 +739,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
   /** The card that says why the chosen assistant cannot be used yet, with the lines that fix it. */
   function showFix(agent) {
     // The sentence, the one-press "Open PowerShell for me" (M10-27) and the lines to type come from assistants.js:
-    // the Settings dialog shows the same card for the same assistant. Each is a list, not `a && b`, because
-    // replaceChildren writes a plain `false` out as the word "false".
+    // the Settings dialog and Home's "Connect an assistant" show the same card for the same assistant.
     notice.hidden = false;
     notice.replaceChildren(
       h("p", {}, fixSentence(agent)),
-      ...openForMe(agent),
-      ...brokenDetail(agent),
-      ...commandLines(agent),
+      ...fixCard(agent),
       h("button", { class: "secondary small", type: "button", onclick: checkAgents }, t("Check again")),
     );
   }

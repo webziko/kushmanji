@@ -2,6 +2,9 @@ import { app, dialog, nativeImage } from "electron";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { about as claudeAbout } from "./agents/claude.js";
+import { about as codexAbout } from "./agents/codex.js";
+import { about as geminiAbout } from "./agents/antigravity.js";
 import { whereAll } from "./agents/launcher.js";
 import { cliVersion, runCli } from "./cli.js";
 import { createProject, listProjects } from "./projects.js";
@@ -412,6 +415,136 @@ async function settingsStep({ win, result, inPage, shot }) {
   pressEscape(win);
   if (!(await until(() => inPage(`!${dialogOpen}`), { timeoutMs: 3000 }))) throw new Error("Escape did not close Settings.");
   result.settings.closedByEscape = true;
+}
+
+/** The three assistants as the main process names them, for the answers the next step hands to Home's card. */
+const ASSISTANT_ABOUT = [["claude", claudeAbout], ["codex", codexAbout], ["antigravity", geminiAbout]];
+const assistantAnswer = (states) => ASSISTANT_ABOUT.map(([id, about], index) => ({
+  id, ...about, inTeam: true, state: states[index],
+  ...(states[index] === "ready" ? { version: "9.9.9" } : {}),
+  ...(states[index] === "broken" ? { detail: "The program did not start." } : {}),
+}));
+
+/**
+ * Home's "Connect an assistant" (M10-09), both ways. Some assistants are ready on this PC, so a real Home shows no card:
+ * that is checked against the page's own question to the main process, on a fresh draw of Home before and after. The
+ * card is then driven the way a person meets it, by handing the page's own card function (the module the page already
+ * loaded) an answer in which none is ready, then one that failed, then one in which ChatGPT is: each press of "Check
+ * again" goes through the real buttons and gets the next answer. Nothing is faked inside the app, and "Open PowerShell
+ * for me" is looked at and never pressed. Shown at the smallest window (960 by 600) too. Ends on Home.
+ */
+async function connectStep({ win, result, inPage, shot }) {
+  const box = "document.querySelector('.connect')";
+  const ownDraw = async (label) => {
+    // The main process reloads the page 50 ms after it is asked; a question put to the page while it goes is never
+    // answered, so the old page is marked and nothing is asked until it has had time to go.
+    await inPage("window.__beforeReload = true; window.hfwin.app.reload()").catch(() => {});
+    await wait(600);
+    if (!(await until(() => inPage(`!window.__beforeReload && document.body.dataset.view === 'home' && Boolean(${box})`)
+      .catch(() => false), { timeoutMs: 30_000 }))) throw new Error(`Home did not come back (${label}).`);
+    // Home is drawn at once; the question to the assistants (it starts each tool) is answered later.
+    const drawn = await inPage(`({ state: ${box}.dataset.state, hidden: ${box}.hidden,
+      loading: document.querySelector('.home').hasAttribute('data-loading') })`);
+    const settled = await until(() => inPage(`${box}.dataset.state !== 'checking'`), { timeoutMs: 120_000, everyMs: 500 });
+    if (!settled) throw new Error(`Home never decided whether to show "Connect an assistant" (${label}).`);
+    const asked = await inPage("window.hfwin.agent.status()");
+    const ready = asked.filter((a) => a.inTeam !== false).some((a) => a.state === "ready");
+    const now = await inPage(`({ state: ${box}.dataset.state, hidden: ${box}.hidden })`);
+    if (now.state !== (ready ? "none" : "needed") || now.hidden !== ready)
+      throw new Error(`Home's "Connect an assistant" disagrees with the assistants (${label}): ` +
+        JSON.stringify({ now, states: asked.map((a) => `${a.id}:${a.state}`) }));
+    return { drawn, now, states: asked.map((a) => `${a.id}:${a.state}`) };
+  };
+  result.connect = { first: await ownDraw("first draw") };
+
+  // Handed an answer in which none is ready, then a failed question, then one in which ChatGPT is ready.
+  const none = assistantAnswer(["not-installed", "not-signed-in", "broken"]);
+  const then = assistantAnswer(["not-installed", "ready", "not-installed"]);
+  await inPage(`(async () => {
+    const connect = await import(new URL("connect.js", document.baseURI).href);
+    const answers = [${inJs(none)}, null, ${inJs(then)}];
+    window.__connectAsked = 0;
+    await connect.showConnect(document.querySelector('.connect'), {
+      status: async () => { await new Promise((done) => setTimeout(done, 700)); return answers[window.__connectAsked++]; },
+    });
+  })()`);
+  const card = await inPage(`({ state: ${box}.dataset.state, hidden: ${box}.hidden, title: ${box}.querySelector('h2')?.textContent,
+    about: ${box}.querySelector('.connect-about')?.textContent,
+    rows: [...${box}.querySelectorAll('.connect-assistant')].map((row) => ({ id: row.dataset.engine, state: row.dataset.state,
+      who: row.querySelector('strong').textContent, goodFor: row.querySelector('.muted').textContent,
+      said: row.querySelector('.connect-state').textContent,
+      buttons: [...row.querySelectorAll('button')].map((b) => b.textContent) })),
+    checks: [...${box}.querySelectorAll('button')].filter((b) => b.textContent === 'Check again').length,
+    text: ${box}.innerText })`);
+  result.connect.card = card;
+  const wantRows = [
+    ["claude", "not-installed", "Claude (Claude Code)", true],
+    ["codex", "not-signed-in", "ChatGPT (Codex)", true],
+    ["antigravity", "broken", "Gemini (Antigravity)", false],
+  ];
+  if (card.state !== "needed" || card.hidden || card.title !== "Connect an assistant" ||
+    !/Claude, ChatGPT or Gemini/.test(card.about) || card.rows.length !== 3 || card.checks !== 1 ||
+    /\bfalse\b/.test(card.text) ||
+    !wantRows.every(([id, state, who, button], i) => card.rows[i].id === id && card.rows[i].state === state &&
+      card.rows[i].who === who && card.rows[i].goodFor && card.rows[i].said &&
+      card.rows[i].buttons.includes("Open PowerShell for me") === button))
+    throw new Error("Home's \"Connect an assistant\" does not show three rows with their cards: " + JSON.stringify(card));
+  await inPage(`${box}.scrollIntoView({ block: 'center' })`);
+  await wait(300);
+  await shot("home-connect");
+
+  // The smallest window: the card is inside it, nothing runs off to the side, and its one "Check again" can be reached.
+  win.setSize(960, 600);
+  await wait(500);
+  await inPage(`${box}.scrollIntoView({ block: 'start' })`);
+  await wait(300);
+  const fitsAt = () => inPage(`(() => { const box = ${box}.getBoundingClientRect(); const home = document.querySelector('.home');
+    const rows = [...${box}.querySelectorAll('.connect-assistant')];
+    const wide = [...${box}.querySelectorAll('.connect-assistant, .connect-assistant *')]
+      .filter((el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).display !== 'inline').length;
+    const check = ${box}.querySelector('.connect-check'); check.scrollIntoView({ block: 'nearest' });
+    const button = check.getBoundingClientRect();
+    return { left: box.left, right: box.right, width: innerWidth, sideways: home.scrollWidth - home.clientWidth,
+      pageSideways: document.documentElement.scrollWidth - innerWidth, rows: rows.length, wide, height: box.height,
+      buttonInside: button.top >= 0 && button.bottom <= innerHeight && button.right <= innerWidth }; })()`);
+  result.connect.small = await fitsAt();
+  await inPage(`${box}.scrollIntoView({ block: 'start' })`);
+  await wait(300);
+  await shot("home-connect-small-window");
+  const small = result.connect.small;
+  if (small.left < 0 || small.right > small.width || small.sideways > 1 || small.pageSideways > 1 || small.wide ||
+    small.rows !== 3 || !small.buttonInside)
+    throw new Error("\"Connect an assistant\" does not fit the smallest window: " + JSON.stringify(small));
+  win.setSize(1440, 900);
+  await wait(500);
+
+  // "Check again": it says it is checking, a failed question says so and keeps the card, and the next one finds ChatGPT.
+  const during = await inPage(`(() => { ${box}.querySelector('.connect-check').click();
+    const button = ${box}.querySelector('.connect-check'); return { text: button.textContent, disabled: button.disabled }; })()`);
+  if (during.text !== "Checking…" || !during.disabled)
+    throw new Error("\"Check again\" did not say it was checking: " + JSON.stringify(during));
+  const failedShown = await until(() => inPage(`!${box}.querySelector('.connect-failed').hidden &&
+    !${box}.querySelector('.connect-check').disabled`), { timeoutMs: 5000, everyMs: 100 });
+  const failed = await inPage(`({ state: ${box}.dataset.state, said: ${box}.querySelector('.connect-failed').textContent,
+    rows: ${box}.querySelectorAll('.connect-assistant').length })`);
+  result.connect.failed = failed;
+  if (!failedShown || failed.state !== "needed" || failed.rows !== 3 ||
+    failed.said !== "Your assistants could not be checked just now.")
+    throw new Error("A question that failed did not leave the card with a sentence about it: " + JSON.stringify(failed));
+  await inPage(`${box}.querySelector('.connect-check').click()`);
+  if (!(await until(() => inPage(`${box}.dataset.state === 'ready'`), { timeoutMs: 5000, everyMs: 100 })))
+    throw new Error("\"Check again\" did not notice that ChatGPT is ready.");
+  const ready = await inPage(`({ text: ${box}.innerText.trim(), buttons: ${box}.querySelectorAll('button').length,
+    hidden: ${box}.hidden, asked: window.__connectAsked })`);
+  result.connect.ready = ready;
+  if (ready.text !== "ChatGPT is ready. You can make a video now." || ready.buttons || ready.hidden || ready.asked !== 3)
+    throw new Error("The card did not turn into one line saying ChatGPT is ready: " + JSON.stringify(ready));
+  await inPage(`${box}.scrollIntoView({ block: 'center' })`);
+  await wait(200);
+  await shot("home-connect-ready");
+
+  // The next time Home is drawn it is what the assistants really are, so the line is gone.
+  result.connect.again = await ownDraw("second draw");
 }
 
 /**
@@ -1681,6 +1814,7 @@ export async function runSmoke({ win, outDir }) {
     await languageStep({ win, result, inPage, shot });
     await renameStep({ win, result, inPage, shot });
     await settingsStep({ win, result, inPage, shot });
+    await connectStep({ win, result, inPage, shot });
     result.ok = true;
   } catch (error) {
     result.error = error instanceof Error ? error.message : String(error);

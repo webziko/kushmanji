@@ -60,6 +60,12 @@ export default {
   "Before you start": "ಶುರು ಮಾಡುವ ಮೊದಲು",
   "Checking…": "ಪರಿಶೀಲಿಸುತ್ತಿದೆ…",
   "Check again": "ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ",
+  // connect.js: Home's "Connect an assistant", when none of the assistants you ticked can be used yet
+  "Connect an assistant": "ಅಸಿಸ್ಟೆಂಟ್ ಸಂಪರ್ಕಿಸಿ",
+  "Kushmanji makes your videos with an AI assistant you already pay for (Claude, ChatGPT or Gemini), and you need at least one.": "Kushmanji ನಿಮ್ಮ ವಿಡಿಯೋಗಳನ್ನು, ನೀವು ಈಗಾಗಲೇ ಹಣ ಕೊಟ್ಟು ಬಳಸುತ್ತಿರುವ AI ಅಸಿಸ್ಟೆಂಟ್‌ನಿಂದ (Claude, ChatGPT ಅಥವಾ Gemini) ಮಾಡುತ್ತದೆ, ಮತ್ತು ಕನಿಷ್ಠ ಒಂದಾದರೂ ನಿಮಗೆ ಬೇಕು.",
+  "Ready, but not ticked yet. Open Settings and tick “I have this one” beside it.": "ಸಿದ್ಧವಿದೆ, ಆದರೆ ಇನ್ನೂ ಟಿಕ್ ಮಾಡಿಲ್ಲ. ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ತೆರೆದು ಇದರ ಪಕ್ಕದಲ್ಲಿರುವ “ಇದು ನನ್ನ ಬಳಿ ಇದೆ” ಗೆ ಟಿಕ್ ಮಾಡಿ.",
+  "{name} is ready. You can make a video now.": "{name} ಸಿದ್ಧವಾಗಿದೆ. ಈಗ ನೀವು ವಿಡಿಯೋ ಮಾಡಬಹುದು.",
+  "Your assistants are ready. You can make a video now.": "ನಿಮ್ಮ ಅಸಿಸ್ಟೆಂಟ್‌ಗಳು ಸಿದ್ಧವಾಗಿವೆ. ಈಗ ನೀವು ವಿಡಿಯೋ ಮಾಡಬಹುದು.",
   "{name} needs you to sign in first.": "{name} ಬಳಸಲು ಮೊದಲು ನೀವು ಸೈನ್ ಇನ್ ಮಾಡಬೇಕು.",
   "A window opens and does it for you. When it has finished, come back here and press Check again. To do it yourself instead, open PowerShell (search for it in the Start menu) and type the lines below.": "ಒಂದು ವಿಂಡೋ ತೆರೆದು ಇದನ್ನು ನಿಮಗಾಗಿ ಮಾಡುತ್ತದೆ. ಅದು ಮುಗಿದ ಮೇಲೆ ಇಲ್ಲಿಗೆ ಬಂದು \"ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ\" ಒತ್ತಿ. ನೀವೇ ಮಾಡಬೇಕಾದರೆ, PowerShell ತೆರೆಯಿರಿ (Start ಮೆನುವಿನಲ್ಲಿ ಹುಡುಕಿ) ಮತ್ತು ಕೆಳಗಿನ ಸಾಲುಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ.",
   "Open PowerShell for me": "ನನಗಾಗಿ PowerShell ತೆರೆಯಿರಿ",

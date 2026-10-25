@@ -108,6 +108,14 @@ export const commandLines = (agent) =>
       h("button", { class: "ghost small", type: "button", onclick: () => navigator.clipboard.writeText(command) },
         t("Copy"))));
 
+/**
+ * The card that gets an assistant going, without its sentence or its "Check again" (each place has its own): the
+ * one-press "Open PowerShell for me", what the program said when it would not start, and the lines to type. The
+ * chat, the Settings dialog and Home's "Connect an assistant" all show exactly this list. Each part is a list, not
+ * `a && b`, because replaceChildren writes a plain `false` out as the word "false". Empty for a ready assistant.
+ */
+export const fixCard = (agent) => [...openForMe(agent), ...brokenDetail(agent), ...commandLines(agent)];
+
 /** An assistant's state in plain words: ready with its version, or why it cannot be used yet. */
 export function stateText(agent) {
   if (agent.state === "ready") {

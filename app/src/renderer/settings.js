@@ -1,7 +1,6 @@
 import { versionsText } from "./about.js";
 import {
-  announceAssistants, brokenDetail, changeTeam, commandLines, confirmTest, GOOD_FOR, lastTestText, menuName,
-  openForMe, stateText, testingText,
+  announceAssistants, changeTeam, confirmTest, fixCard, GOOD_FOR, lastTestText, menuName, stateText, testingText,
 } from "./assistants.js";
 import { h } from "./dom.js";
 import { createProblemReport } from "./report.js";
@@ -126,7 +125,7 @@ export function createSettings({ info, about }) {
       h("p", { class: "settings-state" }, stateText(agent)),
       // The card the chat shows for an assistant that cannot be used yet, here for each one that cannot, with
       // "Check again" within reach of the PowerShell window it opens (the list's own button is further down).
-      ...(ready ? [] : [...openForMe(agent), ...brokenDetail(agent), ...commandLines(agent),
+      ...(ready ? [] : [...fixCard(agent),
         h("div", { class: "settings-actions" }, checkButton("settings-row-check"))]),
       said ? h("p", { class: "muted settings-said" }, said) : null,
       ready ? h("div", { class: "settings-actions" }, h("button", {
@@ -254,5 +253,7 @@ export function createSettings({ info, about }) {
       title: t("Language, your assistants, room on this computer, and help when something goes wrong"),
     }, t("Settings")),
     show,
+    /** True while "Test it now" runs an assistant (about a minute): Home waits to ask the assistants anything. */
+    testing: () => testing !== null,
   };
 }

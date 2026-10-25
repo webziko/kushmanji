@@ -126,6 +126,13 @@ soft surface) and when it last changed.
 - **Hold-back:** the page is invisible for the moment it takes to list the videos, so the Carry on card does not
   push the start cards down after the person has seen them.
 - A video with no picture yet must look as good as one with a picture; the self-test has no pictures at all.
+- **"Connect an assistant"** (M10-09) is a card in the place of "Before you start", shown only when none of the
+  assistants the person ticked is ready (a stranger on a fresh PC): one row for each of Claude, ChatGPT and Gemini
+  with what it is good for, its state, and the same install or sign-in card the chat and Settings show ("Open
+  PowerShell for me", the lines to type), and one "Check again". When that finds one ready the card becomes one
+  line ("ChatGPT is ready. You can make a video now.") and is not drawn again on the next visit. Home is drawn first
+  and the assistants are asked after it (it starts each tool and takes seconds): once per visit, never while an
+  assistant works, and a failed question shows nothing. The code is `renderer/connect.js`, on top of `assistants.js`.
 
 ## Settings
 

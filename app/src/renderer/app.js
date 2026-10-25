@@ -6,6 +6,7 @@ import { h } from "./dom.js";
 import { drawingMessage } from "./drawing.js";
 import { createPlayer } from "./player.js";
 import { createAbout } from "./about.js";
+import { showConnect } from "./connect.js";
 import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
@@ -322,9 +323,12 @@ async function showHealth(box, { again = false } = {}) {
   if (!health?.checked || !box.isConnected) return;
   if (!health.items.length) {
     box.replaceChildren(h("p", { class: "muted" }, t("Kushmanji has everything it needs on this computer.")));
+    // The styles keep this line out of sight while "Connect an assistant" says something is still needed.
+    box.dataset.fine = "";
     box.hidden = false;
     return;
   }
+  delete box.dataset.fine;
   const rows = health.items.map((item) => {
     const row = h("li", {}, h("p", {}, tFrom(item.said)));
     if (item.fix) {
@@ -374,6 +378,8 @@ async function showHealth(box, { again = false } = {}) {
 }
 
 function showHome() {
+  // Read before the video's chat goes: it marks an assistant that is still working (or only just stopping) on the body.
+  const assistantBusy = document.body.dataset.agent === "running";
   open?.destroy();
   open = null;
   document.body.dataset.view = "home";
@@ -454,6 +460,8 @@ function showHome() {
     ),
     home.error,
     home.note = h("p", { class: "home-note", hidden: true, role: "status" }),
+    // "Connect an assistant" (M10-09): filled only when none of the assistants the person ticked can be used.
+    home.connect = h("section", { class: "connect", hidden: true, role: "status" }),
     home.health = h("section", { class: "health", hidden: true, role: "status" }),
     h("h2", { class: "my-videos" }, t("My videos")),
     home.grid,
@@ -481,6 +489,8 @@ function showHome() {
   const main = home.main;
   void showSpace(home.space);
   void showHealth(home.health);
+  // Asked once per visit, after Home is drawn (it starts each tool and takes seconds), and not while an assistant works.
+  void showConnect(home.connect, { working: () => assistantBusy || settings.testing() });
   refreshProjects()
     .then((projects) => {
       // With videos, "Carry on" is the thing to press, so the text box does not grab the keyboard. Nothing is
