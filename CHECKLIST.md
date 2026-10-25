@@ -98,6 +98,11 @@ Then the list further down, starting with one-click export.
 - [x] **Every error message in Kannada and Hindi**, and the titles of the folder windows too.
 - [x] **The assistants name the menus the way you see them**: in Kannada they say the Kannada name, with the
       English in brackets.
+- [x] **Free pictures and sounds (Openverse).** Ask the assistant in the chat for "a free photo of a sunset" or "a
+      whoosh sound": it searches Openverse (only files a video may use: public domain, or free with credit), looks
+      at small previews, and saves the one it picks in your video's `assets\free-media`. Every file's credit is kept
+      in `CREDITS.md` in the video's folder, ready to paste under your YouTube video. Works with Claude and ChatGPT
+      (not yet Gemini). Tried against the real Openverse; not yet through the chat (Claude is signed out).
 - [x] **"Make other sizes"** (an editing button in the chat): from a wide video, one press makes an upright (for
       Shorts and Reels) and/or square copy beside it, opens it, and puts a ready message in its chat asking the
       assistant to adapt the layout. You press Send. Built by Gemini, checked by Claude.
