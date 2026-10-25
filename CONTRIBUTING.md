@@ -142,6 +142,7 @@ app/src/main/            the main process (Node): the only code with file and pr
     tools/               the check itself: rules.js (what is allowed), guard.mjs, and bin/ (the stand-ins);
                          look.mjs, the "look at the video" tool server
     claude.js  codex.js  antigravity.js     one bridge per agent
+    geminiHome.js        Gemini's own clean home (no helpers of the person's other work): about 5 times faster
 app/src/preload/         preload.cjs: the only bridge between page and main process
 app/src/renderer/        the page: Home, the project view, the chat (plain DOM, no build step)
 app/scripts/             check.mjs, test.mjs, smoke.mjs, test-vlog.mjs (a practice project for measuring)

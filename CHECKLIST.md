@@ -25,10 +25,10 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
       Gemini's two (with its pictures) and ChatGPT's (fully drawn, the screen changing shape for "Any size").
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
       right, too quiet or too loud? Nobody on the AI side can hear it.
-- [ ] **Optional, about 10 s faster per Gemini message:** the "Google Cloud Data Agent Kit" add-on in the
-      Antigravity app gives Gemini three helpers that start on every message, and only the app can switch them
-      off. If you do not use Google Cloud data tools: open Antigravity, press Ctrl+Shift+X (Extensions), find
-      "Google Cloud Data Agent Kit", press Disable. Measured: two Gemini replies 28 and 24 s now, 19 and 14 s without.
+- [x] **Gemini is fast in Kushmanji now** (25 October): Kushmanji gives Gemini a clean setup of its own, without
+      the helpers and plugins of your other Antigravity work, so the add-on no longer slows it down here and you do
+      not need to switch anything off. Short replies about 4 s instead of 24, a small edit about 24 s instead of 55.
+      Your Antigravity app is not changed. Close and open Kushmanji again to get it.
 - [x] **Done by Claude on 24 October, as you asked** (each one is in the table at the bottom, with how to undo it):
       Kushmanji closed and opened again with the faster Gemini; Gemini's Google telemetry add-on switched off, so
       **Gemini can change files again** (a real edit through the chat worked); the old GitHub key that sat in

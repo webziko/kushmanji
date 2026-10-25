@@ -4,7 +4,25 @@ import { collect, killTree } from "../proc.js";
 import { withHouseNote } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
 import { mediaToolsEnv } from "./mediaTools.js";
+import { homeEnv, knownConversation, prepareHome } from "./geminiHome.js";
 import { say } from "../say.js";
+
+// Gemini's own home (geminiHome.js): set by the main process once it knows its settings folder. Unset (the unit
+// tests), agy runs with the person's own home as before.
+let ownHome = null;
+
+/** Run agy with its own clean home in `folder` from now on. */
+export function useOwnHome(folder) {
+  try {
+    ownHome = prepareHome(folder);
+  } catch {
+    ownHome = null;
+  }
+}
+
+/** The conversation to carry on, or null for a new one: one begun under another home is not in this one. */
+const resumable = (sessionId) =>
+  sessionId && (!ownHome || knownConversation(ownHome, sessionId)) ? sessionId : null;
 
 // The Antigravity bridge: Google's `agy` command-line agent, the way to use Gemini models. It replaced the
 // Gemini CLI, which Google switched off for personal accounts ("This client is no longer supported ... please
@@ -121,7 +139,10 @@ function openSession({ dir, model, access, sessionId }) {
       ...(model ? ["--model", model] : []),
       ...(ACCESS[access] ?? ACCESS.project),
     ],
-    { cwd: dir, env: mediaToolsEnv(agentEnv(), { dir, access }) },
+    {
+      cwd: dir,
+      env: ownHome ? homeEnv(mediaToolsEnv(agentEnv(), { dir, access }), ownHome) : mediaToolsEnv(agentEnv(), { dir, access }),
+    },
   );
   const session = {
     key: folderKey(dir), model: model ?? null, access, conversation: sessionId ?? null, used: Boolean(sessionId),
@@ -179,7 +200,7 @@ function sessionFor({ dir, model, access, sessionId }) {
 export function prewarm({ dir, model = null, access = "project", sessionId = null }) {
   const kept = sessions.get(folderKey(dir));
   if (kept && !kept.closed) return;
-  const made = openSession({ dir, model, access, sessionId });
+  const made = openSession({ dir, model, access, sessionId: resumable(sessionId) });
   if (!made) return;
   sessions.set(made.key, made);
   waitIdle(made);
@@ -205,10 +226,12 @@ export function run({ dir, text, sessionId, model, access = "project", onEvent }
     onEvent({ type: "done", ...payload });
   };
 
-  const prompt = withHouseNote(text, !sessionId);
+  // A conversation agy does not have under this home starts afresh, so it gets the house note again.
+  const resume = resumable(sessionId);
+  const prompt = withHouseNote(text, !resume);
   // Kept from when the message went on agy's command line (about 32,000 characters on Windows): a request this
   // long is a mistake, not something to send.
-  const session = prompt.length > MAX_PROMPT ? null : sessionFor({ dir, model, access, sessionId });
+  const session = prompt.length > MAX_PROMPT ? null : sessionFor({ dir, model, access, sessionId: resume });
   if (!session) {
     const error = findAgy()
       ? say("That message is too long for Gemini. Shorten it and send again.")

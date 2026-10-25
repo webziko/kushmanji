@@ -306,6 +306,29 @@ Undo copies (UP-02): the practice vlog's 536 MB of clips take 1 MB in `~/.cache/
 went through the chat on 0.8.193 (83 s, the app's check found nothing). Claude Code was signed out on this PC
 that night, so no Claude request was tried.
 
+## Gemini with a home of its own (measured 2026-10-25, agy 1.4.7, on the owner's PC)
+
+The owner: "on antigravity its so fast but why on my app its so slow". `agy mcp list` and `agy plugin list` showed
+what loads on every message: helpers started with `npx -y firebase-tools@latest mcp` and `npx -y
+@modelcontextprotocol/server-github`, an n8n helper on a remote server, Supabase over the internet, and six
+plugins, all set up for the owner's other work. One-word replies, agy kept running as Kushmanji does:
+
+| Setting | First reply | Next replies |
+| --- | --- | --- |
+| As Kushmanji ran it (`--sandbox`, agy's default model) | 45.6 s | 24.1, 23.2 s |
+| `--model gemini-3.8-flash-low` | 39.7 s | 22.6, 31.4 s |
+| `--effort low` | 45.8 s | 23.2, 23.3 s |
+| without `--sandbox` | 45.6 s | 24.3, 24.5 s |
+| all three faster settings together | 44.2 s | 22.1, 22.4 s |
+| **USERPROFILE and HOME on an empty folder** | **11.7 s** | **5.0, 3.5 s** |
+
+Sign-in still worked: agy keeps it under AppData. `ANTIGRAVITY_GEMINI_DIR` and `ANTIGRAVITY_CONFIG_REL_DIR` did not
+change the helper list. The same small edit ("change the title", a fresh copy each time, start included): 52.7 and
+60.8 s with the owner's home, 24.7 and 22.9 s with the clean one. Through Kushmanji's chat after the change: 15.5 s
+and then 4.1 s for one-word replies (29.5 and 24.9 s on 2026-10-24); the self-test's edit, with the house note and
+its checks, 80 s. So Kushmanji now gives agy its own home (`agents/geminiHome.js`): links to the HyperFrames skills
+and to `.cache` (HyperFrames' browser, Whisper model, undo history), nothing else.
+
 ## Why Gemini was slow in Kushmanji (measured 2026-10-24, agy 1.4.7)
 
 The owner noticed Gemini answering slowly in Kushmanji and fast in the Antigravity app: "which model am I using"

@@ -499,6 +499,13 @@ stopped running commands (M2-22). The owner asked for a bigger answer than fixin
       s before, 29.5 and 24.9 s after. About 10 s more per message is the owner's Google Cloud Data Cloud add-on
       in Antigravity, theirs to switch off (docs/FINDINGS.md, last section). Not yet seen: a long real edit kept
       running; Gemini cannot edit on this PC until its telemetry add-on is off (CHECKLIST)
+- [x] M12-08 (Claude, 2026-10-25) Gemini still slow ("on antigravity its so fast"): agy loaded the person's own
+      helpers and plugins (Firebase and GitHub through `npx ...@latest`, n8n, Supabase, six plugins) on every
+      message; model, effort and sandbox made no difference. Kushmanji now runs agy with a home of its own in its
+      settings folder (`agents/geminiHome.js`: links to the HyperFrames skills and `.cache` only; sign-in is under
+      AppData and still works). One-word replies 4 s instead of 24, a small edit 23 to 25 s instead of 53 to 61
+      (FINDINGS). A Gemini conversation begun before starts afresh once. Gemini's generated pictures now land in
+      `<settings>/tools/gemini-home/.gemini/antigravity-cli/brain` (M8-15)
 
 ## M13 · Three agents as a team on one video
 

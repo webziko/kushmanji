@@ -11,6 +11,7 @@ import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
 import { dialogTitle } from "./dialogTitle.js";
 import { captureDrawing } from "./drawings.js";
+import { useOwnHome as useGeminiHome } from "./agents/antigravity.js";
 import { creditsNeeded } from "./credits.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
@@ -693,6 +694,9 @@ if (!app.requestSingleInstanceLock()) {
       emit: (status) => win?.webContents.send("ffmpeg:event", status),
     });
     ffmpeg.useIfPresent();
+    // Gemini runs with a clean home of its own, without the helpers and plugins of the person's other work: a
+    // reply in about 4 s instead of 23 (agents/geminiHome.js). Their Antigravity is not changed.
+    useGeminiHome(path.join(app.getPath("userData"), "tools", "gemini-home"));
     registerIpc();
     await createWindow();
 
