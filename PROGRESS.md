@@ -705,7 +705,7 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
       easing vocabulary, transitions grown from content, rigs and walks, parallax and light, a banned list, word
       sizes and reading time, "Any size" as the screen's own shape, HyperFrames' only music-fade shape, and how to
       check. Not yet tried on a real request
-- [ ] M16-12 Add the research's editing lines to the editing guide (hook in three seconds, cut padding, captions
+- [x] M16-12 (Claude, 2026-10-25) Add the research's editing lines to the editing guide (hook in three seconds, cut padding, captions
       two frames early, effects with a cause, measured loudness): `docs/RESEARCH.md`, the session's report
 - [ ] M16-13 "Pick a look": 12 to 15 ready looks written as STYLE.md (with M10-04's presets)
 - [ ] M16-14 "Smooth motion" (HyperFrames 0.8.191's motion blur) and "Slow motion into the beat" (speed ramps)
@@ -803,8 +803,9 @@ M10 and M17 lines is `docs/RESEARCH.md`.
       assistants' half done (Claude, 2026-10-25): `find_free_media` and `use_free_media` in the app's own tool
       server beside look_at_video (`agents/tools/freeMedia.mjs`), for Claude Code and Codex; the house note sends
       them there first. Tried against the real Openverse: two sunset photos with previews, one saved with its CC BY
-      credit, a CC0 whoosh. Picture searches take 15 to 30 s. Open: a panel for the person to search by hand, the
-      "Copy credits" note on saving, Gemini (agy takes MCP servers only from its global settings), and a real
+      credit, a CC0 whoosh. Picture searches take 15 to 30 s. After "Save video", "Copy credits (n)" copies the lines
+      the description needs (`credits.js`). Open: a panel for the person to search by hand,
+      Gemini (agy takes MCP servers only from its global settings), and a real
       request through the chat
 - [ ] M8-13 Quiet music made in code (an MIT synthesiser, no Python) as the answer to M8-09: audition first
 - [ ] M8-14 "Put the title behind me": HyperFrames `remove-background` (a 168 MB model, only on the person's yes)

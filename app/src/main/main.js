@@ -11,6 +11,7 @@ import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
 import { dialogTitle } from "./dialogTitle.js";
 import { captureDrawing } from "./drawings.js";
+import { creditsNeeded } from "./credits.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
@@ -441,6 +442,8 @@ function registerIpc() {
   });
   handle("save:stop", () => exporter.stop());
   handle("save:status", (dir) => exporter.status(requireProject(dir)));
+  // The credit lines a saved video needs (credits.js): read from its free-media ledger, nothing written.
+  handle("save:credits", (dir) => creditsNeeded(requireProject(dir)));
   // Only the file this app has just made can be shown: the page never names a path.
   handle("save:show", () => {
     const file = exporter.lastFile;

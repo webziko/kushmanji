@@ -60,7 +60,8 @@ contextBridge.exposeInMainWorld("hfwin", {
   preview: { log: call("preview:log") },
   logs: { show: call("logs:show") },
   player: { command: call("player:command") },
-  save: { start: call("save:start"), stop: call("save:stop"), status: call("save:status"), show: call("save:show") },
+  save: { start: call("save:start"), stop: call("save:stop"), status: call("save:status"), show: call("save:show"),
+    credits: call("save:credits") },
   selection: { get: call("selection:get") },
   study: {
     status: call("study:status"),

@@ -458,6 +458,10 @@ export default {
   // saveVideo.js: Save video
   "Show the saved video in File Explorer": "सेव किया वीडियो File Explorer में दिखाएँ",
   "Show the file": "फ़ाइल दिखाएँ",
+  "Copy credits": "क्रेडिट कॉपी करें",
+  "Copy credits ({count})": "क्रेडिट कॉपी करें ({count})",
+  "Credits copied": "क्रेडिट कॉपी हो गए",
+  "This video uses free pictures or sounds that need credit. Copy the lines for its description.": "इस वीडियो में ऐसी मुफ़्त तस्वीरें या आवाज़ें हैं जिनका क्रेडिट देना ज़रूरी है। वीडियो के विवरण के लिए ये लाइनें कॉपी करें।",
   "Make a video file from your whole video and put it in your Downloads folder.": "आपके पूरे वीडियो से एक वीडियो फ़ाइल बनाकर Downloads फ़ोल्डर में रखें।",
   "Stop saving": "सेव करना रोकें",
   "Saving your video… {percent}%": "आपका वीडियो सेव हो रहा है… {percent}%",

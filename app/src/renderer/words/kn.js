@@ -458,6 +458,10 @@ export default {
   // saveVideo.js: Save video
   "Show the saved video in File Explorer": "ಸೇವ್ ಆದ ವಿಡಿಯೋವನ್ನು File Explorer ನಲ್ಲಿ ತೋರಿಸಿ",
   "Show the file": "ಫೈಲ್ ತೋರಿಸಿ",
+  "Copy credits": "ಕ್ರೆಡಿಟ್ ಕಾಪಿ ಮಾಡಿ",
+  "Copy credits ({count})": "ಕ್ರೆಡಿಟ್ ಕಾಪಿ ಮಾಡಿ ({count})",
+  "Credits copied": "ಕ್ರೆಡಿಟ್ ಕಾಪಿ ಆಯಿತು",
+  "This video uses free pictures or sounds that need credit. Copy the lines for its description.": "ಈ ವೀಡಿಯೊದಲ್ಲಿ ಕ್ರೆಡಿಟ್ ಕೊಡಬೇಕಾದ ಉಚಿತ ಚಿತ್ರಗಳು ಅಥವಾ ಶಬ್ದಗಳಿವೆ. ವೀಡಿಯೊದ ವಿವರಣೆಗೆ ಈ ಸಾಲುಗಳನ್ನು ಕಾಪಿ ಮಾಡಿ.",
   "Make a video file from your whole video and put it in your Downloads folder.": "ನಿಮ್ಮ ಪೂರ್ತಿ ವಿಡಿಯೋದಿಂದ ಒಂದು ವಿಡಿಯೋ ಫೈಲ್ ಮಾಡಿ Downloads ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ಇಡಿ.",
   "Stop saving": "ಸೇವ್ ನಿಲ್ಲಿಸಿ",
   "Saving your video… {percent}%": "ನಿಮ್ಮ ವಿಡಿಯೋ ಸೇವ್ ಆಗುತ್ತಿದೆ… {percent}%",

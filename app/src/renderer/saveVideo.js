@@ -14,6 +14,15 @@ export function createSaveVideo(dir) {
     class: "ghost save-show", type: "button", hidden: true, title: t("Show the saved video in File Explorer"),
     onclick: () => api.save.show().catch(() => {}),
   }, t("Show the file"));
+  // Free pictures or sounds "with credit" (the assistant's Openverse tool) must be credited where the video is
+  // posted: after a save, one press copies those lines for the description.
+  let creditLines = [];
+  const credits = h("button", {
+    class: "ghost save-credits", type: "button", hidden: true,
+    title: t("This video uses free pictures or sounds that need credit. Copy the lines for its description."),
+    onclick: () => navigator.clipboard.writeText(creditLines.join("\n"))
+      .then(() => { credits.textContent = t("Credits copied"); }).catch(() => {}),
+  }, t("Copy credits"));
   const button = h("button", {
     class: "secondary save-video", type: "button",
     title: t("Make a video file from your whole video and put it in your Downloads folder."),
@@ -27,6 +36,14 @@ export function createSaveVideo(dir) {
     button.disabled = state === "busy";
     button.textContent = state === "saving" ? t("Stop saving") : t("Save video");
     show.hidden = state !== "saved";
+    credits.hidden = true;
+    if (state === "saved") {
+      api.save.credits(dir).then((lines) => {
+        creditLines = Array.isArray(lines) ? lines : [];
+        credits.textContent = t("Copy credits ({count})", { count: creditLines.length });
+        credits.hidden = state !== "saved" || creditLines.length === 0;
+      }).catch(() => {});
+    }
     status.removeAttribute("title");
     if (state === "saving") status.textContent = t("Saving your video… {percent}%", { percent: next.percent });
     else if (state === "busy") status.textContent = t("Another video is being saved.");
@@ -60,7 +77,7 @@ export function createSaveVideo(dir) {
   api.save.status(dir).then(render).catch(() => {});
 
   return {
-    button, status, show, start,
+    button, status, show, credits, start,
     destroy() {
       stopListening();
       delete document.body.dataset.save;

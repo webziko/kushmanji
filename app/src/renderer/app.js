@@ -732,6 +732,7 @@ async function openProject(dir, { request, name, draft } = {}) {
       save.status,
       h("span", { class: "spacer" }),
       save.show,
+      save.credits,
       save.button,
       addMedia,
       edit,
