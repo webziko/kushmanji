@@ -10,6 +10,7 @@ import { turnHistory } from "./agents/turnHistory.js";
 import { whereAll } from "./agents/launcher.js";
 import { cliVersion } from "./cli.js";
 import { dialogTitle } from "./dialogTitle.js";
+import { captureDrawing } from "./drawings.js";
 import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
@@ -298,6 +299,9 @@ function registerIpc() {
     const box = captureBox(rect, win.getContentBounds());
     return box ? saveCover(dir, await win.webContents.capturePage(box)) : false;
   });
+  // "Draw on the picture" (drawings.js): same rule as the cover. The page names only the box of the picture and
+  // gets back the new file's path inside the project; the file and its name are the main process's own.
+  handle("notes:saveDrawing", ({ dir, rect } = {}) => captureDrawing(win, requireProject(dir), rect));
   handle("projects:create", (name) => createProject(name));
   // The three folder windows (this, "Add clips" and "Open a folder") take their title from the page, which knows
   // the language; dialogTitle() keeps it to plain text and falls back to the English title (M14-16).

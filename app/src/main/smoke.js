@@ -1,4 +1,4 @@
-import { app, dialog } from "electron";
+import { app, dialog, nativeImage } from "electron";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -309,6 +309,169 @@ async function editorArrowStep({ win, result, inPage }) {
   };
 }
 
+/**
+ * "Draw on the picture" (M3-05), the way a person does it: the button stops a playing video and lays the layer
+ * exactly over the picture; a coral line made with pointer events shows on it; Undo and Clear work; "Send to the
+ * chat" keeps one picture (the frame and the marks together) in .hyperframes/notes and puts the message in the
+ * chat's box without sending it; Escape puts the layer away; and the bar fits the smallest window.
+ */
+async function drawingStep({ win, result, inPage, shot, dir, state }) {
+  const draft = await inPage("document.querySelector('.composer textarea').value");
+  const layerUp = "(Boolean(document.querySelector('.player-draw-layer')) && !document.querySelector('.player-draw-layer').hidden)";
+  const open = async () => {
+    await inPage("document.querySelector('.player-draw').click()");
+    if (!(await until(() => inPage(layerUp), { timeoutMs: 5000 })))
+      throw new Error("\"Draw on the picture\" did not open the drawing layer.");
+  };
+  const gone = async (what) => {
+    if (!(await until(() => inPage(`!${layerUp}`), { timeoutMs: 5000 }))) throw new Error(`${what} did not put the drawing layer away.`);
+  };
+  // A line made the way a mouse or a pen makes it: down, many moves, up. `from` and `to` are fractions of the picture.
+  const stroke = (from, to) => inPage(`(() => {
+    const marks = document.querySelector('.player-marks');
+    const box = marks.getBoundingClientRect();
+    const fire = (type, x, y, buttons) => marks.dispatchEvent(new PointerEvent(type, {
+      pointerId: 7, pointerType: 'mouse', isPrimary: true, button: 0, buttons, bubbles: true, cancelable: true,
+      clientX: box.left + box.width * x, clientY: box.top + box.height * y }));
+    const [a, b] = ${JSON.stringify([from, to])};
+    fire('pointerdown', a[0], a[1], 1);
+    for (let i = 1; i <= 16; i++) fire('pointermove', a[0] + (b[0] - a[0]) * i / 16, a[1] + (b[1] - a[1]) * i / 16, 1);
+    fire('pointerup', b[0], b[1], 0);
+  })()`);
+  // How many pixels of the canvas are the pen's coral.
+  const coral = () => inPage(`(() => {
+    const canvas = document.querySelector('.player-marks');
+    const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 200 && data[i] > 200 && data[i + 1] < 140 && data[i + 2] < 120) count++;
+    return count;
+  })()`);
+  const notesFolder = path.join(dir, ".hyperframes", "notes");
+  const saved = () => (fs.existsSync(notesFolder) ? fs.readdirSync(notesFolder).filter((name) => name.endsWith(".png")) : []);
+
+  // 1. Pressed while the video plays: the video stops, and the layer lies exactly over the picture.
+  await inPage("document.querySelector('.player-play').click()");
+  if (!(await until(async () => (await state()).playing, { timeoutMs: 3000 })))
+    throw new Error("The video could not play before drawing on it.");
+  await open();
+  const stopped = await state();
+  await wait(500);
+  const later = await state();
+  if (stopped.playing || later.playing || Math.abs(later.time - stopped.time) > 0.05)
+    throw new Error("The video kept playing under the drawing layer.");
+  const place = await inPage(`(() => {
+    const rect = (item) => { const r = item.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; };
+    const layer = document.querySelector('.player-marks');
+    const middle = layer.getBoundingClientRect();
+    return { layer: rect(layer), picture: rect(document.querySelector('.player iframe')), screen: rect(document.querySelector('.player-screen')),
+      onTop: document.elementFromPoint(middle.left + middle.width / 2, middle.top + middle.height / 2) === layer };
+  })()`);
+  if (!place.layer.every((value, i) => Math.abs(value - place.picture[i]) < 1.5))
+    throw new Error(`The drawing layer is not exactly over the picture (${place.layer} against ${place.picture}).`);
+  if (!place.onTop) throw new Error("Something lies over the drawing layer, so a pen could not reach it.");
+
+  // 2. The video cannot be played while the layer is up.
+  const locked = await inPage("({ controls: document.querySelector('.player-controls').hidden, picture: document.querySelector('.player-picture').disabled })");
+  if (!locked.controls || !locked.picture) throw new Error("The video can still be played from under the drawing layer.");
+  await inPage("document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true }))");
+  await wait(500);
+  if ((await state()).playing) throw new Error("The space bar played the video under the drawing layer.");
+
+  // 3. Lines, Undo and Clear.
+  if (!(await inPage("document.querySelector('.player-draw-send').disabled")))
+    throw new Error("\"Send to the chat\" can be pressed before anything is drawn.");
+  await stroke([0.2, 0.25], [0.5, 0.45]);
+  const one = await coral();
+  if (one < 150) throw new Error(`A line drawn with the pen left only ${one} coral pixels.`);
+  await stroke([0.2, 0.7], [0.8, 0.75]);
+  const two = await coral();
+  if (two < one * 1.3) throw new Error("A second line did not show.");
+  await inPage("document.querySelector('.player-draw-undo').click()");
+  if (Math.abs((await coral()) - one) > one * 0.03) throw new Error("Undo did not take back the last line only.");
+  await inPage("document.querySelector('.player-draw-clear').click()");
+  if ((await coral()) !== 0 || !(await inPage("document.querySelector('.player-draw-send').disabled")))
+    throw new Error("Clear did not take every line away.");
+  await stroke([0.15, 0.3], [0.55, 0.5]);
+  const marked = await coral();
+  const note = "Make this title bigger";
+  await inPage(`(() => { const box = document.querySelector('.player-draw-note'); box.value = ${inJs(note)}; box.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await shot("player-drawing");
+
+  // 4. Send to the chat: one picture in the project, the message in the box, nothing sent.
+  const chip = await inPage("document.querySelector('.chat-moment').textContent");
+  const shape = await inPage("(() => { const r = document.querySelector('.player-marks').getBoundingClientRect(); return r.width / r.height; })()");
+  const playerUrl = await inPage("document.querySelector('.player iframe').src");
+  const before = saved().length;
+  await inPage("document.querySelector('.player-draw-send').click()");
+  await gone("\"Send to the chat\"");
+  const message = await inPage("document.querySelector('.composer textarea').value");
+  const found = /\((\.hyperframes\/notes\/drawing-\d{8}-\d{6}\.png), my marks are in coral\)/.exec(message);
+  if (!found) throw new Error(`The chat's box does not name the drawing: ${message}`);
+  const expected = `I drew on the picture at ${chip.replace("At ", "")} (${found[1]}, my marks are in coral): ${note}`;
+  if (message !== (draft.trim() ? `${draft.trimEnd()}\n\n${expected}` : expected))
+    throw new Error(`The chat's box holds the wrong message: ${message}`);
+  if ((await inPage("document.activeElement === document.querySelector('.composer textarea')")) !== true)
+    throw new Error("The message box was not given the keyboard after a drawing was sent to it.");
+  if ((await inPage("document.body.dataset.agent")) !== "idle") throw new Error("Sending a drawing to the chat sent a request.");
+  const file = path.join(dir, ...found[1].split("/"));
+  if (saved().length !== before + 1 || !fs.existsSync(file)) throw new Error("The drawing was not kept in the project's notes folder.");
+  const bytes = fs.readFileSync(file);
+  if (bytes.length < 1000 || bytes.subarray(1, 4).toString() !== "PNG") throw new Error("The kept drawing is not a picture.");
+  // The picture itself: the video's frame and the coral together, in the shape of the picture on screen.
+  const image = nativeImage.createFromBuffer(bytes);
+  const { width, height } = image.getSize();
+  if (width < 200 || Math.abs(width / height - shape) > 0.03)
+    throw new Error(`The kept drawing is ${width} by ${height}, not the shape of the picture on screen.`);
+  const bitmap = image.toBitmap();
+  let pen = 0;
+  for (let i = 0; i + 3 < bitmap.length; i += 4)
+    if (Math.abs(bitmap[i + 2] - 0xf4) <= 12 && Math.abs(bitmap[i + 1] - 0x64) <= 12 && Math.abs(bitmap[i] - 0x4a) <= 12) pen++;
+  if (pen < marked / 3 || pen > width * height * 0.3)
+    throw new Error(`The kept drawing shows ${pen} pixels of the pen, and the screen showed ${marked}.`);
+  const resting = await state();
+  if (resting.playing) throw new Error("The video played again after a drawing was sent.");
+  if (!(await inPage("document.querySelector('.player-controls').hidden === false && document.querySelector('.player-picture').disabled === false")))
+    throw new Error("The playback controls did not come back after a drawing was sent.");
+  await wait(1200);
+  if ((await inPage("document.querySelector('.player iframe').src")) !== playerUrl)
+    throw new Error("Keeping a drawing in the project reloaded the video.");
+
+  // 5. Escape puts the layer away and keeps nothing.
+  await open();
+  await stroke([0.3, 0.3], [0.6, 0.6]);
+  await inPage("document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))");
+  await gone("Escape");
+  if (saved().length !== before + 1) throw new Error("Escape kept a drawing.");
+  if ((await inPage("document.querySelector('.composer textarea').value")) !== message)
+    throw new Error("Escape changed the message in the chat's box.");
+
+  // 6. The smallest window: the bar and its buttons are all in sight, and the picture is still worth drawing on.
+  const size = win.getSize();
+  win.setSize(960, 600);
+  await wait(400);
+  await open();
+  const fits = await inPage(`(() => {
+    const player = document.querySelector('.player').getBoundingClientRect();
+    const layer = document.querySelector('.player-marks').getBoundingClientRect();
+    const items = [...document.querySelectorAll('.player-drawbar button, .player-draw-note')];
+    return layer.width > 200 && layer.height > 100 && items.length === 5 && items.every((item) => {
+      const r = item.getBoundingClientRect();
+      return r.width > 0 && r.left >= player.left && r.right <= player.right && r.bottom <= innerHeight;
+    });
+  })()`);
+  if (!fits) throw new Error("The drawing bar or its picture does not fit the app's smallest window.");
+  await stroke([0.2, 0.2], [0.7, 0.6]);
+  await shot("player-drawing-small-window");
+  await inPage("document.querySelector('.player-draw-cancel').click()");
+  await gone("Cancel");
+  win.setSize(...size);
+  await wait(300);
+
+  await inPage(`document.querySelector('.composer textarea').value = ${inJs(draft)}`);
+  result.drawing = { pausesVideo: true, overPicture: true, locksPlayback: true, undoClear: true, sentOnePicture: found[1],
+    pictureSize: [width, height], penPixels: pen, messageNotSent: true, escape: true, smallWindow: true };
+}
+
 async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   if (!(await inPage("document.body.dataset.screen === 'watch' && Boolean(document.querySelector('.player'))")))
     throw new Error("A video did not open on the simple player screen.");
@@ -459,6 +622,7 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   await wait(300);
   if (Math.abs((await state()).time - afterBack.time) > 0.2)
     throw new Error("Typing in chat unexpectedly moved the video.");
+  await drawingStep({ win, result, inPage, shot, dir, state });
 
   // A real file edit must reach the simple screen too; only this throwaway project is changed.
   const index = path.join(dir, "index.html");

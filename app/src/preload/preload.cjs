@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld("hfwin", {
     reveal: call("projects:reveal"),
     forget: call("projects:forget"),
   },
+  notes: { saveDrawing: call("notes:saveDrawing") },
   looks: { list: call("looks:list"), save: call("looks:save"), use: call("looks:use") },
   health: { check: call("health:check"), get: call("health:get") },
   storage: { status: call("storage:status"), free: call("storage:free") },

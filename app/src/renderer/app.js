@@ -3,6 +3,7 @@
 // What a person reads here follows the words in docs/UX.md ("a project" is "a video", and so on).
 import { createChat } from "./chat.js";
 import { h } from "./dom.js";
+import { drawingMessage } from "./drawing.js";
 import { createPlayer } from "./player.js";
 import { createAbout } from "./about.js";
 import { askGuided } from "./guided.js";
@@ -537,6 +538,8 @@ async function openProject(dir, { request } = {}) {
   const player = createPlayer(dir, { onLoading: loading, onReady: ready,
     onTime: (time) => project.chat.setTime(time),
     onHelp: () => help.show(),
+    // A drawing is saved in the video's folder; the chat's box gets the message about it, to send or to change.
+    onDrawing: (sent) => project.chat.addToDraft(drawingMessage(sent)),
     onError: (message) => { if (open === project) project.fail("failed", message); } });
   project.destroy = () => { player.destroy(); project.chat.destroy(); save.destroy(); };
   const edit = h("button", {

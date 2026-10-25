@@ -103,6 +103,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   log.js                 the problem report: a daily log file with nothing private in it (`redact`)
   lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them
   covers.js              Home's picture of each video, captured from the player
+  drawings.js            "Draw on the picture": the window's picture with the person's coral marks, kept in .hyperframes/notes
   storage.js             Home's "Undo copies take ..." and "Free up space" (upstream's `hyperframes clean`)
   health.js              Home's "Before you start": what this computer still needs (`hyperframes doctor`)
   kits.js                saved looks: a video's STYLE.md kept under a name and used again

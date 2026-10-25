@@ -363,7 +363,7 @@ export default {
   "It is built on HyperFrames, the open-source video engine made by HeyGen, used under its Apache 2.0 licence. Kushmanji is not made by HeyGen and is not an official HeyGen app.": "ಇದನ್ನು HyperFrames ಮೇಲೆ ಕಟ್ಟಲಾಗಿದೆ. ಅದು HeyGen ಮಾಡಿದ ಓಪನ್-ಸೋರ್ಸ್ ವಿಡಿಯೋ ಎಂಜಿನ್, Apache 2.0 ಲೈಸೆನ್ಸ್ ಅಡಿಯಲ್ಲಿ ಬಳಸಲಾಗಿದೆ. Kushmanji ಅನ್ನು HeyGen ಮಾಡಿಲ್ಲ, ಇದು HeyGen ನ ಅಧಿಕೃತ ಆ್ಯಪ್ ಅಲ್ಲ.",
   "The assistants are your own: Claude, ChatGPT and Gemini, each with its own sign-in. Kushmanji keeps no passwords and adds no tracking of its own.": "ಅಸಿಸ್ಟೆಂಟ್‌ಗಳು ನಿಮ್ಮವೇ: Claude, ChatGPT ಮತ್ತು Gemini, ಒಂದೊಂದಕ್ಕೂ ಅದರದೇ ಸೈನ್ ಇನ್. Kushmanji ಯಾವ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನೂ ಇಟ್ಟುಕೊಳ್ಳುವುದಿಲ್ಲ, ತನ್ನದೇ ಆದ ಯಾವ ಟ್ರ್ಯಾಕಿಂಗ್ ಕೂಡ ಮಾಡುವುದಿಲ್ಲ.",
   "App {appVersion} · HyperFrames {cliVersion} · Electron {electron}": "ಆ್ಯಪ್ {appVersion} · HyperFrames {cliVersion} · Electron {electron}",
-  // player.js: The video player
+  // player.js and drawing.js: The video player
   "Play": "ಪ್ಲೇ",
   "Play video": "ವಿಡಿಯೋ ಪ್ಲೇ ಮಾಡಿ",
   "Playback position": "ಪ್ಲೇ ಆಗುತ್ತಿರುವ ಸ್ಥಾನ",
@@ -386,6 +386,14 @@ export default {
   "{time} of {total}": "{total} ರಲ್ಲಿ {time}",
   "The video's picture did not finish loading. Try again.": "ವಿಡಿಯೋದ ಚಿತ್ರ ಪೂರ್ತಿ ಲೋಡ್ ಆಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   "Exit full screen": "ಫುಲ್ ಸ್ಕ್ರೀನ್‌ನಿಂದ ಹೊರಬನ್ನಿ",
+  "Drawing on the picture. Use a mouse, a pen or a finger.": "ಚಿತ್ರದ ಮೇಲೆ ಬರೆಯುವ ಜಾಗ. ಮೌಸ್, ಪೆನ್ ಅಥವಾ ಬೆರಳು ಬಳಸಿ.",
+  "What should change here?": "ಇಲ್ಲಿ ಏನು ಬದಲಾಗಬೇಕು?",
+  "Undo": "ಹಿಂದಕ್ಕೆ ಪಡೆಯಿರಿ",
+  "Clear": "ಎಲ್ಲಾ ಅಳಿಸಿ",
+  "Send to the chat": "ಚಾಟ್‌ಗೆ ಕಳುಹಿಸಿ",
+  "Draw on the picture": "ಚಿತ್ರದ ಮೇಲೆ ಬರೆಯಿರಿ",
+  "Saving the picture…": "ಚಿತ್ರ ಸೇವ್ ಆಗುತ್ತಿದೆ…",
+  "Draw on the picture with a mouse, a pen or a finger, then press “Send to the chat”.": "ಮೌಸ್, ಪೆನ್ ಅಥವಾ ಬೆರಳಿನಿಂದ ಚಿತ್ರದ ಮೇಲೆ ಬರೆಯಿರಿ, ನಂತರ “ಚಾಟ್‌ಗೆ ಕಳುಹಿಸಿ” ಒತ್ತಿ.",
   // saveVideo.js: Save video
   "Show the saved video in File Explorer": "ಸೇವ್ ಆದ ವಿಡಿಯೋವನ್ನು File Explorer ನಲ್ಲಿ ತೋರಿಸಿ",
   "Show the file": "ಫೈಲ್ ತೋರಿಸಿ",
@@ -559,6 +567,10 @@ export default {
   "{name} is a folder or a shortcut, so nothing was added.": "{name} ಒಂದು ಫೋಲ್ಡರ್ ಅಥವಾ ಶಾರ್ಟ್‌ಕಟ್, ಹಾಗಾಗಿ ಏನೂ ಸೇರಿಸಲಿಲ್ಲ.",
   // player.js: sending the moment being watched
   "The video is loading. Wait for the picture, then send your message again.": "ವಿಡಿಯೋ ಲೋಡ್ ಆಗುತ್ತಿದೆ. ಚಿತ್ರ ಬರುವವರೆಗೆ ಕಾಯಿರಿ, ನಂತರ ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಮತ್ತೆ ಕಳುಹಿಸಿ.",
+  // drawings.js: sending a drawing to the chat
+  "The picture could not be taken. Try again.": "ಚಿತ್ರ ತೆಗೆಯಲು ಆಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "The drawing could not be saved in this video's folder.": "ನೀವು ಬರೆದ ಚಿತ್ರವನ್ನು ಈ ವಿಡಿಯೋದ ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ಸೇವ್ ಮಾಡಲು ಆಗಲಿಲ್ಲ.",
+  "The picture is not on the screen, so it could not be taken. Try again.": "ಚಿತ್ರ ಸ್ಕ್ರೀನ್ ಮೇಲೆ ಕಾಣಿಸುತ್ತಿಲ್ಲ, ಹಾಗಾಗಿ ತೆಗೆಯಲು ಆಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   // preview.js: the editor not starting. The editor's own last lines follow the first line, in English
   "The editor took too long to start. Press Try again.": "ಎಡಿಟರ್ ಶುರುವಾಗಲು ತುಂಬಾ ಸಮಯ ಹಿಡಿಯಿತು. “ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ” ಒತ್ತಿ.",
   "The editor could not start: {message}": "ಎಡಿಟರ್ ಶುರುವಾಗಲಿಲ್ಲ: {message}",

@@ -12,6 +12,8 @@ export const HOUSE_PROMPT =
   ".hyperframes/study/index.json before you work with a clip. It lists every clip with its length, a " +
   "transcript with the time of each phrase, and sheets of still frames with the time printed on each frame. " +
   "Open a sheet to see what is in a clip, and cut by those times instead of guessing. " +
+  "When a message names a drawing in .hyperframes/notes, open that picture first: the person's marks are in coral " +
+  "on the frame at that moment. " +
   "Before you cut, arrange or re-time footage, read .hyperframes/EDITING_GUIDE.md and edit by it: no repeated " +
   "takes, soft joins of picture and sound, and everything after a moved clip moved with it. " +
   "Before you make or change titles, animation, a logo sting, a trailer or any motion design, read " +

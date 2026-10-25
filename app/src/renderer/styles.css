@@ -1297,6 +1297,57 @@ dialog[open]::backdrop {
   display: inline-block;
 }
 
+/* "Draw on the picture" (M3-05, drawing.js). The layer lies exactly over the picture, not the dark bars around it,
+ * and has nothing of its own to show: whatever is drawn inside it is what the main process takes a picture of. The
+ * coral frame is on the screen around it (outside the picture), and the bar below takes the place of the controls. */
+.player-screen[data-drawing] {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.player-draw-layer {
+  position: absolute;
+  z-index: 2;
+}
+
+.player-marks {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.player-drawbar {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.player-draw-note {
+  flex: none;
+}
+
+.player-draw-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.player-draw-buttons button {
+  min-height: 44px;
+  border-radius: 999px;
+}
+
 [data-screen="watch"] .chat {
   width: clamp(320px, 26vw, 380px);
   border-inline-start: 1px solid var(--border);
@@ -1381,7 +1432,8 @@ dialog[open]::backdrop {
     gap: 4px;
   }
 
-  .player-controls {
+  .player-controls,
+  .player-drawbar {
     padding: 8px 12px 12px;
   }
 
@@ -1390,7 +1442,12 @@ dialog[open]::backdrop {
     gap: 4px;
   }
 
-  .player-buttons button {
+  .player-draw-buttons {
+    gap: 4px;
+  }
+
+  .player-buttons button,
+  .player-draw-buttons button {
     padding-inline: 12px;
   }
 

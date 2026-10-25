@@ -363,7 +363,7 @@ export default {
   "It is built on HyperFrames, the open-source video engine made by HeyGen, used under its Apache 2.0 licence. Kushmanji is not made by HeyGen and is not an official HeyGen app.": "यह HyperFrames पर बना है, जो HeyGen का बनाया ओपन-सोर्स वीडियो इंजन है और Apache 2.0 लाइसेंस के तहत इस्तेमाल हुआ है। Kushmanji को HeyGen ने नहीं बनाया है और यह HeyGen का ऑफ़िशियल ऐप नहीं है।",
   "The assistants are your own: Claude, ChatGPT and Gemini, each with its own sign-in. Kushmanji keeps no passwords and adds no tracking of its own.": "असिस्टेंट आपके अपने हैं: Claude, ChatGPT और Gemini, हर एक का अपना साइन-इन। Kushmanji कोई पासवर्ड नहीं रखता और अपनी तरफ़ से कोई ट्रैकिंग नहीं जोड़ता।",
   "App {appVersion} · HyperFrames {cliVersion} · Electron {electron}": "ऐप {appVersion} · HyperFrames {cliVersion} · Electron {electron}",
-  // player.js: The video player
+  // player.js and drawing.js: The video player
   "Play": "चलाएँ",
   "Play video": "वीडियो चलाएँ",
   "Playback position": "वीडियो में कहाँ तक",
@@ -386,6 +386,14 @@ export default {
   "{time} of {total}": "{total} में से {time}",
   "The video's picture did not finish loading. Try again.": "वीडियो की तस्वीर पूरी लोड नहीं हुई। फिर कोशिश करें।",
   "Exit full screen": "फ़ुल स्क्रीन से बाहर",
+  "Drawing on the picture. Use a mouse, a pen or a finger.": "तस्वीर पर बनाने की जगह। माउस, पेन या उँगली इस्तेमाल करें।",
+  "What should change here?": "यहाँ क्या बदलना चाहिए?",
+  "Undo": "वापस लें",
+  "Clear": "सब मिटाएँ",
+  "Send to the chat": "चैट में भेजें",
+  "Draw on the picture": "तस्वीर पर बनाएँ",
+  "Saving the picture…": "तस्वीर सेव हो रही है…",
+  "Draw on the picture with a mouse, a pen or a finger, then press “Send to the chat”.": "माउस, पेन या उँगली से तस्वीर पर बनाएँ, फिर “चैट में भेजें” दबाएँ।",
   // saveVideo.js: Save video
   "Show the saved video in File Explorer": "सेव किया वीडियो File Explorer में दिखाएँ",
   "Show the file": "फ़ाइल दिखाएँ",
@@ -559,6 +567,10 @@ export default {
   "{name} is a folder or a shortcut, so nothing was added.": "{name} एक फ़ोल्डर या शॉर्टकट है, इसलिए कुछ नहीं जोड़ा गया।",
   // player.js: sending the moment being watched
   "The video is loading. Wait for the picture, then send your message again.": "वीडियो लोड हो रहा है। तस्वीर आने तक इंतज़ार करें, फिर अपना मैसेज दोबारा भेजें।",
+  // drawings.js: sending a drawing to the chat
+  "The picture could not be taken. Try again.": "तस्वीर ली नहीं जा सकी। फिर कोशिश करें।",
+  "The drawing could not be saved in this video's folder.": "आपकी बनाई तस्वीर इस वीडियो के फ़ोल्डर में सेव नहीं हो सकी।",
+  "The picture is not on the screen, so it could not be taken. Try again.": "तस्वीर स्क्रीन पर नहीं दिख रही, इसलिए ली नहीं जा सकी। फिर कोशिश करें।",
   // preview.js: the editor not starting. The editor's own last lines follow the first line, in English
   "The editor took too long to start. Press Try again.": "एडिटर को शुरू होने में बहुत देर लगी। “फिर कोशिश करें” दबाएँ।",
   "The editor could not start: {message}": "एडिटर शुरू नहीं हो सका: {message}",

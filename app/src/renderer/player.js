@@ -1,4 +1,5 @@
 import { h } from "./dom.js";
+import { createDrawing } from "./drawing.js";
 import { t, tFrom } from "./words.js";
 
 const api = window.hfwin;
@@ -8,7 +9,7 @@ const clock = (seconds) => {
 };
 
 /** The same video the editor shows, with ordinary playback controls around it. */
-export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp }) {
+export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp, onDrawing }) {
   let active = false;
   let source = null;
   let generation = 0;
@@ -87,6 +88,19 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
       } catch { note.textContent = t("Full screen did not open. Try again."); }
     },
   }, t("Full screen"));
+  // "Draw on the picture" (M3-05, drawing.js): the video stops, and a layer for the pen lies over the picture.
+  const draw = h("button", { class: "secondary player-draw", type: "button", onclick: () => void startDrawing() },
+    t("Draw on the picture"));
+  const drawing = createDrawing({
+    dir, screen, place: pictureBox, when: () => clock(state.time),
+    status: (text) => { note.textContent = text; },
+    onSent: (sent) => onDrawing?.(sent),
+    onClosed: () => {
+      controls.hidden = false;
+      picture.disabled = !state.ready;
+      draw.focus();
+    },
+  });
   const controls = h("fieldset", { class: "player-controls", "aria-label": t("Playback controls"), disabled: true },
     h("div", { class: "player-progress" }, seek, time),
     h("div", { class: "player-buttons" },
@@ -95,6 +109,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
       play,
       h("button", { class: "secondary player-forward", type: "button", title: t("Skip forward 10 seconds"),
         onclick: () => control("skip", 10) }, t("Forward 10s")),
+      draw,
       h("span", { class: "spacer" }), mute, volume, full,
     ),
   );
@@ -102,14 +117,37 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     h("div", { class: "player-heading" }, h("strong", {}, t("Your video")),
       h("span", { class: "muted" }, t("Space to play · Arrow keys skip 10 seconds")),
       h("button", { class: "secondary player-help", type: "button", onclick: onHelp }, t("Help"))),
-    screen, controls, note,
+    screen, controls, drawing.bar, note,
   );
+
+  async function startDrawing() {
+    if (drawing.active || !active || !state.ready) return;
+    const current = generation;
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch { /* the pen works over a full-screen picture too; only the chat is out of sight */ }
+    if (state.playing) await control("pause");
+    // Not while the picture is playing, loading again or gone: the marks would be on a different moment.
+    if (!active || current !== generation || !state.ready || state.playing || drawing.active) return;
+    controls.hidden = true;
+    picture.disabled = true;
+    drawing.show();
+  }
+
+  /** The picture's box inside the screen: the video's frame as fit() scales it, centred. */
+  function pictureBox() {
+    const scale = Math.max(0, Math.min(screen.clientWidth / state.width, screen.clientHeight / state.height));
+    const width = state.width * scale;
+    const height = state.height * scale;
+    return { left: (screen.clientWidth - width) / 2, top: (screen.clientHeight - height) / 2, width, height };
+  }
 
   function fit() {
     const scale = Math.min(screen.clientWidth / state.width, screen.clientHeight / state.height);
     frame.style.width = `${state.width}px`;
     frame.style.height = `${state.height}px`;
     frame.style.transform = `translate(-50%, -50%) scale(${Math.max(0, scale)})`;
+    drawing.layout();
   }
   const size = new ResizeObserver(fit);
   size.observe(screen);
@@ -141,7 +179,9 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
           await command("volume", sound);
           if (resumePlaying && resumeTime < got.duration) got = await command("play");
           if (!active || current !== generation) return;
-          controls.disabled = picture.disabled = false;
+          controls.disabled = false;
+          picture.disabled = drawing.active;
+          drawing.wait(false);
           note.textContent = "";
           onReady();
         }
@@ -164,6 +204,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     state = { ...state, ready: false };
     onTime(null);
     controls.disabled = picture.disabled = true;
+    drawing.wait(true);
     clearTimeout(pollTimer);
     clearTimeout(seekTimer);
     scrubbing = false;
@@ -188,7 +229,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     if (changed === dir && event.type === "done") refresh();
   });
   const keys = (event) => {
-    if (!active || !state.ready || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey ||
+    if (!active || !state.ready || drawing.active || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey ||
       event.target.closest?.("input, textarea, select, [contenteditable], .chat, dialog[open]")) return;
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
@@ -208,6 +249,7 @@ export function createPlayer(dir, { onLoading, onReady, onError, onTime, onHelp 
     if (state.ready) resumeTime = state.time;
     resumePlaying = false;
     state = { ...state, ready: false };
+    drawing.close();
     onTime(null);
     active = false;
     generation++;

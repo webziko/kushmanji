@@ -1390,6 +1390,13 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       if (!input.value.trim()) input.value = text;
       input.focus();
     },
+    /** A prepared message after whatever is already typed, not sent: the person presses Send (M3-05, a drawing). */
+    addToDraft(text) {
+      input.value = input.value.trim() ? `${input.value.trimEnd()}\n\n${text}` : text;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      input.dispatchEvent(new Event("input"));
+    },
     /** Send now if the agent is ready; otherwise keep it in the box and send once it is. */
     send(text) {
       if (isReady()) return void submit(text, false);
