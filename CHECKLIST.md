@@ -14,8 +14,10 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 ## Waiting on you
 
 - [ ] **Sign Claude Code in again** (it signed itself out on this PC on the night of 24 October, so Kushmanji
-      cannot use Claude): open PowerShell, type `claude auth login`, press Enter, and sign in in the browser
-      window that opens. Then tell me, and Claude's trailer gets made.
+      cannot use Claude). Easiest: close Kushmanji and open it again, open any video, choose Claude in the chat,
+      and press the new **Open PowerShell for me** button; sign in in the browser window that opens, then press
+      "Check again". (Or open PowerShell yourself and type `claude auth login`.) Then tell me, and Claude's
+      trailer gets made.
 - [ ] **Watch the trailer test** in `reviews\READY\Kushmanji trailer test` and read `COMPARISON.md` there:
       Gemini's two (with its pictures) and ChatGPT's (fully drawn, the screen changing shape for "Any size").
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
@@ -93,6 +95,9 @@ Then the list further down, starting with one-click export.
 - [x] **Every error message in Kannada and Hindi**, and the titles of the folder windows too.
 - [x] **The assistants name the menus the way you see them**: in Kannada they say the Kannada name, with the
       English in brackets.
+- [x] **Sign in or install an assistant with one press.** When Claude, ChatGPT or Gemini is missing or signed
+      out, the chat's card now has "Open PowerShell for me": a window opens already running that assistant's own
+      installer or sign-in, and you only follow its steps. No typing.
 - [x] **A signed-out assistant is said plainly** ("Claude is signed out ... claude auth login"), and its sign-in
       card no longer hides the message box in a small window (it also printed a stray "false"; gone).
 - [x] **ChatGPT still works on your plan's lower models** (GPT-6-Luna): proven twice through the chat.
