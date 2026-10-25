@@ -47,6 +47,11 @@ assistant half (`agents/tools/freeMedia.mjs`: find_free_media and use_free_media
 tried against the real Openverse; picture searches can take 15 to 30 s, hence the 60 s limit), "Copy credits"
 after saving (`credits.js`), and M16-12 (the editing guide's research lines; one set of phone-safe zones).
 
+Last, at the owner's request ("why on my app its so slow"), M12-08: agy now runs with a home of its own
+(`agents/geminiHome.js`; FINDINGS has the measurements). Surprises: `ls` in Git Bash does not show junctions inside a
+folder (PowerShell's Get-ChildItem does); a conversation id from the person's own home is unknown in the new one,
+so `resumable()` starts it afresh with the house note; agy writes an empty `.gemini/config` of its own there.
+
 At the owner's request the four trailer folders were added to their Home list (`%APPDATA%\Kushmanji\state.json`,
 backup beside it; in CHECKLIST's table). Claude Code is still signed out on the owner's PC.
 
