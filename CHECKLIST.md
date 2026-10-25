@@ -95,6 +95,14 @@ Then the list further down, starting with one-click export.
 - [x] **Every error message in Kannada and Hindi**, and the titles of the folder windows too.
 - [x] **The assistants name the menus the way you see them**: in Kannada they say the Kannada name, with the
       English in brackets.
+- [x] **Settings**, on every screen (top right): the language, your assistants (tick the ones you have, see if
+      each is ready, sign in or install with one press, "Test it now"), space on this computer, the problem
+      report, and About.
+- [x] **Rename a video, or move it to the Recycle Bin**: the "⋯" on each video card on Home. The Recycle Bin
+      asks first, and the video can be restored from there.
+- [x] **Draw on the picture**: on the watching screen, "Draw on the picture" pauses the video; draw on it in
+      coral, add a note ("make this bigger"), then "Send to the chat". The assistant is told to look at your
+      drawing first.
 - [x] **Sign in or install an assistant with one press.** When Claude, ChatGPT or Gemini is missing or signed
       out, the chat's card now has "Open PowerShell for me": a window opens already running that assistant's own
       installer or sign-in, and you only follow its steps. No typing.
@@ -374,6 +382,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | The GitHub key (classic, `ghp_…`) that sat in plain text in `.gemini\settings.json` with almost every permission on webziko, **revoked on GitHub** with GitHub's own revoke service, and its old "github" helper entry removed from that file, 24 October, as you asked | GitHub; `.gemini\settings.json` | A revoked key cannot come back. If the old Gemini command line needs GitHub again, make a new key on github.com with only what it needs |
 | ChatGPT's Codex updated from 0.162.1 to 0.164.0, 24 October, as you asked | Global npm package | `npm install -g @openai/codex@0.162.1` |
 | Kushmanji closed and opened again from the Desktop shortcut, 24 October | Your running app | Nothing to undo |
+| The four trailer test videos added to the top of your Home list ("My videos"), 25 October, as you asked | Kushmanji's settings file (`%APPDATA%\Kushmanji\state.json`; the old one kept as `state.json.before-trailers`) | On each card: "⋯" → "Remove from list" (the folders are not touched) |
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.
