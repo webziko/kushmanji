@@ -848,7 +848,11 @@ M10 and M17 lines is `docs/RESEARCH.md`.
       from the person's view where Kushmanji shows files, and say in Help what they are
 - [ ] M17-10 A shorts rubric for "Make shorts": opens cold, one idea, ends on a finished thought, nothing outside
       the clip needed, 20 to 60 s; plus the phone safe zones
-- [ ] M17-11 "Make the upright version" (and square) of a design: today a copy by hand and a second request
+- [x] M17-11 "Make the upright version" (and square) of a design (Gemini, 2026-10-25, reviewed by Claude): the editing
+      button "Make other sizes" offers the shapes the video is not (upright 9:16, square 1:1), makes each as a new
+      video beside it (text files copied, assets hard-linked or copied, nothing from .hyperframes or .cache, links
+      never followed; `otherSizes.js`), lists it on Home and opens it with a prepared request (not sent) to adapt
+      the layout with the motion guide. Not yet tried with a real assistant
 - [ ] M9-14 Keep the repository easy for people and AIs to find their way in: CONTRIBUTING's file map true, a
       tidy-up pass (with M9-05)
 - [ ] M9-15 The self-test deletes `app/.smoke-<name>` at its start and stops with a raw EPERM when a shell sits

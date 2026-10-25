@@ -1806,6 +1806,29 @@ dialog[open]::backdrop {
   min-height: 44px;
 }
 
+.size-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.size-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: var(--fs-md);
+  user-select: none;
+}
+
+.size-choice input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .composer-context {
   display: flex;
   align-items: center;

@@ -554,14 +554,30 @@ function startFailure(message) {
   return [tFrom(sentence), ...printed].join("\n");
 }
 
-async function openProject(dir, { request, name } = {}) {
+async function openProject(dir, { request, name, draft } = {}) {
   // Moving to another video from an open one: keep the picture of the one being left first.
   if (open) await keepPicture();
   open?.destroy();
   // The name the person gave the video, when the caller knows it. The main process answers with it too (below).
   const project = { dir, name: name || folderName(dir) };
   const save = createSaveVideo(dir);
-  project.chat = createChat(dir, { onEdit: () => { if (!project.editing) edit.click(); }, onSave: () => save.start() });
+  const mediaStatus = h("span", { class: "muted", role: "status" });
+  project.chat = createChat(dir, {
+    onEdit: () => { if (!project.editing) edit.click(); },
+    onSave: () => save.start(),
+    onOtherSizes: async (shapes) => {
+      try {
+        const made = await api.sizes.make({ dir, shapes });
+        if (made?.length > 0) {
+          const first = made[0];
+          await openProject(first.dir, { name: first.name, draft: first.request });
+        }
+      } catch (error) {
+        mediaStatus.textContent = tFrom(error.message);
+      }
+    },
+  });
+  if (draft) project.chat.draft(draft);
   open = project;
   document.body.dataset.view = "project";
   document.body.dataset.screen = "watch";
@@ -576,10 +592,16 @@ async function openProject(dir, { request, name } = {}) {
   });
   const status = h("p", { class: "overlay-text" }, t("Opening your video…"));
   // A "Make it" idea that never reached the assistant because the editor failed to start is not lost on retry.
-  const retry = h("button", { class: "primary", hidden: true,
-    onclick: () => openProject(dir, { request: initialRequest ?? undefined }) }, t("Try again"));
+  const retry = h("button", {
+    class: "primary", hidden: true,
+    onclick: () => openProject(dir, {
+      request: initialRequest ?? undefined,
+      draft: initialDraft ?? undefined,
+    }),
+  }, t("Try again"));
   const overlay = h("div", { class: "overlay" }, h("div", { class: "spinner", "aria-hidden": "true" }), status, retry);
   let initialRequest = request;
+  let initialDraft = draft;
   let viewGeneration = 0;
   const loading = () => {
     if (open !== project) return;
@@ -598,6 +620,10 @@ async function openProject(dir, { request, name } = {}) {
     if (initialRequest) {
       project.chat.send(initialRequest);
       initialRequest = null;
+    }
+    if (initialDraft) {
+      project.chat.draft(initialDraft);
+      initialDraft = null;
     }
   };
   const player = createPlayer(dir, { onLoading: loading, onReady: ready,
@@ -653,7 +679,6 @@ async function openProject(dir, { request, name } = {}) {
     if (open === project && project.editing && current === viewGeneration)
       project.fail("failed", t("The editor opened, but the video's picture did not finish loading. Try again."));
   });
-  const mediaStatus = h("span", { class: "muted", role: "status" });
   // The app makes lighter copies of big clips for smooth watching and editing (main/lightCopies.js).
   const smooth = h("span", { class: "muted", role: "status" });
   let smoothTimer;

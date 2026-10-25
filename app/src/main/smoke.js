@@ -1421,6 +1421,104 @@ async function pointingStep({ win, result, inPage, shot }) {
 }
 
 /**
+ * "Make other sizes" (M17-11): makes upright (and square) project copies beside the source video.
+ * Presses "Make other sizes" on the video, picks Upright, checks the new folder, its meta.json name,
+ * that Home lists it, and that the chat's box holds the prepared request without sending it.
+ */
+async function otherSizesStep({ win, result, inPage, shot, dir }) {
+  await inPage("document.querySelector('.edit-actions')?.setAttribute('open', '')");
+  const opened = await until(
+    () => inPage("[...document.querySelectorAll('.edit-action')].some((b) => b.textContent === 'Make other sizes')"),
+    { timeoutMs: 5000 },
+  );
+  if (!opened) throw new Error("The 'Make other sizes' button was not found in the chat.");
+
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Make other sizes').click()");
+  if (!(await until(() => inPage("Boolean(document.querySelector('dialog.edit-action-dialog[open]'))"), { timeoutMs: 5000 }))) {
+    throw new Error("The 'Make other sizes' dialog did not open.");
+  }
+
+  // Only the shapes the video is not are offered. By this step the self-test's video has been made upright
+  // (the portrait player step), so Square is what is offered here; on a wide video it would be Upright too.
+  const offered = await inPage("[...document.querySelectorAll('.size-choices input')].map((box) => box.value)");
+  const source = (() => {
+    const html = fs.readFileSync(path.join(dir, "index.html"), "utf8");
+    const width = Number(/data-width="(\d+)"/.exec(html)?.[1]);
+    const height = Number(/data-height="(\d+)"/.exec(html)?.[1]);
+    return width > height ? "wide" : width < height ? "upright" : "square";
+  })();
+  if (!offered.length || offered.includes(source)) {
+    throw new Error(`"Make other sizes" offered ${JSON.stringify(offered)} for a ${source} video.`);
+  }
+  const chosen = offered.includes("upright") ? "upright" : offered[0];
+  await inPage(`(() => {
+    for (const box of document.querySelectorAll('.size-choices input')) {
+      const want = box.value === ${inJs(chosen)};
+      if (box.checked !== want) { box.checked = want; box.dispatchEvent(new Event('change')); }
+    }
+  })()`);
+
+  // Press Make other sizes
+  await inPage("document.querySelector('.edit-action-use').click()");
+
+  // The new folder is made beside the source before the new video opens.
+  const parent = path.dirname(dir);
+  const uprightDir = path.join(parent, `${path.basename(dir)}-${chosen}`);
+  if (!(await until(() => fs.existsSync(uprightDir), { timeoutMs: 20_000 }))) {
+    throw new Error(`The ${chosen} project folder was not created at ${uprightDir}.`);
+  }
+  const metaPath = path.join(uprightDir, "meta.json");
+  if (!fs.existsSync(metaPath)) throw new Error(`The ${chosen} project has no meta.json.`);
+  const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+  if (!meta.name || !meta.name.includes(`(${chosen})`)) {
+    throw new Error(`The ${chosen} project's meta.json name is unexpected: ${meta.name}`);
+  }
+
+  // Waited for, not read once: the source's screen counts as "open" until the new video replaces it.
+  const size = chosen === "upright" ? "1080 by 1920" : "1080 by 1080";
+  const draftHolds = `(document.querySelector('.composer textarea')?.value ?? '').includes(${inJs(size)})`;
+  if (!(await until(() => inPage(draftHolds), { timeoutMs: 60_000 }))) {
+    throw new Error(`The new ${chosen} video did not open with the prepared request in its message box.`);
+  }
+  const draft = await inPage("document.querySelector('.composer textarea')?.value ?? ''");
+  if (await inPage("document.body.dataset.agent === 'running'")) {
+    throw new Error("The prepared request was sent automatically instead of waiting for the person to press Send.");
+  }
+  if ((await inPage("document.querySelectorAll('.msg.user').length")) > 0) {
+    throw new Error("A user message was sent in chat; it should stay in the draft box.");
+  }
+
+  await wait(500);
+  await shot("other-sizes");
+
+  // Check that Home lists it
+  await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← My videos').click()");
+  if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 10_000 }))) {
+    throw new Error("Could not return Home to verify project listing.");
+  }
+
+  const listed = await until(
+    () => inPage(`[...document.querySelectorAll('.card-name')].some((el) => el.textContent === ${inJs(meta.name)})`),
+    { timeoutMs: 10_000 },
+  );
+  if (!listed) {
+    throw new Error(`Home does not list the new project "${meta.name}".`);
+  }
+
+  result.otherSizes = {
+    dir: uprightDir, shape: chosen, offered,
+    name: meta.name,
+    draftLength: draft.length,
+  };
+
+  // Reopen the first card so subsequent steps (like saveStep) find an open project
+  await inPage("[...document.querySelectorAll('.card-open')][0].click()");
+  if (!(await until(() => inPage("document.body.dataset.view === 'project' && document.body.dataset.studio === 'loaded'"), { timeoutMs: 60_000 }))) {
+    throw new Error("Could not reopen project after Home verification.");
+  }
+}
+
+/**
  * `HFWIN_SMOKE_SOUND` with `HFWIN_SMOKE_REAL_PROJECT`: open that project, press Studio's own Play the way a
  * person does, and report whether the window is really making sound, with the state of every video and sound
  * element in every frame. Written to chase "no sound in the preview"; kept because only a real window can tell.
@@ -1810,6 +1908,7 @@ export async function runSmoke({ win, outDir }) {
     }
     await pointingStep({ win, result, inPage, shot });
     if (process.env.HFWIN_SMOKE_AGENT) await agentStep({ result, inPage, shot, dir: chatProject });
+    await otherSizesStep({ win, result, inPage, shot, dir: chatProject });
     await saveStep({ result, inPage, shot, outDir });
     await languageStep({ win, result, inPage, shot });
     await renameStep({ win, result, inPage, shot });

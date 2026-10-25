@@ -42,6 +42,7 @@ import {
   trashProject,
 } from "./projects.js";
 import { makeShorts, readShortsPlan } from "./shorts.js";
+import { makeOtherSizes, offeredShapes, SHAPES } from "./otherSizes.js";
 import { madeRecord, recordMade, ShortsMaker } from "./shortsMaker.js";
 import { say } from "./say.js";
 import { runSmoke } from "./smoke.js";
@@ -523,6 +524,29 @@ function registerIpc() {
     return shortsMaker.start(source, shorts, { engine: agent.history(source).engine });
   });
   handle("shorts:stop", () => shortsMaker.stop());
+  // "Make other sizes" (M17-11): makes upright and square versions of a video beside the source.
+  handle("sizes:shapes", (dir) => offeredShapes(requireProject(dir)));
+  handle("sizes:make", ({ dir, shapes } = {}) => {
+    dir = requireProject(dir);
+    if (agent.busy) {
+      throw new Error(say("The assistant is still working. Wait for it to finish before making other sizes."));
+    }
+    if (samePath(exporter.dir, dir)) {
+      throw new Error(say("This video is being saved. Wait until it is saved before making other sizes."));
+    }
+    if (!Array.isArray(shapes) || shapes.length === 0) {
+      throw new Error(say("Choose at least one size to make."));
+    }
+    // Each known shape once, whatever the page sent: a repeated or unknown choice never makes extra folders.
+    if (shapes.length > SHAPES.length || shapes.some((shape) => !SHAPES.includes(shape))) {
+      throw new Error(say("The shape “{shape}” is not known to this app.",
+        { shape: String(shapes.find((shape) => !SHAPES.includes(shape)) ?? shapes.join(", ")).slice(0, 40) }));
+    }
+    const made = makeOtherSizes(dir, [...new Set(shapes)]);
+    for (const target of [...made].reverse()) rememberFolder(target.dir);
+    rememberFolder(dir);
+    return made;
+  });
   handle("speech:status", () => speech.status());
   // The person's yes to the download. When it is done, the clips of their video that have no words yet are heard.
   handle("speech:get", (dir) => {

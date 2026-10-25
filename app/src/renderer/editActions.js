@@ -1,6 +1,8 @@
 import { h } from "./dom.js";
 import { t } from "./words.js";
 
+const api = window.hfwin;
+
 // Requests use existing chat editing; unavailable automation is explained before a message is prepared.
 // `label` and `about` are what the person reads. `request` goes to the assistant as it is, in English, because it
 // names files and formats the assistants rely on, so it is never put through t().
@@ -55,6 +57,12 @@ const ACTIONS = [
     request: "Add a voiceover that says: ",
   },
   {
+    label: t("Make other sizes"),
+    about: t("Make copies of this video in other shapes beside this one. " +
+      "You can turn them into upright videos for phones or square posts."),
+    otherSizes: true,
+  },
+  {
     // Step one of M17-04: the assistant only plans. The app then makes each short as its own video from the plan
     // (main/shorts.js) and asks for them one by one; the chat shows "Make them" once SHORTS.md is there.
     label: t("Make shorts"),
@@ -79,22 +87,46 @@ const ACTIONS = [
   },
 ];
 
-export function createEditActions({ onDraft, onEdit, onSave }) {
+export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }) {
   const title = h("h2", { id: "edit-action-title" });
   const about = h("p", { id: "edit-action-about" });
   const note = h("p", { class: "muted" });
+  const choices = h("div", { class: "size-choices", hidden: true });
   let chosen;
+
+  const shapeLabels = {
+    upright: t("Upright (9:16, for Shorts and Reels)"),
+    square: t("Square (1:1)"),
+  };
+
+  function renderChoices(shapes) {
+    choices.replaceChildren(
+      ...shapes.map((shape) => {
+        const box = h("input", { type: "checkbox", value: shape, checked: true });
+        box.addEventListener("change", () => {
+          const selected = choices.querySelectorAll("input:checked").length;
+          use.disabled = selected === 0;
+        });
+        return h("label", { class: "size-choice" }, box, shapeLabels[shape] ?? shape);
+      }),
+    );
+    use.disabled = shapes.length === 0;
+  }
+
   const close = h("button", { class: "secondary edit-action-close", type: "button",
     onclick: () => dialog.close() }, t("Cancel"));
   const use = h("button", { class: "primary edit-action-use", type: "button", onclick: () => {
     dialog.close();
     if (chosen.request) onDraft(chosen.request);
     else if (chosen.save) onSave();
-    else onEdit();
+    else if (chosen.otherSizes) {
+      const selected = [...choices.querySelectorAll("input:checked")].map((b) => b.value);
+      if (selected.length > 0 && onOtherSizes) onOtherSizes(selected);
+    } else onEdit();
   } });
   const dialog = h("dialog", { class: "edit-action-dialog", "aria-labelledby": "edit-action-title",
     "aria-describedby": "edit-action-about" },
-    title, about, note, h("div", { class: "notice-actions" }, close, use),
+    title, about, choices, note, h("div", { class: "notice-actions" }, close, use),
   );
   document.body.append(dialog);
   const buttons = ACTIONS.map((action) => h("button", {
@@ -102,12 +134,30 @@ export function createEditActions({ onDraft, onEdit, onSave }) {
       chosen = action;
       title.textContent = action.label;
       about.textContent = action.about;
+      if (action.otherSizes) {
+        choices.hidden = false;
+        renderChoices(["upright", "square"]);
+        if (dir && api?.sizes?.shapes) {
+          void api.sizes.shapes(dir).then((offered) => {
+            if (chosen === action && dialog.open && Array.isArray(offered)) {
+              renderChoices(offered);
+            }
+          }).catch(() => {});
+        }
+      } else {
+        choices.hidden = true;
+        choices.replaceChildren();
+        use.disabled = false;
+      }
       note.textContent = action.request
         ? t("This writes a message for you. You can change it before pressing Send. Sending uses your chosen assistant.")
         : action.save ? t("Nothing leaves your computer. You can stop saving at any time.")
-        : t("Your chat and message stay with you in the editor.");
+        : action.otherSizes
+          ? t("The new video appears in My videos and opens with a prepared message. Sending uses your chosen assistant.")
+          : t("Your chat and message stay with you in the editor.");
       use.textContent = action.request ? t("Write the message")
-        : action.save ? t("Save video") : t("Open the editor");
+        : action.save ? t("Save video")
+        : action.otherSizes ? t("Make other sizes") : t("Open the editor");
       dialog.showModal();
     },
   }, action.label));
