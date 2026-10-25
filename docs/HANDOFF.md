@@ -27,6 +27,13 @@ real `trashItem` never run). **M7-03**: Settings (`renderer/settings.js`, shared
 `report.js`; also `storage.js` no longer throws EPERM on its scratch folder). **M10-09 part 1**: "Connect an
 assistant" on Home (`renderer/connect.js`).
 
+Then, at the owner's request ("Let ChatGPT (Codex) build the next tasks and you only review"), Codex built M5-05's
+first part with `codex exec -m gpt-6-luna -s workspace-write -C <worktree>` and the brief on stdin (15 minutes;
+its sandbox cannot start Electron, so Claude ran the self-test). Its second job, M10-26, stopped at once: the
+owner's ChatGPT allowance is used up until 2026-11-17. A locked, git-ignored leftover folder
+`.claude/worktrees/codex-m10-26` may remain; delete it when Windows lets go. M2-24 (GSAP in each new video) waits
+on a choice: GSAP is not among the app's packages, and adding it brings its own licence.
+
 At the owner's request the four trailer folders were added to their Home list (`%APPDATA%\Kushmanji\state.json`,
 backup beside it; in CHECKLIST's table). Claude Code is still signed out on the owner's PC.
 

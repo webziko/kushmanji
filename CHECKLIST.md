@@ -18,6 +18,9 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
       and press the new **Open PowerShell for me** button; sign in in the browser window that opens, then press
       "Check again". (Or open PowerShell yourself and type `claude auth login`.) Then tell me, and Claude's
       trailer gets made.
+- [ ] **ChatGPT's free allowance is used up until 17 November** (Codex said: "You've hit your usage limit.
+      Upgrade to Plus ... or try again at Nov 17th"). Until then Kushmanji's chat cannot use ChatGPT, and
+      ChatGPT cannot build the app. Claude and Gemini still can.
 - [ ] **Watch the trailer test** in `reviews\READY\Kushmanji trailer test` and read `COMPARISON.md` there:
       Gemini's two (with its pictures) and ChatGPT's (fully drawn, the screen changing shape for "Any size").
 - [ ] **Listen to the five motion videos** in `reviews\READY\Kushmanji motion videos`: is the new quiet music
