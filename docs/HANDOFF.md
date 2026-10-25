@@ -5,6 +5,23 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-25 (morning) · Claude · M10-27, M3-05, M1-10, M7-03, M10-09 (first part)
+
+The owner said "keep going ... using cheaper helpers": four features, each built by a Sonnet helper in its own
+worktree, reviewed (diff, screenshots) and merged; the full self-test passes on the merged main (now about 4.5
+minutes; its limit is 8). **M10-27 part 1** (by me): "Open PowerShell for me" (`agents/setup.js`); a hidden
+PowerShell runs `Start-Process -WindowStyle Normal` with `-EncodedCommand`, because Node's `detached` gives no
+console on Windows and `cmd /c start` from a hidden cmd opened an invisible window. **M3-05**: draw on the
+picture (`renderer/drawing.js`, `main/drawings.js`). **M1-10**: rename and Recycle Bin (`videoManage.js`; a
+real `trashItem` never run). **M7-03**: Settings (`renderer/settings.js`, shared `assistants.js`, `space.js`,
+`report.js`; also `storage.js` no longer throws EPERM on its scratch folder). **M10-09 part 1**: "Connect an
+assistant" on Home (`renderer/connect.js`).
+
+At the owner's request the four trailer folders were added to their Home list (`%APPDATA%\Kushmanji\state.json`,
+backup beside it; in CHECKLIST's table). Claude Code is still signed out on the owner's PC.
+
+---
+
 ## 2026-10-25 (night) · Claude · Trailer test, research, HyperFrames 0.8.193, M14-16, M14-17, M16-11
 
 **Trailer test** (`reviews/kushmanji-trailer`, results in `reviews/READY/Kushmanji trailer test` with
