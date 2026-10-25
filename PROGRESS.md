@@ -257,7 +257,10 @@ Do not build them.
 - [x] M7-02 Guided first video (hook, proof, turn, call to action) (Claude, 2026-10-14): "Make it" on Home
       asks how long, which shape and what feel, as buttons to tap, then asks for a hook, the main moment, a turn
       and a call to action (`renderer/guided.js`). "Just make it" skips the questions
-- [~] M7-03 Settings screen (Claude, 2026-10-25, after M1-10 and M3-05)
+- [x] M7-03 Settings screen (Claude, 2026-10-25; built by a Sonnet helper in a worktree, reviewed): a Settings button on every
+      screen opens language, your assistants (tick, state, "Open PowerShell for me", "Test it now"), space on this
+      computer, the problem report and About. Shared code in `renderer/assistants.js`, `space.js`, `report.js`.
+      Also fixed: `storage.js` threw EPERM on its scratch folder, so the undo-copies line was empty on this PC
 - [ ] M7-04 Keyboard shortcuts that work the same in the frame and inside Studio
 
 ## M8 · Voice, images and music
