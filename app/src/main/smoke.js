@@ -211,6 +211,74 @@ async function languageStep({ result, inPage, shot }) {
 }
 
 /**
+ * Rename and the Recycle Bin question (M1-10), from Home's "⋯" menu the way a person would: a throwaway video is
+ * renamed, and Home shows the new name, its folder has it, and meta.json holds it. The Recycle Bin question is
+ * opened and cancelled; nothing is moved there, or a throwaway would sit in the person's real Recycle Bin. Shown
+ * once at the smallest window (960 by 600) too, with the menu open. Ends on Home.
+ */
+async function renameStep({ win, result, inPage, shot }) {
+  const made = await createProject("rename test");
+  const newName = "My renamed video";
+  const card = (dir) => `[...document.querySelectorAll('.card')].find((c) => c.querySelector('.card-open')?.title === ${inJs(dir)})`;
+  // Home draws its list when it opens, so it is drawn again for the video made just now (as a language choice does).
+  await inPage("window.hfwin.app.reload()").catch(() => {});
+  if (!(await until(() => inPage(`document.body.dataset.view === 'home' && Boolean(${card(made.dir)})`).catch(() => false),
+    { timeoutMs: 30_000 }))) throw new Error("Home does not list the video made for the rename check.");
+  const menuOpen = (dir) => until(() => inPage(`${card(dir)}.querySelector('.card-menu').matches(':popover-open')`),
+    { timeoutMs: 5000 });
+  const chooseFromMenu = async (dir, label) => {
+    await inPage(`${card(dir)}.querySelector('.card-more').click()`);
+    if (!(await menuOpen(dir))) throw new Error("The card's \"⋯\" button did not open its menu.");
+    await inPage(`[...${card(dir)}.querySelectorAll('.card-menu-item')].find((b) => b.textContent === ${inJs(label)}).click()`);
+  };
+  const dialogOpen = () => until(() => inPage("Boolean(document.querySelector('dialog.video-dialog[open]'))"), { timeoutMs: 5000 });
+
+  win.setSize(960, 600);
+  await wait(500);
+  // The cards are below the start cards: scrolled into view, so the picture shows the card with its menu open.
+  await inPage(`${card(made.dir)}.scrollIntoView({ block: "center" })`);
+  await wait(300);
+  await inPage(`${card(made.dir)}.querySelector('.card-more').click()`);
+  if (!(await menuOpen(made.dir))) throw new Error("The card's \"⋯\" button did not open its menu.");
+  await wait(200);
+  await shot("home-card-menu-small");
+  await inPage("document.querySelector('.card-menu:popover-open').hidePopover()");
+  win.setSize(1440, 900);
+  await wait(500);
+
+  await chooseFromMenu(made.dir, "Rename");
+  if (!(await dialogOpen())) throw new Error("Rename did not ask for a name.");
+  const asked = await inPage("document.querySelector('dialog.video-dialog[open] input').value");
+  if (asked !== "rename-test") throw new Error(`Rename started from "${asked}", not the video's name.`);
+  await shot("home-rename");
+  await inPage(`(() => { const field = document.querySelector('dialog.video-dialog[open] input');
+    field.value = ${inJs(newName)}; field.dispatchEvent(new Event('input')); field.form.requestSubmit(); })()`);
+  const now = path.join(path.dirname(made.dir), "my-renamed-video");
+  if (!(await until(() => inPage(`[...document.querySelectorAll('.card-name')].some((n) => n.textContent === ${inJs(newName)})`),
+    { timeoutMs: 15_000 }))) throw new Error("Home did not show the video's new name.");
+  const meta = JSON.parse(fs.readFileSync(path.join(now, "meta.json"), "utf8"));
+  result.rename = { from: path.basename(made.dir), folder: path.basename(now), metaName: meta.name,
+    oldFolderGone: !fs.existsSync(made.dir) };
+  if (meta.name !== newName || !result.rename.oldFolderGone || !fs.existsSync(path.join(now, "index.html")))
+    throw new Error("The video was not renamed on disk: " + JSON.stringify(result.rename));
+  if (!(await inPage(`Boolean(${card(now)})`))) throw new Error("Home lists the video by its old place after a rename.");
+  await shot("home-renamed");
+
+  // The Recycle Bin question names the video and its folder, and Cancel leaves everything as it was.
+  await chooseFromMenu(now, "Move to the Recycle Bin");
+  if (!(await dialogOpen())) throw new Error("Move to the Recycle Bin did not ask first.");
+  const asking = await inPage("document.querySelector('dialog.video-dialog[open]').innerText");
+  result.rename.asking = asking;
+  if (!asking.includes(newName) || !asking.includes(now) || !asking.includes("you can restore it from there"))
+    throw new Error("The Recycle Bin question did not name the video, its folder and the way back: " + asking);
+  await shot("home-trash-ask");
+  await inPage("[...document.querySelectorAll('dialog.video-dialog[open] button')].find((b) => b.textContent === 'Cancel').click()");
+  if (!(await until(() => inPage("!document.querySelector('dialog.video-dialog')"), { timeoutMs: 5000 })))
+    throw new Error("Cancel did not close the Recycle Bin question.");
+  if (!fs.existsSync(path.join(now, "index.html"))) throw new Error("Cancelling the Recycle Bin question still moved the video.");
+}
+
+/**
  * In "Edit by hand", while the video plays, a real arrow key skips ten seconds and the video keeps playing.
  * Paused, or with the keyboard in the chat box, the key is left alone. Keys are sent the way Windows sends them.
  */
@@ -1300,6 +1368,7 @@ export async function runSmoke({ win, outDir }) {
     if (process.env.HFWIN_SMOKE_AGENT) await agentStep({ result, inPage, shot, dir: chatProject });
     await saveStep({ result, inPage, shot, outDir });
     await languageStep({ result, inPage, shot });
+    await renameStep({ win, result, inPage, shot });
     result.ok = true;
   } catch (error) {
     result.error = error instanceof Error ? error.message : String(error);

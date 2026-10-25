@@ -34,8 +34,10 @@ import {
   listProjects,
   projectAt,
   rememberFolder,
+  renameProject,
   TOO_DEEP,
   tooDeep,
+  trashProject,
 } from "./projects.js";
 import { makeShorts, readShortsPlan } from "./shorts.js";
 import { madeRecord, recordMade, ShortsMaker } from "./shortsMaker.js";
@@ -268,13 +270,24 @@ function handle(channel, fn) {
   });
 }
 
-function requireProject(dir) {
+/**
+ * `allowDeep`: a folder too deep for Windows' video tools cannot be opened, but it can still be renamed or moved to
+ * the Recycle Bin.
+ */
+function requireProject(dir, { allowDeep = false } = {}) {
   if (!isProject(dir)) {
     throw new Error(
       say("That folder is not a video this app can open. Choose a folder where a video was made."));
   }
-  if (tooDeep(dir)) throw new Error(TOO_DEEP);
+  if (!allowDeep && tooDeep(dir)) throw new Error(TOO_DEEP);
   return dir;
+}
+
+/** Why a video's folder must stay where it is for now: it is open, being saved, or an assistant is working. */
+function whyInUse(dir) {
+  if (samePath(preview.current?.dir, dir)) return "open";
+  if (samePath(exporter.dir, dir)) return "saving";
+  return agent.busy ? "working" : null;
 }
 
 function registerIpc() {
@@ -368,7 +381,9 @@ function registerIpc() {
     lightCopies.start(dir);
     // The chat's assistant starts now, while the person looks at the video (Gemini's start-up is about 12 s).
     void agent.prewarm(dir);
-    return started;
+    // `title` is the name the person gave the video (meta.json), for the top bar. Studio's own name for it is the
+    // folder's, and `projectName` stays that.
+    return { ...started, title: projectAt(dir).name };
   });
   handle("projects:close", () => {
     agent.stop();
@@ -391,6 +406,20 @@ function registerIpc() {
     if (problem) throw new Error(problem);
   });
   handle("projects:forget", (dir) => forgetFolder(String(dir)));
+  // Rename (M1-10): the name Home shows, and the folder too for a video the app made. Answers the video as Home
+  // shows it now, and a sentence when the folder kept its old name. Anything but text is an empty name, which
+  // is refused with a sentence.
+  handle("projects:rename", ({ dir, name } = {}) => {
+    const text = typeof name === "string" ? name : "";
+    return renameProject(requireProject(dir, { allowDeep: true }), text, { why: whyInUse });
+  });
+  // Not a delete: the folder goes to the Windows Recycle Bin, from which it can be restored. The page asks the
+  // person first; the checks that matter are repeated here.
+  handle("projects:trash", async (dir) => {
+    const trashItem = (file) => shell.trashItem(file);
+    await trashProject(requireProject(dir, { allowDeep: true }), { trashItem, why: whyInUse });
+    return true;
+  });
   // One video at a time, and never while an assistant is changing one: the file would hold half an edit.
   handle("save:start", (dir) => {
     dir = requireProject(dir);

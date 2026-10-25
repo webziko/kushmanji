@@ -30,6 +30,8 @@ contextBridge.exposeInMainWorld("hfwin", {
     close: call("projects:close"),
     reveal: call("projects:reveal"),
     forget: call("projects:forget"),
+    rename: call("projects:rename"),
+    trash: call("projects:trash"),
   },
   looks: { list: call("looks:list"), save: call("looks:save"), use: call("looks:use") },
   health: { check: call("health:check"), get: call("health:get") },
