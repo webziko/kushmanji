@@ -34,6 +34,14 @@ owner's ChatGPT allowance is used up until 2026-11-17. A locked, git-ignored lef
 `.claude/worktrees/codex-m10-26` may remain; delete it when Windows lets go. M2-24 (GSAP in each new video) waits
 on a choice: GSAP is not among the app's packages, and adding it brings its own licence.
 
+Then Gemini built, with Claude reviewing: M10-26 (18 min; `automationCheck.js`) and M17-11 (35 min;
+`otherSizes.js`). How: a worktree, and the brief sent the bridge's way (`agy -p= --input-format stream-json
+--output-format stream-json --dangerously-skip-permissions --sandbox`, one `{"event":"user",...}` line, stdin
+closed on the `result` event; the launcher was the session's scratch `run-gemini.mjs`). In `--sandbox` agy cannot
+run Node (it is outside the workspace), so it tests nothing: run check, tests and the self-test yourself. Its
+M17-11 self-test step assumed a wide video and raced the new video's opening; both fixed. Its worktree folders
+can stay locked after `git worktree remove` (sandbox permissions); they are git-ignored.
+
 At the owner's request the four trailer folders were added to their Home list (`%APPDATA%\Kushmanji\state.json`,
 backup beside it; in CHECKLIST's table). Claude Code is still signed out on the owner's PC.
 

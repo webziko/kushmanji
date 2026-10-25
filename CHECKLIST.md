@@ -98,6 +98,13 @@ Then the list further down, starting with one-click export.
 - [x] **Every error message in Kannada and Hindi**, and the titles of the folder windows too.
 - [x] **The assistants name the menus the way you see them**: in Kannada they say the Kannada name, with the
       English in brackets.
+- [x] **"Make other sizes"** (an editing button in the chat): from a wide video, one press makes an upright (for
+      Shorts and Reels) and/or square copy beside it, opens it, and puts a ready message in its chat asking the
+      assistant to adapt the layout. You press Send. Built by Gemini, checked by Claude.
+- [x] **The check after every change catches a music fade that would stop "Save video"** (the mistake Gemini made
+      in the trailer test). Built by Gemini, checked by Claude.
+- [x] **"Check for a new version"** in Settings → About (only when you press it). Built by ChatGPT, checked by
+      Claude. No version is published yet.
 - [x] **"Connect an assistant" on Home**: on a computer where none of your assistants is ready (a stranger's new
       PC), Home now says so in one sentence and shows each one's state with "Open PowerShell for me".
 - [x] **Settings**, on every screen (top right): the language, your assistants (tick the ones you have, see if
