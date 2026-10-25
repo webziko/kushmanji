@@ -127,6 +127,29 @@ soft surface) and when it last changed.
   push the start cards down after the person has seen them.
 - A video with no picture yet must look as good as one with a picture; the self-test has no pictures at all.
 
+## Settings
+
+A **Settings** button sits in the header of every screen, beside Language (Home only) and Help. It opens one dialog
+with five sections, in this order, and each is a control the app already had, shown in one place:
+
+1. **Language.** The same menu as Home's header, and it reloads the page through the same function. On a video's
+   screen the menu is shown but cannot be used, with a sentence saying to go back to My videos first: choosing a
+   language draws every screen again, which is safe only when nothing is open and nothing is being made.
+2. **Your assistants.** One row for each of Claude, ChatGPT and Gemini: "I have this one" (the chat's tick, and
+   one always stays ticked), its state in the chat's own words ("Ready · version 2.1.119", "is not on this
+   computer yet", "needs you to sign in first", "will not start"), "Open PowerShell for me" and the lines to type
+   when it is not on this computer or not signed in, and "Test it now" when it is ready (it asks first, as in the
+   chat). One "Check again" under the list. Asking each assistant takes seconds, and the dialog says so while it waits.
+3. **Space on this computer.** Home's undo-copies line with "Free up", and where new videos are kept (the path only:
+   there is no folder button, because the call that shows a folder takes a video's folder).
+4. **When something goes wrong.** "Show the problem report", the same button as in Help.
+5. **About.** The versions on one line and a button that opens the About box.
+
+What the chat disables while an assistant works, the dialog disables too (the ticks, "Test it now", "Free up"), with a
+sentence at the top saying why. The code that both places use is in `assistants.js` (names, states, the install and
+sign-in card, the ticks, the test), `space.js` (the undo-copies line), `report.js` and `about.js`. A change to the
+chat's wording of any of these shows in Settings as well.
+
 ## The words
 
 Use the plain word everywhere the app speaks. In the workshop, where HyperFrames' own word is on screen, show

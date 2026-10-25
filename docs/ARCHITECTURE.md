@@ -151,6 +151,16 @@ localStorage (`hfwin-help-seen-v1`), with an in-memory fallback when storage is 
 call, `logs.show` (the "Show the problem report" button, M9-07), starts no assistant and changes no project files. The glossary sits above the unchanged Studio iframe,
 which gets the remaining stage height. Playback keyboard shortcuts ignore an open dialog's contents.
 
+`renderer/settings.js` is the Settings dialog (M7-03): language, assistants, space, the problem report and About in
+one native dialog opened from a header button on every screen. It adds no call to the main process: it uses
+`app.info`, `agent.status/setTeam/checkup/openSetup`, `storage.status/free` and `logs.show`, each already checked in
+`main.js`. What it shares with the chat and Home is not copied: `assistants.js` (names, states, the install and sign-in
+card, the ticks, the one-small-job test), `space.js` (the undo-copies line and "Free up"), `report.js` (the problem
+report block) and `about.js` (the versions line). After a fresh check or a changed tick the dialog says so on `window`
+(`kushmanji:assistants`, carrying a copy of the list) and an open chat takes it over. The chat marks "an assistant is
+working" as `data-agent="running"` on the page's body; Settings reads it (a `MutationObserver`) and waits wherever the chat
+does. The language menu is usable on Home only, as in the header.
+
 ## Decisions
 
 | Decision | Why |

@@ -9,13 +9,16 @@ import { createAbout } from "./about.js";
 import { askGuided } from "./guided.js";
 import { createEditorWords, createHelp } from "./help.js";
 import { createSaveVideo } from "./saveVideo.js";
+import { createSettings, languageMenu } from "./settings.js";
+import { showSpace } from "./space.js";
 import { askTrash, askVideoName } from "./videoActions.js";
-import { LANGUAGES, language, setLanguage, t, tFrom } from "./words.js";
+import { t, tFrom } from "./words.js";
 
 const api = window.hfwin;
 const app = document.getElementById("app");
 const help = createHelp();
 const about = createAbout(() => info);
+const settings = createSettings({ info: () => info, about });
 
 const folderName = (dir) => dir.split(/[\\/]/).filter(Boolean).pop() ?? dir;
 
@@ -370,47 +373,6 @@ async function showHealth(box, { again = false } = {}) {
   box.hidden = false;
 }
 
-/**
- * How much room HyperFrames' undo copies take (M16-09, main/storage.js), and a button that frees what belongs to
- * videos that were deleted. Asked after Home is drawn: counting takes a few seconds.
- */
-async function showSpace(line) {
-  const status = await api.storage.status().catch(() => null);
-  if (!status?.historyBytes || !line.isConnected) return;
-  const free = h("button", { class: "ghost small", type: "button" },
-    t("Free up {amount}", { amount: status.freeable }));
-  free.addEventListener("click", async () => {
-    if (!confirm(t("Free up to {amount}? This removes the undo copies of videos you have deleted and old picture " +
-      "caches. Videos you still have keep theirs.", { amount: status.freeable }))) return;
-    free.disabled = true;
-    const done = await api.storage.free().catch(() => null);
-    line.textContent = done?.freedBytes > 0
-      ? t("Freed {amount}.", { amount: done.freed }) : t("Nothing could be freed just now.");
-  });
-  line.replaceChildren(
-    t("Undo copies of your videos take {amount} on this computer.", { amount: status.history }),
-    ...(status.freeableBytes > 0
-      ? [" ", t("Up to {amount} can be freed (deleted videos, old caches).", { amount: status.freeable }), " ", free]
-      : []),
-  );
-}
-
-/**
- * The language of the app's own words (M14-12). Only here: choosing one draws every screen again, which is safe
- * when nothing is open and nothing is being made. The names are each language's own, so a person who cannot read
- * the current language can still find theirs.
- */
-function languageMenu() {
-  const pick = h("select", { class: "agent-pick language-pick", "aria-label": t("Language"), title: t("Language") },
-    ...LANGUAGES.map((item) => h("option", { value: item.id }, item.name)));
-  pick.value = language();
-  pick.addEventListener("change", () => {
-    // False when the choice could not be kept: the menu goes back to the language still in force.
-    if (!setLanguage(pick.value)) pick.value = language();
-  });
-  return pick;
-}
-
 function showHome() {
   open?.destroy();
   open = null;
@@ -511,6 +473,7 @@ function showHome() {
         "aria-label": t("About Kushmanji (unofficial)"), onclick: () => about.show() }, t("unofficial")),
       h("span", { class: "spacer" }),
       languageMenu(),
+      settings.button,
       help.button,
     ),
     home.main,
@@ -746,6 +709,7 @@ async function openProject(dir, { request, name } = {}) {
         },
         t("Show folder"),
       ),
+      settings.button,
       help.button,
     ),
     h("main", { class: "project" },

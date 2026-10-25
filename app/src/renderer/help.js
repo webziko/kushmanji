@@ -1,5 +1,6 @@
 import { h } from "./dom.js";
-import { t, tFrom } from "./words.js";
+import { createProblemReport } from "./report.js";
+import { t } from "./words.js";
 
 const SEEN = "hfwin-help-seen-v1";
 // The editor's own word first (it stays English: the editor is not translated), then the plain word and a sentence.
@@ -40,6 +41,7 @@ const SECTIONS = [
       t("Shows only when this computer still needs something, with how to get it.")],
     [t("unofficial"), t("Press it to read what Kushmanji is and whose engine it runs on.")],
     [t("Language"), t("Choose the language the app speaks. It can only be changed on this screen.")],
+    [t("Settings"), t("Language, your assistants, room on this computer and the problem report, all in one place.")],
   ] },
   { id: "watch", name: t("Watching and asking for changes"), parts: [
     [t("Your video"), t("Press Play to watch, or drag the bar to a moment you want to change.")],
@@ -61,6 +63,7 @@ const SECTIONS = [
       "asks you first. Auto uses a quicker setting for small changes to save your allowance. Look saves this " +
       "video's colours, fonts and titles under a name, or gives it a saved look. You can also see what the app " +
       "saw in your clips.")],
+    [t("Settings"), t("Language, your assistants, room on this computer and the problem report, all in one place.")],
     [t("Start over"), t("Start a new conversation with the assistant. Your video is not changed.")],
     [t("Edit by hand"), t("Open the full editor to make changes yourself.")],
     [t("Save video"), t("Make a video file in your Downloads folder. A long video takes a while; " +
@@ -97,15 +100,7 @@ export function createHelp() {
     h("div", { class: "help-head" }, title, progress), content, footer);
   document.body.append(dialog);
   // The problem report (M9-07): shown in File Explorer, ready to be sent to whoever helps. Nothing private is in it.
-  const reportNote = h("p", { class: "muted", role: "status" });
-  const report = h("div", { class: "help-report" },
-    h("p", {}, t("If something goes wrong, send this file to whoever helps you. " +
-      "It has no messages, words or files in it.")),
-    h("button", { class: "secondary help-report-show", type: "button", onclick: () => {
-      reportNote.textContent = "";
-      window.hfwin.logs.show().catch((error) => { reportNote.textContent = tFrom(error.message); });
-    } }, t("Show the problem report")),
-    reportNote);
+  const report = createProblemReport();
   function remember() {
     seen = true;
     try { localStorage.setItem(SEEN, "1"); } catch { /* Remember for this session instead. */ }
@@ -154,8 +149,8 @@ export function createHelp() {
     content.replaceChildren(...ordered.map(({ id, name, parts }) => h("details", {
       class: "help-section", "data-help": id, open: id === current,
     }, h("summary", {}, name), h("dl", {}, parts.map(([name, sentence]) =>
-      h("div", {}, h("dt", {}, name), h("dd", {}, sentence)))))), report);
-    reportNote.textContent = "";
+      h("div", {}, h("dt", {}, name), h("dd", {}, sentence)))))), report.element);
+    report.reset();
     footer.replaceChildren(
       h("button", { class: "secondary help-replay", type: "button", onclick: showWalk }, t("Show me around")),
       h("span", { class: "spacer" }),

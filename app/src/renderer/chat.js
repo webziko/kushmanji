@@ -7,27 +7,13 @@ import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
 import { createShortsCard } from "./shorts.js";
+import {
+  ASSISTANTS_CHANGED, brokenDetail, changeTeam, commandLines, confirmTest, fixSentence, GOOD_FOR, lastTestText,
+  menuName, openForMe, STATE_NOTES, testingText,
+} from "./assistants.js";
 import { language, locale, t, tFrom } from "./words.js";
 
 const api = window.hfwin;
-
-// What each assistant is good for, under "Your assistants" (M15-01). Plain, and true of every plan.
-const GOOD_FOR = {
-  claude: t("careful editing and planning a whole video"),
-  codex: t("editing, and it can make pictures"),
-  antigravity: t("editing, and watching many clips without using much"),
-};
-
-// Said beside an assistant's name in the menu when it cannot be used yet.
-const STATE_NOTES = {
-  "not-installed": t("not on this computer yet"),
-  "not-signed-in": t("sign in first"),
-  broken: t("will not start"),
-};
-
-/** "ChatGPT (Codex)": the plain name first, the maker's own product name beside it so it can be recognised. */
-const menuName = (agent) =>
-  agent.label && agent.product && agent.label !== agent.product ? `${agent.label} (${agent.product})` : agent.name;
 
 /** Inline `code` and **bold**, built as nodes so the agent's text is never parsed as HTML. */
 function formatted(text) {
@@ -520,12 +506,11 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     const agent = current();
     if (!agent || live) return;
     const name = agent.label ?? agent.name;
-    if (!confirm(t("Test {name} with one small job? It changes one word in a practice folder and runs one check. " +
-      "It takes a minute and uses a little of its allowance. Your videos are not touched.", { name }))) return;
+    if (!confirmTest(name)) return;
     testButton.disabled = true;
     send.disabled = true;
     testing = true;
-    versionText.textContent = t("Testing {name}… this takes about a minute.", { name });
+    versionText.textContent = testingText(name);
     try {
       const got = await api.agent.checkup(agent.id);
       agent.untested = !got.ok;
@@ -753,50 +738,15 @@ export function createChat(dir, { onEdit, onSave } = {}) {
 
   /** The card that says why the chosen assistant cannot be used yet, with the lines that fix it. */
   function showFix(agent) {
-    const commands =
-      agent.state === "not-installed"
-        ? [...(agent.install ?? []), ...(agent.signIn ?? [])]
-        : agent.state === "not-signed-in"
-          ? (agent.signIn ?? [])
-          : [];
-    const who = menuName(agent);
-    const text =
-      agent.state === "not-installed"
-        ? t("{name} is not on this computer yet.", { name: who })
-        : agent.state === "not-signed-in"
-          ? t("{name} needs you to sign in first.", { name: who })
-          : t("{name} is on this computer, but it will not start.", { name: who });
-    // One press instead of typing (M10-27): the main process opens PowerShell running exactly these lines.
-    const step = agent.state === "not-installed" ? "install" : agent.state === "not-signed-in" ? "signIn" : null;
-    const openForMe = step && commands.length
-      ? [
-        h("button", {
-          class: "primary small", type: "button",
-          onclick: () => api.agent.openSetup({ engine: agent.id, step }).catch(() => {}),
-        }, t("Open PowerShell for me")),
-        h("p", { class: "muted" }, t("A window opens and does it for you. When it has finished, come back here " +
-          "and press Check again. To do it yourself instead, open PowerShell (search for it in the Start menu) " +
-          "and type the lines below.")),
-      ]
-      : [];
+    // The sentence, the one-press "Open PowerShell for me" (M10-27) and the lines to type come from assistants.js:
+    // the Settings dialog shows the same card for the same assistant. Each is a list, not `a && b`, because
+    // replaceChildren writes a plain `false` out as the word "false".
     notice.hidden = false;
     notice.replaceChildren(
-      h("p", {}, text),
-      ...openForMe,
-      // A spread, not `a && b`: replaceChildren writes a plain `false` out as the word "false".
-      ...(agent.state === "broken" && agent.detail ? [h("p", { class: "muted" }, agent.detail)] : []),
-      ...commands.map((command) =>
-        h(
-          "div",
-          { class: "command" },
-          h("code", {}, command),
-          h(
-            "button",
-            { class: "ghost small", type: "button", onclick: () => navigator.clipboard.writeText(command) },
-            t("Copy"),
-          ),
-        ),
-      ),
+      h("p", {}, fixSentence(agent)),
+      ...openForMe(agent),
+      ...brokenDetail(agent),
+      ...commandLines(agent),
       h("button", { class: "secondary small", type: "button", onclick: checkAgents }, t("Check again")),
     );
   }
@@ -833,8 +783,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       ? [
         t("Your copy of {name} (version {version}) is newer than the one this app was tested with ({tested}). " +
           "It should still work.", { name: agent.product ?? agent.name, version: agent.version, tested: agent.tested }),
-        agent.checkup?.version === agent.version &&
-          t("Last test: {said}", { said: tFrom(agent.checkup.said) }),
+        lastTestText(agent),
       ].filter(Boolean).join(" ")
       : "";
     if (!checked || !agent || agent.state === "ready") notice.hidden = true;
@@ -854,18 +803,12 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       ...agents.map((agent) => {
         const box = h("input", { type: "checkbox", checked: agent.inTeam !== false });
         box.addEventListener("change", async () => {
-          const ticked = agents.filter((item) => (item === agent ? box.checked : item.inTeam !== false));
-          if (!ticked.length) {
-            box.checked = true;
-            teamNote.textContent = t("Keep at least one assistant ticked.");
+          // The same rule and call as the Settings dialog's ticks (assistants.js): one always stays ticked.
+          const { problem } = await changeTeam(agents, agent, box.checked);
+          teamNote.textContent = problem ?? "";
+          if (problem) {
+            box.checked = agent.inTeam !== false;
             return;
-          }
-          teamNote.textContent = "";
-          try {
-            await api.agent.setTeam(ticked.map((item) => item.id));
-            for (const item of agents) item.inTeam = ticked.includes(item);
-          } catch (error) {
-            teamNote.textContent = tFrom(error.message);
           }
           render();
         });
@@ -883,6 +826,16 @@ export function createChat(dir, { onEdit, onSave } = {}) {
     checked = true;
     render();
   }
+
+  // The Settings dialog checked the assistants again, or changed which ones are ticked (assistants.js).
+  const settingsFound = (event) => {
+    const found = event.detail?.agents;
+    if (!Array.isArray(found)) return;
+    agents = found;
+    checked = true;
+    render();
+  };
+  window.addEventListener(ASSISTANTS_CHANGED, settingsFound);
 
   modelPick.addEventListener("change", async () => {
     const agent = current();
@@ -1408,6 +1361,7 @@ export function createChat(dir, { onEdit, onSave } = {}) {
       clearTimeout(hintTimer);
       stopListening();
       window.removeEventListener("message", fromEditor);
+      window.removeEventListener(ASSISTANTS_CHANGED, settingsFound);
       clearInterval(watchPointing);
       studyBar.destroy();
       editActions.destroy();

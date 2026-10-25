@@ -1,6 +1,12 @@
 import { h } from "./dom.js";
 import { t } from "./words.js";
 
+/** "App 0.1.0 · HyperFrames 0.8.193 · Electron 44.0.0", or nothing when the main process has not answered. */
+export const versionsText = (known) => known
+  ? t("App {appVersion} · HyperFrames {cliVersion} · Electron {electron}",
+    { appVersion: known.appVersion, cliVersion: known.cliVersion, electron: known.electron })
+  : "";
+
 /**
  * "About Kushmanji" (M14-06): what the app is, whose engine it runs on, and that it is not HeyGen's. HyperFrames'
  * licence asks for the credit; saying "unofficial" plainly is a hard rule of this project (AGENTS.md). Opened from
@@ -22,11 +28,7 @@ export function createAbout(info) {
   document.body.append(dialog);
   return {
     show() {
-      const known = info();
-      versions.textContent = known
-        ? t("App {appVersion} · HyperFrames {cliVersion} · Electron {electron}",
-          { appVersion: known.appVersion, cliVersion: known.cliVersion, electron: known.electron })
-        : "";
+      versions.textContent = versionsText(info());
       if (!dialog.open) dialog.showModal();
     },
   };

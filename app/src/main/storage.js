@@ -54,7 +54,14 @@ async function clean(dryRun) {
   } catch {
     return 0;
   } finally {
-    fs.rmSync(empty, { recursive: true, force: true });
+    try {
+      fs.rmSync(empty, { recursive: true, force: true });
+    } catch {
+      // Windows keeps the folder (EPERM) for a moment after the program that ran in it has ended. That must never
+      // cost the answer: looking at the room would fail and Home and Settings would show nothing. Tried again in
+      // the background, and left for the system's own temp cleaning if it still holds on.
+      fs.rm(empty, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }, () => {});
+    }
   }
 }
 

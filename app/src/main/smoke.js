@@ -7,6 +7,7 @@ import { cliVersion, runCli } from "./cli.js";
 import { createProject, listProjects } from "./projects.js";
 import { playbackProbe } from "./playbackProbe.js";
 import { isCompositionPreview } from "./preview.js";
+import { readState } from "./state.js";
 
 // The end-to-end check behind `npm run smoke`: the real app opens Home, makes a project if there is none, opens
 // it in Studio, and saves a picture of each screen plus result.json. Nobody has to click anything, so either AI
@@ -182,7 +183,7 @@ async function saveStep({ result, inPage, shot, outDir }) {
  * could not, because the window refused every navigation, a reload included. Back to English afterwards, since
  * the rest of the self-test finds buttons by their English words.
  */
-async function languageStep({ result, inPage, shot }) {
+async function languageStep({ win, result, inPage, shot }) {
   await inPage("[...document.querySelectorAll('button')].find((b) => b.textContent === '← My videos')?.click()");
   if (!(await until(() => inPage("document.body.dataset.view === 'home'"), { timeoutMs: 15_000 })))
     throw new Error("Could not return Home to choose a language.");
@@ -204,6 +205,18 @@ async function languageStep({ result, inPage, shot }) {
   if (!/[ಀ-೿]/.test(result.language.accessLine))
     throw new Error("In Kannada, the line under the chat box was still English.");
   await shot("chat-kannada");
+  // Kannada has the longest button names, and the header of a video holds the most buttons (Settings is the newest):
+  // at the smallest window every one of them must still be on screen.
+  const barFits = `(() => { const bar = document.querySelector('.topbar'); const help = bar.querySelector('.help-button').getBoundingClientRect();
+    return { fits: bar.scrollWidth <= bar.clientWidth + 1, helpRight: Math.round(help.right), width: innerWidth }; })()`;
+  win.setSize(960, 600);
+  await wait(500);
+  result.language.smallBar = await inPage(barFits);
+  await shot("chat-kannada-small-window");
+  win.setSize(1440, 900);
+  await wait(500);
+  if (!result.language.smallBar.fits || result.language.smallBar.helpRight > result.language.smallBar.width)
+    throw new Error("In Kannada the header of a video does not fit the smallest window: " + JSON.stringify(result.language.smallBar));
   await inPage("document.querySelector('.back')?.click() ?? [...document.querySelectorAll('button')].find((b) => /←/.test(b.textContent))?.click()");
   if (!(await showing("kn"))) throw new Error("Could not return Home in Kannada.");
   await choose("en");
@@ -276,6 +289,129 @@ async function renameStep({ win, result, inPage, shot }) {
   if (!(await until(() => inPage("!document.querySelector('dialog.video-dialog')"), { timeoutMs: 5000 })))
     throw new Error("Cancel did not close the Recycle Bin question.");
   if (!fs.existsSync(path.join(now, "index.html"))) throw new Error("Cancelling the Recycle Bin question still moved the video.");
+}
+
+/** Escape the way Windows sends it, to the page. */
+function pressEscape(win) {
+  win.webContents.sendInputEvent({ type: "keyDown", keyCode: "Escape" });
+  win.webContents.sendInputEvent({ type: "keyUp", keyCode: "Escape" });
+}
+
+/**
+ * Settings (M7-03), from Home's header the way a person would. The five sections are there in order; the assistants
+ * say they are being checked, then each says what state it is in; the ticks keep at least one (the self-test has its
+ * own settings folder, so it may change them, and puts them back); the buttons wait while an assistant works; the
+ * dialog fits the smallest window (960 by 600) and Escape closes it, the About box on top of it first. Sends nothing to
+ * an assistant and runs no test (both spend the person's allowance). Ends on Home.
+ */
+async function settingsStep({ win, result, inPage, shot }) {
+  const dialogOpen = "Boolean(document.querySelector('dialog.settings-dialog[open]'))";
+  const loadingAtOpen = await inPage(
+    "(() => { document.querySelector('.settings-button').click(); return Boolean(document.querySelector('.settings-loading')); })()");
+  if (!(await until(() => inPage(dialogOpen), { timeoutMs: 5000 }))) throw new Error("The Settings button did not open Settings.");
+  if (!loadingAtOpen) throw new Error("Settings did not say that it is checking the assistants.");
+  const sections = await inPage(
+    "[...document.querySelectorAll('dialog.settings-dialog .settings-section')].map((s) => s.dataset.section)");
+  const wanted = ["language", "assistants", "space", "problems", "about"];
+  if (JSON.stringify(sections) !== JSON.stringify(wanted))
+    throw new Error(`Settings has the sections ${JSON.stringify(sections)}, not ${JSON.stringify(wanted)}.`);
+  if (await inPage("/\\bfalse\\b/.test(document.querySelector('dialog.settings-dialog').innerText)"))
+    throw new Error("Settings shows stray text.");
+  // Asking each assistant takes seconds: it starts each program.
+  const stated = `(() => { const rows = [...document.querySelectorAll('dialog.settings-dialog .settings-assistant')];
+    return rows.length >= 3 && rows.every((row) => row.querySelector('.settings-state')?.textContent.trim()); })()`;
+  if (!(await until(() => inPage(stated), { timeoutMs: 120_000 }))) throw new Error("Settings never showed the assistants' states.");
+  result.settings = { sections, loadingAtOpen, assistants: await inPage(
+    `[...document.querySelectorAll('dialog.settings-dialog .settings-assistant')].map((row) => ({
+      id: row.dataset.engine, state: row.dataset.state, said: row.querySelector('.settings-state').textContent }))`) };
+  // Space: counting may take a while on a computer with many videos; it says something either way.
+  if (!(await until(() => inPage("document.querySelector('.settings-space').textContent.trim() !== 'Checking…'"),
+    { timeoutMs: 60_000 }))) throw new Error("Settings never said how much room the undo copies take.");
+  result.settings.space = await inPage("document.querySelector('.settings-space').textContent");
+  result.settings.folder = await inPage("document.querySelector('.settings-folder')?.textContent ?? ''");
+  if (!result.settings.folder.includes(process.env.HFWIN_PROJECTS_ROOT ?? ""))
+    throw new Error("Settings does not say where new videos are kept.");
+  if (await inPage("document.querySelector('dialog.settings-dialog .language-pick').disabled"))
+    throw new Error("The language menu in Settings cannot be used on Home.");
+  if (!(await inPage("Boolean(document.querySelector('dialog.settings-dialog .help-report-show'))")))
+    throw new Error("Settings has no way to show the problem report.");
+  await shot("settings");
+
+  // The ticks: one can be taken off, and the last one stays.
+  const boxes = "[...document.querySelectorAll('dialog.settings-dialog .settings-have input')]";
+  const ids = await inPage("[...document.querySelectorAll('dialog.settings-dialog .settings-assistant')].map((r) => r.dataset.engine)");
+  const teamIs = (list) => until(() => (readState().team ?? []).slice().sort().join() === [...list].sort().join(),
+    { timeoutMs: 5000, everyMs: 100 });
+  const press = (index) => inPage(`${boxes}[${index}].click()`);
+  const keep = { still: [...ids] };
+  for (let i = 0; i < ids.length - 1; i++) {
+    await press(i);
+    keep.still = ids.slice(i + 1);
+    if (!(await teamIs(keep.still))) throw new Error(`Taking ${ids[i]} off the team in Settings was not kept.`);
+  }
+  await press(ids.length - 1);
+  await wait(500);
+  const last = await inPage(`({ checked: ${boxes}[${ids.length - 1}].checked,
+    said: document.querySelector('dialog.settings-dialog .settings-team-note').textContent })`);
+  result.settings.lastTick = last;
+  if (!last.checked || !(await teamIs([ids.at(-1)])) || last.said !== "Keep at least one assistant ticked.")
+    throw new Error("Settings let the last assistant be taken off the team: " + JSON.stringify(last));
+  for (let i = 0; i < ids.length - 1; i++) {
+    await press(i);
+    if (!(await teamIs([...ids.slice(0, i + 1), ids.at(-1)])))
+      throw new Error(`Putting ${ids[i]} back on the team in Settings was not kept.`);
+  }
+  if (!(await teamIs(ids))) throw new Error("The self-test could not put the team back.");
+
+  // While an assistant works (the chat marks it on the page's body), what the chat disables waits here too.
+  await inPage("document.body.dataset.agent = 'running'");
+  const waiting = `(() => ({ ticks: ${boxes}.every((b) => b.disabled),
+    note: !document.querySelector('.settings-working').hidden,
+    test: [...document.querySelectorAll('dialog.settings-dialog .settings-assistant button')]
+      .filter((b) => b.textContent === 'Test it now').every((b) => b.disabled) }))()`;
+  if (!(await until(() => inPage(`Object.values(${waiting}).every(Boolean)`), { timeoutMs: 3000, everyMs: 100 })))
+    throw new Error("Settings kept its buttons usable while an assistant works: " + JSON.stringify(await inPage(waiting)));
+  await inPage("delete document.body.dataset.agent");
+  if (!(await until(() => inPage(`${boxes}.every((b) => !b.disabled) && document.querySelector('.settings-working').hidden`),
+    { timeoutMs: 3000, everyMs: 100 })))
+    throw new Error("Settings kept its buttons waiting after the assistant had finished.");
+
+  // About opens on top of Settings; Escape closes it first and leaves Settings open.
+  await inPage("document.querySelector('.settings-about').click()");
+  if (!(await until(() => inPage("Boolean(document.querySelector('dialog.about-dialog[open]'))"), { timeoutMs: 3000 })))
+    throw new Error("The About button in Settings did not open the About box.");
+  pressEscape(win);
+  if (!(await until(() => inPage("!document.querySelector('dialog.about-dialog[open]')"), { timeoutMs: 3000 })))
+    throw new Error("Escape did not close the About box.");
+  if (!(await inPage(dialogOpen))) throw new Error("Escape closed Settings along with the About box.");
+
+  // The smallest window: the dialog fits, scrolls, and the last section can be reached.
+  win.setSize(960, 600);
+  await wait(500);
+  const fits = await inPage(`(() => { const box = document.querySelector('dialog.settings-dialog').getBoundingClientRect();
+    const content = document.querySelector('dialog.settings-dialog .settings-content');
+    const close = document.querySelector('.settings-close').getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom, height: innerHeight, closeBottom: close.bottom,
+      scrolls: content.scrollHeight > content.clientHeight }; })()`);
+  result.settings.small = fits;
+  if (fits.top < 0 || fits.bottom > fits.height || fits.closeBottom > fits.height)
+    throw new Error("Settings does not fit the smallest window: " + JSON.stringify(fits));
+  await shot("settings-small-window");
+  await inPage("document.querySelector('.settings-about').scrollIntoView({ block: 'center' })");
+  await wait(200);
+  const reachable = await inPage(`(() => { const about = document.querySelector('.settings-about').getBoundingClientRect();
+    const content = document.querySelector('dialog.settings-dialog .settings-content').getBoundingClientRect();
+    return about.top >= content.top && about.bottom <= content.bottom; })()`);
+  if (!reachable) throw new Error("The last section of Settings cannot be scrolled into view in the smallest window.");
+  await inPage("(() => { const content = document.querySelector('dialog.settings-dialog .settings-content'); content.scrollTop = content.scrollHeight; })()");
+  await wait(200);
+  await shot("settings-small-window-end");
+  win.setSize(1440, 900);
+  await wait(500);
+
+  pressEscape(win);
+  if (!(await until(() => inPage(`!${dialogOpen}`), { timeoutMs: 3000 }))) throw new Error("Escape did not close Settings.");
+  result.settings.closedByEscape = true;
 }
 
 /**
@@ -1480,6 +1616,17 @@ export async function runSmoke({ win, outDir }) {
     await shot("project");
     result.importDraft = await inPage("document.querySelector('.composer textarea').value");
     if (!result.importDraft.includes("sideways")) throw new Error("No request to look at the new clips was prepared.");
+    // Settings is in the header of the video screen too, where the language cannot be changed (it is Home's alone).
+    await inPage("document.querySelector('.topbar .settings-button').click()");
+    if (!(await until(() => inPage("Boolean(document.querySelector('dialog.settings-dialog[open]'))"), { timeoutMs: 5000 })))
+      throw new Error("The video screen has no working Settings button.");
+    result.settingsOnVideoScreen = await inPage(`({ languageWaits: document.querySelector('dialog.settings-dialog .language-pick').disabled,
+      said: document.querySelector('dialog.settings-dialog [data-section=language] .muted')?.textContent ?? '' })`);
+    if (!result.settingsOnVideoScreen.languageWaits || !result.settingsOnVideoScreen.said)
+      throw new Error("Settings let the language change on the video screen, or did not say why not.");
+    pressEscape(win);
+    if (!(await until(() => inPage("!document.querySelector('dialog.settings-dialog[open]')"), { timeoutMs: 3000 })))
+      throw new Error("Escape did not close Settings on the video screen.");
     await playerStep({ win, result, inPage, shot, dir: project.dir, hasAudio: hasFfmpeg });
     result.studioUrl = await inPage("document.querySelector('iframe[title=\"HyperFrames Studio\"]').src");
     await accessStep({ result, inPage, shot });
@@ -1531,8 +1678,9 @@ export async function runSmoke({ win, outDir }) {
     await pointingStep({ win, result, inPage, shot });
     if (process.env.HFWIN_SMOKE_AGENT) await agentStep({ result, inPage, shot, dir: chatProject });
     await saveStep({ result, inPage, shot, outDir });
-    await languageStep({ result, inPage, shot });
+    await languageStep({ win, result, inPage, shot });
     await renameStep({ win, result, inPage, shot });
+    await settingsStep({ win, result, inPage, shot });
     result.ok = true;
   } catch (error) {
     result.error = error instanceof Error ? error.message : String(error);

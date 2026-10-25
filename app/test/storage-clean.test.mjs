@@ -8,14 +8,14 @@ import path from "node:path";
 import vm from "node:vm";
 import { test } from "node:test";
 
-function load(t, answer) {
+function load(t, answer, files = fs) {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "hfwin clean é "));
   t.after(() => fs.rmSync(home, { recursive: true, force: true }));
   const calls = [];
   const source = fs.readFileSync(new URL("../src/main/storage.js", import.meta.url), "utf8")
     .replace(/^import .+;\r?$/gm, "").replace(/^export (async )?(function|const)/gm, "$1$2");
   const api = vm.runInNewContext(`${source}\n({ storageStatus, freeUpSpace, historyRoot, sizeText });`, {
-    fs, path, os: { ...os, homedir: () => home, tmpdir: () => os.tmpdir() },
+    fs: files, path, os: { ...os, homedir: () => home, tmpdir: () => os.tmpdir() },
     runCli: async (args, options) => {
       calls.push({ args, options, existed: fs.existsSync(args[1]) });
       return typeof answer === "function" ? answer(args, options) : answer;
@@ -51,6 +51,24 @@ test("clean runs in a folder of its own that is empty, and that folder is gone a
   assert.equal(path.dirname(folder), os.tmpdir());
   assert.match(path.basename(folder), /^kushmanji-clean-/);
   assert.equal(fs.existsSync(folder), false);
+});
+
+test("a folder Windows will not let go of yet does not cost the answer, and is tried again later", async (t) => {
+  // The real Windows error, seen on the owner's computer: the program has ended but the folder is still held.
+  const retried = [];
+  const held = {
+    ...fs,
+    rmSync(target, options) {
+      if (String(target).includes("kushmanji-clean-")) throw Object.assign(new Error("EPERM: operation not permitted, rm"), { code: "EPERM" });
+      return fs.rmSync(target, options);
+    },
+    rm(target, options, done) { retried.push([target, options]); fs.rm(target, options, done); },
+  };
+  const { api } = load(t, { code: 0, stdout: report({ totalBytes: 4096 }) }, held);
+  const status = await api.storageStatus();
+  assert.equal(status.freeableBytes, 4096, "the number is still given");
+  assert.equal(retried.length, 1, "removing the folder is tried again in the background");
+  assert.ok(retried[0][1].maxRetries >= 1);
 });
 
 test("a banner before the answer and an exit code of 1 (some folders could not be cleaned) still give the bytes", async (t) => {
