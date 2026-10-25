@@ -80,7 +80,7 @@ Do not build them.
 - [x] M1-08 Real thumbnails on the Home cards (now a letter on a dark tile) (Claude, 2026-10-14: done by M14-07's
       pictures, `covers.js`)
 - [ ] M1-09 Follow Studio's light and dark toggle in the frame around it
-- [ ] M1-10 Rename a project; delete one to the Recycle Bin
+- [~] M1-10 Rename a project; delete one to the Recycle Bin (Claude, with a Sonnet helper, 2026-10-25)
 - [x] M1-11 Project names in any language (a name with no Latin letters becomes "untitled" today) (Claude,
       2026-10-14): letters of any script keep themselves ("ನನ್ನ ಊರಿನ ವ್ಲಾಗ್" becomes the folder
       `ನನ್ನ-ಊರಿನ-ವ್ಲಾಗ್`); Latin accents are still dropped. A video in a Kannada folder was opened, edited by
@@ -167,7 +167,13 @@ Do not build them.
       `webUtils.getPathForFile` in the preload). Tried in the real app here; a non-ASCII file name dropped on
       Windows is still to be tried
 - [ ] M3-04 Pending edits: collect up to 10 picks and send them as one request
-- [ ] M3-05 Draw and comment on the frame (needs Studio's components mounted directly; see ARCHITECTURE "Later")
+- [x] M3-05 Draw and comment on the frame (Claude, 2026-10-25; built by a Sonnet helper in a worktree, reviewed). On the
+      watching screen, "Draw on the picture" pauses the video and lays a layer over the picture: a coral pen, Undo,
+      Clear, a note "What should change here?", Cancel (Escape) and "Send to the chat". The main process captures its
+      own window at the picture's box and saves `.hyperframes/notes/drawing-<date>-<time>.png` (newest 50 kept,
+      `drawings.js`); the chat box gets a prepared message naming the file, and the person presses Send. The house
+      note tells every assistant to open a named drawing first. Self-test draws a stroke and checks the PNG. Open:
+      drawing in "Edit by hand", and a real pen or touch screen
 
 ## M4 · Export
 
@@ -244,7 +250,7 @@ Do not build them.
 - [x] M7-02 Guided first video (hook, proof, turn, call to action) (Claude, 2026-10-14): "Make it" on Home
       asks how long, which shape and what feel, as buttons to tap, then asks for a hook, the main moment, a turn
       and a call to action (`renderer/guided.js`). "Just make it" skips the questions
-- [ ] M7-03 Settings screen
+- [~] M7-03 Settings screen (Claude, 2026-10-25, after M1-10 and M3-05)
 - [ ] M7-04 Keyboard shortcuts that work the same in the frame and inside Studio
 
 ## M8 · Voice, images and music
