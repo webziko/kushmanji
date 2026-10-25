@@ -12,6 +12,7 @@ import path from "node:path";
 import readline from "node:readline";
 import { pathToFileURL } from "node:url";
 import { killTree } from "../../proc.js";
+import { FIND_TOOL, freeMediaTools, USE_TOOL } from "./freeMedia.mjs";
 
 const MAX_MOMENTS = 6;
 const KEEP_LOOKS = 3;
@@ -53,7 +54,7 @@ export function moments(given) {
  * Answer one JSON-RPC message from the assistant, or return null for a notification. `look(seconds)` makes the
  * pictures: `[{ seconds, png }]` with `png` a Buffer.
  */
-export async function answer(message, { look }) {
+export async function answer(message, { look, freeMedia = null }) {
   const { id, method, params } = message ?? {};
   if (id === undefined || id === null) return null;
   const reply = (result) => ({ jsonrpc: "2.0", id, result });
@@ -65,8 +66,17 @@ export async function answer(message, { look }) {
     });
   }
   if (method === "ping") return reply({});
-  if (method === "tools/list") return reply({ tools: [TOOL] });
+  if (method === "tools/list") return reply({ tools: freeMedia ? [TOOL, FIND_TOOL, USE_TOOL] : [TOOL] });
   if (method === "tools/call") {
+    // Free pictures and sounds (freeMedia.mjs), when this server was started with them.
+    const media = { [FIND_TOOL.name]: freeMedia?.find, [USE_TOOL.name]: freeMedia?.use }[params?.name];
+    if (media) {
+      try {
+        return reply({ content: await media(params.arguments ?? {}) });
+      } catch (error) {
+        return reply({ isError: true, content: [{ type: "text", text: `Nothing found or saved: ${error.message}` }] });
+      }
+    }
     if (params?.name !== TOOL.name) {
       return reply({ isError: true, content: [{ type: "text", text: `There is no tool called ${params?.name}.` }] });
     }
@@ -122,7 +132,7 @@ export function snapshotLook(cliEntry, projectDir) {
 }
 
 /** Serve on stdin and stdout, one JSON message per line, as MCP's stdio transport does. */
-export function serve(look, input = process.stdin, output = process.stdout) {
+export function serve(look, input = process.stdin, output = process.stdout, freeMedia = null) {
   const lines = readline.createInterface({ input });
   lines.on("line", async (line) => {
     if (!line.trim()) return;
@@ -132,12 +142,18 @@ export function serve(look, input = process.stdin, output = process.stdout) {
     } catch {
       return;
     }
-    const response = await answer(message, { look });
+    const response = await answer(message, { look, freeMedia });
     if (response) output.write(`${JSON.stringify(response)}\n`);
   });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cliEntry, projectDir] = process.argv.slice(2);
-  serve(snapshotLook(cliEntry, path.resolve(projectDir)));
+  const dir = path.resolve(projectDir);
+  // The app's version, for the User-Agent Openverse is sent (its terms ask apps to say who they are).
+  let version = "0";
+  try {
+    version = JSON.parse(fs.readFileSync(new URL("../../../../package.json", import.meta.url), "utf8")).version;
+  } catch { /* an unknown version is still a polite request */ }
+  serve(snapshotLook(cliEntry, dir), process.stdin, process.stdout, freeMediaTools(dir, { version }));
 }

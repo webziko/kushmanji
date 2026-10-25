@@ -798,8 +798,14 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
 The owner asked to "note it down what we might need extra". Each line is a task; the research behind the M8,
 M10 and M17 lines is `docs/RESEARCH.md`.
 
-- [ ] M8-12 "Find free pictures and sounds" from Openverse (no key), downloaded one by one into
-      `assets/free-media/` with a ledger and `CREDITS.md`, filtered to public domain and CC BY by default
+- [~] M8-12 "Find free pictures and sounds" from Openverse (no key), downloaded one by one into
+      `assets/free-media/` with a ledger and `CREDITS.md`, filtered to public domain and CC BY by default. The
+      assistants' half done (Claude, 2026-10-25): `find_free_media` and `use_free_media` in the app's own tool
+      server beside look_at_video (`agents/tools/freeMedia.mjs`), for Claude Code and Codex; the house note sends
+      them there first. Tried against the real Openverse: two sunset photos with previews, one saved with its CC BY
+      credit, a CC0 whoosh. Picture searches take 15 to 30 s. Open: a panel for the person to search by hand, the
+      "Copy credits" note on saving, Gemini (agy takes MCP servers only from its global settings), and a real
+      request through the chat
 - [ ] M8-13 Quiet music made in code (an MIT synthesiser, no Python) as the answer to M8-09: audition first
 - [ ] M8-14 "Put the title behind me": HyperFrames `remove-background` (a 168 MB model, only on the person's yes)
 - [ ] M8-15 Pictures an assistant makes land in the video by themselves. Gemini's `generate_image` saves to

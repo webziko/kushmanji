@@ -136,7 +136,8 @@ app/src/main/            the main process (Node): the only code with file and pr
     turnCheck.js         the app's check for mistakes after each change
     automationCheck.js   the check that sound fades and automation will not stop "Save video"
     checkup.js           "Test it now" for an assistant newer than the app was tried with
-    lookTool.js          how each assistant is given the "look at the video" tool
+    lookTool.js          how each assistant is given the "look at the video" tool (and free pictures and sounds)
+    tools/freeMedia.mjs  free pictures and sounds from Openverse, saved with their credits
     mediaTools.js        puts the FFmpeg check on an agent's PATH
     tools/               the check itself: rules.js (what is allowed), guard.mjs, and bin/ (the stand-ins);
                          look.mjs, the "look at the video" tool server

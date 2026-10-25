@@ -3,7 +3,7 @@ import path from "node:path";
 import { collect, killTree } from "../proc.js";
 import { HOUSE_PROMPT } from "./house.js";
 import { agentEnv, lastLine, readJsonLines, resolveTool, startTool } from "./launcher.js";
-import { CLAUDE_LOOK_TOOL, claudeLookArgs } from "./lookTool.js";
+import { CLAUDE_FREE_MEDIA_TOOLS, CLAUDE_LOOK_TOOL, claudeLookArgs } from "./lookTool.js";
 import { fromClaude } from "./usage.js";
 import { mediaToolsEnv } from "./mediaTools.js";
 import { say } from "../say.js";
@@ -55,8 +55,9 @@ const limited = (...commands) => [
   "acceptEdits",
   "--allowedTools",
   ...commands,
-  // The app's own "look at the video" (lookTool.js): it only draws this project.
+  // The app's own "look at the video" and free pictures and sounds (lookTool.js): they only touch this project.
   CLAUDE_LOOK_TOOL,
+  ...CLAUDE_FREE_MEDIA_TOOLS,
   "WebFetch",
   "WebSearch",
   "Skill",

@@ -8,6 +8,8 @@ const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "tools", 
 
 /** Claude Code's name for the tool, for its list of allowed tools. */
 export const CLAUDE_LOOK_TOOL = "mcp__kushmanji__look_at_video";
+/** The same server's free pictures and sounds (tools/freeMedia.mjs, M8-12). They write only into this project. */
+export const CLAUDE_FREE_MEDIA_TOOLS = ["mcp__kushmanji__find_free_media", "mcp__kushmanji__use_free_media"];
 
 /** The server for one project: the program, its arguments and what it needs in its environment. */
 export function lookServer(dir, { execPath = process.execPath, cli = cliEntry } = {}) {
