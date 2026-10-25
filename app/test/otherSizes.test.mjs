@@ -107,7 +107,8 @@ test("preparedRequest contains exact safe margins and dimensions for upright and
   assert.ok(uprightReq.includes("This is a copy of the wide video City Vlog."));
   assert.ok(uprightReq.includes("1080 by 1920"));
   assert.ok(uprightReq.includes("words in the upper third, the main subject larger and centred"));
-  assert.ok(uprightReq.includes("160 px of the top, 320 px of the bottom or 60 px of the sides"));
+  // The same zones as the editing and motion guides: where Shorts and Reels put their buttons.
+  assert.ok(uprightReq.includes("220 px of the top, 420 px of the bottom, 140 px of the right or 60 px of the left"));
   assert.ok(uprightReq.includes(".hyperframes/MOTION_GUIDE.md"));
   assert.ok(uprightReq.includes("look_at_video"));
 

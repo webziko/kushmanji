@@ -18,7 +18,8 @@ something else, the person wins.
 
 ## The story
 
-- Open on the best five seconds: a face, a greeting, the title. Not a slow pan.
+- Open on the best five seconds: a face, a greeting, the title. Not a slow pan. Within three seconds the viewer
+  must see what the video will give them.
 - One idea per clip. Order the clips so that each one answers "and then what?".
 - Never keep two takes of the same lines. Keep the one with the clearer voice and the look at the camera, and
   say which one you dropped.
@@ -27,8 +28,11 @@ something else, the person wins.
 
 ## Where to cut
 
-- Cut on a breath, between sentences. Never inside a word.
-- Trim dead air at the start and end of a talking clip (more than about 0.4 seconds of nothing).
+- Cut on a breath, between sentences. Never inside a word. A transcript says a word ends a little before its sound
+  really does: leave about 50 ms of air before a word and 80 ms after the last one.
+- Trim dead air at the start and end of a talking clip (more than about 0.4 seconds of nothing). Inside a clip,
+  keep a breath between sentences (0.15 to 0.25 seconds); a pause longer than about half a second can go.
+- When the person says a line twice, keep the last clean take.
 - A shot of things (shelves, a street, a view) earns 2 to 5 seconds, longer only if something happens in it.
 - Mix long and short shots. A run of clips that are all the same length feels like a slideshow.
 - Trimming needs no new file: set where the clip starts in its file and how long it plays.
@@ -45,7 +49,8 @@ something else, the person wins.
 - In a cross-fade only the incoming picture fades in, on top of the outgoing one, which stays solid until its
   clip ends. Fading both at once lets the background show through as a dark flash in the middle of the join.
 - Sound always joins softly, even on a plain cut: fade each clip's sound out and in over 0.15 to 0.3 seconds, so
-  there is never a click or a hole of silence.
+  there is never a click or a hole of silence. Where a cut inside one talking clip only removes a pause, a fade of
+  20 to 30 ms on each side is enough to stop the click.
 - At most two kinds of join in one video. A different wipe on every cut looks like a demo.
 - No label, title or subtitle may start or end within half a second of a join.
 
@@ -55,6 +60,10 @@ something else, the person wins.
 - A clip with no talking (music in a shop, a street) sits 8 to 10 dB under the voice: quiet, never silent.
 - Music under a voice sits 15 to 20 dB under it and dips further while the person speaks.
 - No jump of more than about 3 dB from one clip to the next.
+- A sound effect needs something on screen that makes it, and lands a frame after it. Two to four in a short;
+  a whoosh on every cut is the surest sign of a template.
+- You cannot hear the result: measure the finished loudness (about -14 LUFS, peaks under -1 dB) and say you
+  measured it, not that it sounds right.
 
 ## Words on screen
 
@@ -63,6 +72,9 @@ something else, the person wins.
 - It arrives in half a second or less and leaves faster than it came.
 - Subtitles: bottom centre, two lines at most, about 42 letters a line, on with the first word, off with the
   last, at least one second. Use the person's checked words, never your own translation.
+- A machine transcript invents "Thank you." or repeats a line over silence or music: drop those, never caption them.
+- In an upright video for Shorts and Reels the platforms put their buttons over the picture: keep words and faces
+  out of the top 220 px, the bottom 420 px and the right 140 px (at 1080 by 1920), and 60 px from the left.
 - One look for the whole video: the same lettering, colours and corners on every label.
 
 ## Movement
@@ -153,8 +165,9 @@ animated scene. Where the person has asked for something else, the person wins.
   A font that is not on Windows (Nunito, for one) shows only if its file is in the video's assets with an
   @font-face pointing at that file.
 - Words enter with motion (per letter or per word, a short stagger) and leave with motion, not a plain fade.
-- Safe margins: about 5% of the frame. Upright videos for Shorts and Reels: nothing important within 160 px of
-  the top, 320 px of the bottom or 60 px of the sides (at 1080 by 1920).
+- Safe margins: about 5% of the frame. Upright videos for Shorts and Reels, where the platforms' buttons sit over
+  the picture: nothing important within 220 px of the top, 420 px of the bottom, 140 px of the right or 60 px of
+  the left (at 1080 by 1920).
 
 ## "Any size" and other shapes
 

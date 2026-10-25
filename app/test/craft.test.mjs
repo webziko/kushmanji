@@ -54,6 +54,14 @@ test("the motion guide covers what went wrong in the trailer test", () => {
   }
 });
 
+test("the editing guide carries the research's lessons (M16-12), with the same safe zones as the motion guide", () => {
+  for (const lesson of [/Within three seconds/, /50 ms of air before a word and 80 ms after/, /last clean take/,
+    /20 to 30 ms on each side/, /invents "Thank you\."/, /a whoosh on every cut/, /measured it, not that it sounds/]) {
+    assert.match(GUIDE, lesson);
+  }
+  for (const guide of [GUIDE, MOTION_GUIDE]) assert.match(guide, /220 px[^.]*420 px[^.]*140 px/);
+});
+
 test("the guide covers what went wrong on the first real video", () => {
   for (const lesson of [/two takes of the same lines/, /cross-fade/, /click or a hole of silence/, /moves everything after it/,
     /never plays past its last picture/, /pictureSeconds/, /only the incoming picture fades in/]) {

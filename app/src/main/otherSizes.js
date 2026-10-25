@@ -76,7 +76,8 @@ export function preparedRequest({ sourceName, shape, sourceShape = "wide" }) {
       `This is a copy of the ${sourceKind} video ${sourceName}. Turn it into the upright version for phones: ` +
       "1080 by 1920, same length, same story and moments at the same times, same words, music and ending. " +
       "Do not squeeze or crop: adapt the layout (words in the upper third, the main subject larger and centred, " +
-      "nothing important within 160 px of the top, 320 px of the bottom or 60 px of the sides). " +
+      "nothing important within 220 px of the top, 420 px of the bottom, 140 px of the right or 60 px of the " +
+      "left, where the platforms put their buttons). " +
       "Read .hyperframes/MOTION_GUIDE.md first. Check with look_at_video at several moments, fix once, " +
       "and tell me what you changed."
     );
