@@ -42,6 +42,11 @@ run Node (it is outside the workspace), so it tests nothing: run check, tests an
 M17-11 self-test step assumed a wide video and raced the new video's opening; both fixed. Its worktree folders
 can stay locked after `git worktree remove` (sandbox permissions); they are git-ignored.
 
+The owner then said Claude should build and the others only do small jobs (memory note). Claude built M8-12's
+assistant half (`agents/tools/freeMedia.mjs`: find_free_media and use_free_media in the look_at_video server,
+tried against the real Openverse; picture searches can take 15 to 30 s, hence the 60 s limit), "Copy credits"
+after saving (`credits.js`), and M16-12 (the editing guide's research lines; one set of phone-safe zones).
+
 At the owner's request the four trailer folders were added to their Home list (`%APPDATA%\Kushmanji\state.json`,
 backup beside it; in CHECKLIST's table). Claude Code is still signed out on the owner's PC.
 

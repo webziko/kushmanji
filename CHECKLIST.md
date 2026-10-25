@@ -102,7 +102,12 @@ Then the list further down, starting with one-click export.
       whoosh sound": it searches Openverse (only files a video may use: public domain, or free with credit), looks
       at small previews, and saves the one it picks in your video's `assets\free-media`. Every file's credit is kept
       in `CREDITS.md` in the video's folder, ready to paste under your YouTube video. Works with Claude and ChatGPT
-      (not yet Gemini). Tried against the real Openverse; not yet through the chat (Claude is signed out).
+      (not yet Gemini). Tried against the real Openverse; not yet through the chat (Claude is signed out). After
+      "Save video", a **Copy credits** button appears when your video uses files that need credit: one press copies
+      the lines to paste under the video.
+- [x] **The assistants edit better**: the guide they read before cutting now also says to show what the video gives
+      within three seconds, never cut inside a word, keep the last clean take, never caption an invented "Thank
+      you.", and keep words clear of the buttons Shorts and Reels put over the picture.
 - [x] **"Make other sizes"** (an editing button in the chat): from a wide video, one press makes an upright (for
       Shorts and Reels) and/or square copy beside it, opens it, and puts a ready message in its chat asking the
       assistant to adapt the layout. You press Send. Built by Gemini, checked by Claude.
