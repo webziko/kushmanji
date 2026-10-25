@@ -439,7 +439,8 @@ you want and get a properly edited result. Feature-by-feature comparison with th
       kept per project in the app's settings. Proven through the real chat with Claude Code and with Gemini (a
       clip cut at "Editing tools"; refused at "Project only"; a file outside the project refused), and since
       M12-01 with Codex too (a clip cut; the outside file refused). Limits: `SECURITY.md`
-- [ ] M10-09 First-time experience for someone who has never used a terminal: which agents are installed,
+- [~] M10-09 (Claude; first part done 2026-10-25 by a Sonnet helper, reviewed: when none of the person's assistants is ready,
+      Home shows "Connect an assistant" with each one's state and "Open PowerShell for me", `renderer/connect.js`) First-time experience for someone who has never used a terminal: which agents are installed,
       one-click fixes, the HyperFrames skills installed for each agent, a first video in minutes
 - [ ] M10-10 Image ideas as a short list to accept or reject before any picture is added. Real frames from the
       footage first; generated pictures only where there is no footage
