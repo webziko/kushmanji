@@ -152,9 +152,11 @@ call, `logs.show` (the "Show the problem report" button, M9-07), starts no assis
 which gets the remaining stage height. Playback keyboard shortcuts ignore an open dialog's contents.
 
 `renderer/settings.js` is the Settings dialog (M7-03): language, assistants, space, the problem report and About in
-one native dialog opened from a header button on every screen. It adds no call to the main process: it uses
-`app.info`, `agent.status/setTeam/checkup/openSetup`, `storage.status/free` and `logs.show`, each already checked in
-`main.js`. What it shares with the chat and Home is not copied: `assistants.js` (names, states, the install and sign-in
+one native dialog opened from a header button on every screen. Its About section checks for an app update only when
+the person presses its button, and sends a release URL back to the main process before opening it. It uses
+`app.info`, `app.checkUpdate`, `app.openReleasePage`, `agent.status/setTeam/checkup/openSetup`,
+`storage.status/free` and `logs.show`, all through checked handlers in `main.js`. What it shares with the chat and
+Home is not copied: `assistants.js` (names, states, the install and sign-in
 card, the ticks, the one-small-job test), `space.js` (the undo-copies line and "Free up"), `report.js` (the problem
 report block) and `about.js` (the versions line). After a fresh check or a changed tick the dialog says so on `window`
 (`kushmanji:assistants`, carrying a copy of the list) and an open chat takes it over. The chat marks "an assistant is
@@ -203,6 +205,8 @@ and the caller in `renderer/`.
 | Call | Does |
 | --- | --- |
 | `app.info()` | App, CLI and Electron versions; the projects folder |
+| `app.checkUpdate()` | Only when pressed in Settings: GET the fixed GitHub latest-release endpoint; return the current and latest app version, or a plain status |
+| `app.openReleasePage(url)` | Open only a Kushmanji GitHub release URL; the main process checks it again before opening the browser |
 | `app.reload()` | Draw the page again, after the person picks a language on Home (`renderer/words.js`, M14-12). The window refuses every navigation, and a reload the page starts is one; this one is started by the main process |
 | `projects.list()` | `[{ dir, name, modifiedAt, external }]`, newest first |
 | `projects.create(name)` | `hyperframes init` in the projects folder |

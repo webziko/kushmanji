@@ -213,12 +213,16 @@ Do not build them.
       start" only when something is missing: FFmpeg (with the `winget` line to copy and how to run it), the
       browser for saving videos (Kushmanji fetches it with one press), little disk space or memory. Otherwise
       "Kushmanji has everything it needs on this computer". `main/health.js`. Not yet seen on a fresh Windows PC
-- [ ] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version. The routine is
+- [~] M5-05 Updates for the app, and a routine for moving to a newer HyperFrames version. First part (ChatGPT, 2026-10-25,
+      reviewed by Claude): "Check for a new version".
+      Settings > About checks only when pressed; release publishing steps are in `docs/MAINTENANCE.md`. No release
+      has been published yet. The HyperFrames routine is
       `docs/MAINTENANCE.md`; it was followed on 2026-10-18 to move from 0.8.149 to 0.8.169 (Claude): check,
       tests, self-test, one Claude request, and the playback measurement, both versions the same night
       (`docs/FINDINGS.md`, last section). Followed again on 2026-10-25 to move to 0.8.193 (Claude): check, tests,
       self-test, one ChatGPT request (Claude Code was signed out), and both versions measured on the practice
-      vlog within the hour: the same or a little better (FINDINGS). Still open: updates for the app itself
+      vlog within the hour: the same or a little better (FINDINGS). Check, tests and the self-test pass (the self-test run by Claude:
+      Codex's sandbox may not start Electron). Open: installing a new version from inside the app.
 - [x] M5-06 Work with no system Node installed (Claude, 2026-10-24). With every Node, npm and npx folder taken off
       PATH, the full self-test passed: making, playing, editing, studying and saving a video all run on Electron's
       own Node. The CLI 0.8.169 runs `npx` in two places only: `skills update` (installing HyperFrames' skills for

@@ -412,6 +412,12 @@ export default {
   "Could not look just now.": "ಈಗ ನೋಡಲು ಆಗಲಿಲ್ಲ.",
   "When something goes wrong": "ಏನಾದರೂ ತೊಂದರೆ ಆದಾಗ",
   "About": "ಬಗ್ಗೆ",
+  "Check for a new version": "ಹೊಸ ಆವೃತ್ತಿ ಇದೆಯೇ ಎಂದು ನೋಡಿ",
+  "Kushmanji {latest} is out (you have {current}).": "Kushmanji {latest} ಬಂದಿದೆ (ನಿಮ್ಮಲ್ಲಿ {current} ಇದೆ).",
+  "You have the newest version ({current}).": "ನಿಮ್ಮಲ್ಲಿ ಇತ್ತೀಚಿನ ಆವೃತ್ತಿ ({current}) ಇದೆ.",
+  "No versions are published yet. You have {current}.": "ಇನ್ನೂ ಯಾವುದೇ ಆವೃತ್ತಿ ಪ್ರಕಟವಾಗಿಲ್ಲ. ನಿಮ್ಮಲ್ಲಿ {current} ಇದೆ.",
+  "Could not reach GitHub. Check the internet, then try again.": "GitHub ಸಂಪರ್ಕಿಸಲು ಆಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "Could not check just now. Try again later.": "ಈಗ ಪರಿಶೀಲಿಸಲು ಆಗಲಿಲ್ಲ. ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   // player.js and drawing.js: The video player
   "Play": "ಪ್ಲೇ",
   "Play video": "ವಿಡಿಯೋ ಪ್ಲೇ ಮಾಡಿ",

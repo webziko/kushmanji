@@ -15,6 +15,7 @@ import { watchEditorKeys } from "./editorKeys.js";
 import { ExportManager } from "./exporter.js";
 import { captureBox, readCover, saveCover } from "./covers.js";
 import { checkHealth, forgetHealth, getBrowser } from "./health.js";
+import { checkForUpdate, isReleasePageUrl } from "./updates.js";
 import { FfmpegTool } from "./ffmpegTool.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
@@ -296,6 +297,11 @@ function registerIpc() {
   // for itself is a navigation, which the window refuses; one started by the main process is not.
   handle("app:reload", () => {
     setTimeout(() => win?.webContents.reload(), 50);
+  });
+  handle("app:checkUpdate", () => checkForUpdate({}));
+  handle("app:openReleasePage", (page) => {
+    if (!isReleasePageUrl(page)) return false;
+    return shell.openExternal(page);
   });
   handle("app:info", () => ({
     appVersion: app.getVersion(),

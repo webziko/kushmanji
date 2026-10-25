@@ -87,6 +87,11 @@ a Windows PC to see the message. The app is packed as plain files (`asar: false`
 the HyperFrames CLI is run from `node_modules` by Electron's own Node and starts workers and browsers that need
 real paths. Signing (to quiet SmartScreen) needs a certificate the owner would have to buy; not done.
 
+## Publishing a new version of Kushmanji
+
+Raise `version` in `app/package.json`, tag the commit `vX.Y.Z`, create a GitHub release with that tag, and attach
+the installer built by the Installer workflow. Nothing is published by the app or by CI on its own.
+
 ## Electron updates (every eight weeks)
 
 1. Bump `electron` in `app/package.json`, `npm install`, then `node node_modules/electron/install.js` if the

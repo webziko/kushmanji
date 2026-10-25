@@ -99,7 +99,8 @@ Then the list further down, starting with one-click export.
       PC), Home now says so in one sentence and shows each one's state with "Open PowerShell for me".
 - [x] **Settings**, on every screen (top right): the language, your assistants (tick the ones you have, see if
       each is ready, sign in or install with one press, "Test it now"), space on this computer, the problem
-      report, and About.
+      report, and About. About now has "Check for a new version"; it checks only when you press it. No release
+      has been published yet. Once one is published, "Get it" opens its page.
 - [x] **Rename a video, or move it to the Recycle Bin**: the "⋯" on each video card on Home. The Recycle Bin
       asks first, and the video can be restored from there.
 - [x] **Draw on the picture**: on the watching screen, "Draw on the picture" pauses the video; draw on it in

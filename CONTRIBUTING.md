@@ -98,6 +98,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   editorKeys.js          arrow keys in "Edit by hand": a ten-second skip while the video plays
   editorPrep.js          "Getting the editor ready" while Studio prepares a project's first open
   ffmpegTool.js          FFmpeg with one press on a PC that has none: pinned, checked, in the app's own folder
+  updates.js             the release check in Settings, and the safe page link it can open
   say.js                 marks a sentence the main process writes for the person, so the page can translate it
   dialogTitle.js         the title of a native folder window: the page's own words (it knows the language), checked
   exporter.js            "Save video": the video file, made into the Downloads folder

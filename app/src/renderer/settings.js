@@ -49,6 +49,9 @@ export function createSettings({ info, about }) {
   /** How many times the dialog has been opened or closed: the count of space answers that still matter. */
   let opening = 0;
   let freeButton = null;
+  let updateChecking = false;
+  let updateMessage = "";
+  let releasePage = null;
 
   const title = h("h2", { class: "help-title", id: "settings-title", tabindex: "-1" }, t("Settings"));
   const workingNote = h("p", { class: "settings-working", hidden: true }, t("An assistant is working on your " +
@@ -63,6 +66,60 @@ export function createSettings({ info, about }) {
   close.addEventListener("click", () => dialog.close());
 
   const problems = createProblemReport({ className: "settings-report" });
+  const updateStatus = h("p", { class: "muted settings-update-status", role: "status" });
+  const updateActions = h("div", { class: "settings-actions" });
+
+  function drawUpdate() {
+    updateStatus.textContent = updateMessage;
+    const check = h("button", {
+      class: "secondary small", type: "button", disabled: updateChecking, onclick: () => void checkUpdate(),
+    }, updateChecking ? t("Checking…") : t("Check for a new version"));
+    const getIt = releasePage ? h("button", {
+      class: "secondary small", type: "button",
+      onclick: () => void api.app.openReleasePage(releasePage).catch(() => {}),
+    }, t("Get it")) : null;
+    updateActions.replaceChildren(check, ...(getIt ? [getIt] : []));
+  }
+
+  async function checkUpdate() {
+    if (updateChecking) return;
+    const mine = opening;
+    updateChecking = true;
+    updateMessage = "";
+    releasePage = null;
+    drawUpdate();
+    try {
+      const result = await api.app.checkUpdate();
+      if (mine !== opening) return;
+      switch (result.state) {
+        case "newer":
+          updateMessage = t("Kushmanji {latest} is out (you have {current}).", {
+            latest: result.latest,
+            current: result.current,
+          });
+          releasePage = result.page;
+          break;
+        case "newest":
+          updateMessage = t("You have the newest version ({current}).", { current: result.current });
+          break;
+        case "none":
+          updateMessage = t("No versions are published yet. You have {current}.", { current: result.current });
+          break;
+        case "offline":
+          updateMessage = t("Could not reach GitHub. Check the internet, then try again.");
+          break;
+        default:
+          updateMessage = t("Could not check just now. Try again later.");
+      }
+    } catch {
+      if (mine === opening) updateMessage = t("Could not check just now. Try again later.");
+    } finally {
+      if (mine === opening) {
+        updateChecking = false;
+        drawUpdate();
+      }
+    }
+  }
 
   const section = (id, heading, ...children) => h("section", {
     class: "settings-section", "data-section": id, "aria-labelledby": `settings-${id}`,
@@ -199,8 +256,11 @@ export function createSettings({ info, about }) {
 
   function aboutSection() {
     const versions = versionsText(info());
+    drawUpdate();
     return section("about", t("About"),
       versions ? h("p", { class: "muted" }, versions) : null,
+      updateStatus,
+      updateActions,
       h("button", { class: "secondary settings-about", type: "button", onclick: () => about.show() },
         t("About Kushmanji")));
   }
@@ -229,6 +289,7 @@ export function createSettings({ info, about }) {
   function show() {
     generation++;
     opening++;
+    updateChecking = false;
     agents = null;
     failed = false;
     freeButton = null;

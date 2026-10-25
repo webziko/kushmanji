@@ -412,6 +412,12 @@ export default {
   "Could not look just now.": "अभी देखा नहीं जा सका।",
   "When something goes wrong": "जब कुछ गड़बड़ हो जाए",
   "About": "जानकारी",
+  "Check for a new version": "नया संस्करण देखें",
+  "Kushmanji {latest} is out (you have {current}).": "Kushmanji {latest} आ गया है (आपके पास {current} है)।",
+  "You have the newest version ({current}).": "आपके पास सबसे नया संस्करण ({current}) है।",
+  "No versions are published yet. You have {current}.": "अभी कोई संस्करण जारी नहीं हुआ है। आपके पास {current} है।",
+  "Could not reach GitHub. Check the internet, then try again.": "GitHub से संपर्क नहीं हो पाया। इंटरनेट जाँचें, फिर कोशिश करें।",
+  "Could not check just now. Try again later.": "अभी जाँच नहीं हो पाई। थोड़ी देर बाद फिर कोशिश करें।",
   // player.js and drawing.js: The video player
   "Play": "चलाएँ",
   "Play video": "वीडियो चलाएँ",

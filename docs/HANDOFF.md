@@ -5,6 +5,16 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-10-25 · ChatGPT · M5-05 app updates
+
+Settings > About now checks the fixed GitHub releases endpoint only after the person presses the button. The main
+process checks the release link again before opening it. There are no published releases yet; publishing steps are
+in `docs/MAINTENANCE.md`. Kannada and Hindi lines were added.
+
+`npm run check` and `npm test` pass. Codex's sandbox could not start Electron for `npm run smoke` (its suggested
+permission change was refused; nothing was changed); Claude ran the self-test, which passed, tightened the release
+page check to the parsed address, and committed. Built by Codex in a worktree on GPT-6-Luna in 15 minutes.
+
 ## 2026-10-25 (morning) · Claude · M10-27, M3-05, M1-10, M7-03, M10-09 (first part)
 
 The owner said "keep going ... using cheaper helpers": four features, each built by a Sonnet helper in its own
