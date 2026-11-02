@@ -4,9 +4,16 @@ import { test } from "node:test";
 import { agentEnv, lastLine } from "../src/main/agents/launcher.js";
 import { isNewer } from "../src/main/agents/versions.js";
 
+const NO_REPORTING = { HYPERFRAMES_NO_TELEMETRY: "1" };
+
 test("started normally, the person's own settings pass through untouched", () => {
   const env = agentEnv({ PATH: "x", CLAUDE_CODE_MAX_OUTPUT_TOKENS: "4000", CODEX_HOME: "D:\\codex" });
-  assert.deepEqual(env, { PATH: "x", CLAUDE_CODE_MAX_OUTPUT_TOKENS: "4000", CODEX_HOME: "D:\\codex" });
+  assert.deepEqual(env, { ...NO_REPORTING, PATH: "x", CLAUDE_CODE_MAX_OUTPUT_TOKENS: "4000", CODEX_HOME: "D:\\codex" });
+});
+
+test("HyperFrames' own usage reporting is off for an assistant, and nothing else of theirs is touched", () => {
+  assert.equal(agentEnv({ PATH: "x" }).HYPERFRAMES_NO_TELEMETRY, "1");
+  assert.equal("DO_NOT_TRACK" in agentEnv({ PATH: "x" }), false);
 });
 
 test("started from inside a Claude Code session, that session's variables are dropped", () => {
@@ -17,16 +24,16 @@ test("started from inside a Claude Code session, that session's variables are dr
     CLAUDE_CODE_ENTRYPOINT: "cli",
     CLAUDE_CODE_GIT_BASH_PATH: "C:\\Git\\bash.exe",
   });
-  assert.deepEqual(env, { PATH: "x", CLAUDE_CODE_GIT_BASH_PATH: "C:\\Git\\bash.exe" });
+  assert.deepEqual(env, { ...NO_REPORTING, PATH: "x", CLAUDE_CODE_GIT_BASH_PATH: "C:\\Git\\bash.exe" });
 });
 
 test("started from inside a Codex session, its thread and sandbox variables are dropped, its home is kept", () => {
   const env = agentEnv({ CODEX_THREAD_ID: "t", CODEX_SANDBOX_NETWORK_DISABLED: "1", CODEX_HOME: "D:\\codex" });
-  assert.deepEqual(env, { CODEX_HOME: "D:\\codex" });
+  assert.deepEqual(env, { ...NO_REPORTING, CODEX_HOME: "D:\\codex" });
 });
 
 test("our own Electron switch never reaches an agent", () => {
-  assert.deepEqual(agentEnv({ ELECTRON_RUN_AS_NODE: "1", PATH: "x" }), { PATH: "x" });
+  assert.deepEqual(agentEnv({ ELECTRON_RUN_AS_NODE: "1", PATH: "x" }), { ...NO_REPORTING, PATH: "x" });
 });
 
 test("lastLine picks the final line of mixed line endings", () => {

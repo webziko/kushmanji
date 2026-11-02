@@ -13,9 +13,8 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
-- [ ] **HyperFrames' own usage reporting: switch it off inside Kushmanji?** It is on for everything Kushmanji runs
-      (anonymous counts sent to HeyGen's PostHog; "Tracked commands: 1851" on your PC). Until now Kushmanji left it
-      at HyperFrames' own setting. Say yes and Kushmanji switches it off for everyone who uses it.
+- [x] **HyperFrames' own usage reporting is switched off inside Kushmanji** (your yes, 2 November). The CLI and the
+      assistants run with it off, and Studio's page may not reach PostHog. Takes effect when Kushmanji is reopened.
 - [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around) and working Undo.
 - [x] **Claude Code is signed in again** (checked 2 November). Claude's trailer was started, then paused while you
       looked at the official HyperFrames app; it carries on next.

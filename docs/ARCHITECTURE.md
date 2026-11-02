@@ -183,7 +183,7 @@ does. The language menu is usable on Home only, as in the header.
 | **Kill the process tree with `taskkill /T /F`** | Windows cannot signal a process group. A plain kill leaves the server's Chrome and FFmpeg running and the port bound |
 | **Renderer is plain DOM, no build step** | Two screens. No bundler means nothing to break between two AIs. Revisit if we import Studio's React components |
 | **Its own name and app id**; a plain play mark, not HeyGen's logo; "unofficial" in the header | It must not pass for HeyGen's product, and must not collide with the official Windows build at `%LOCALAPPDATA%\Programs\HyperFrames` |
-| **No HeyGen sign-in, no telemetry of our own** | The agent runs on the person's own Claude or ChatGPT plan. The CLI keeps its own anonymous telemetry setting, which we do not change |
+| **No HeyGen sign-in, no telemetry of our own** | The agent runs on the person's own Claude or ChatGPT plan. HyperFrames' own anonymous reporting is switched off for everything we run (owner, 2026-11-02, M9-16): `cliEnv` in `cli.js`, `agentEnv` in `agents/launcher.js`, and Studio's page may not reach `*.posthog.com` (`studioRequests.js`) |
 
 ## Security model
 

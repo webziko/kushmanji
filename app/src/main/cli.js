@@ -22,14 +22,21 @@ export function spawnCli(args, { cwd, env = {}, projectDir } = {}) {
     cwd,
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
-    env: {
-      ...process.env,
-      ...env,
-      ELECTRON_RUN_AS_NODE: "1",
-      // Tells the CLI it runs inside a desktop app, which silences its "get the desktop app" hints.
-      ...(projectDir ? { HYPERFRAMES_DESKTOP_PROJECT: projectDir } : {}),
-    },
+    env: cliEnv(process.env, env, projectDir),
   });
+}
+
+/** The CLI's environment. Switches off HyperFrames' own anonymous usage reporting (M9-16, the owner's yes). */
+export function cliEnv(base, extra = {}, projectDir) {
+  return {
+    ...base,
+    ...extra,
+    ELECTRON_RUN_AS_NODE: "1",
+    HYPERFRAMES_NO_TELEMETRY: "1",
+    DO_NOT_TRACK: "1",
+    // Tells the CLI it runs inside a desktop app, which silences its "get the desktop app" hints.
+    ...(projectDir ? { HYPERFRAMES_DESKTOP_PROJECT: projectDir } : {}),
+  };
 }
 
 export const runCli = (args, options = {}) =>

@@ -90,8 +90,10 @@ agent "are you signed in, yes or no".
 - **The app trusts the agents' own programs.** It runs whatever `claude`, `codex` or `agy` is installed. If one of
   those is replaced by something hostile, the app would start it.
 - **Chat requests leave the computer.** They go to Anthropic, OpenAI or Google, whichever agent is chosen, under
-  that company's terms. The app adds no telemetry of its own. The HyperFrames CLI has its own anonymous usage
-  reporting, which the app leaves at the person's setting.
+  that company's terms. The app adds no telemetry of its own, and it switches off HyperFrames' own anonymous
+  usage reporting for everything it runs (`HYPERFRAMES_NO_TELEMETRY` and `DO_NOT_TRACK` for the CLI,
+  `HYPERFRAMES_NO_TELEMETRY` for the assistants; the assistants' own settings are left alone) and refuses requests from
+  Studio's page to `*.posthog.com` (`studioRequests.js`). Owner's decision, 2 November 2026 (M9-16).
 
 ## Not done yet
 

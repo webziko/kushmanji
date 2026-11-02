@@ -111,9 +111,11 @@ const PARENT_SESSIONS = [
 export function agentEnv(env = process.env) {
   const active = PARENT_SESSIONS.filter(({ markers }) => markers.some((name) => name in env));
   const dropped = (key) => active.some(({ vars, keep }) => vars.test(key) && !keep.includes(key));
-  return Object.fromEntries(
-    Object.entries(env).filter(([key]) => key !== "ELECTRON_RUN_AS_NODE" && !dropped(key)),
-  );
+  return {
+    ...Object.fromEntries(Object.entries(env).filter(([key]) => key !== "ELECTRON_RUN_AS_NODE" && !dropped(key))),
+    // Only HyperFrames' own anonymous reporting (M9-16, the owner's yes). The assistants' own settings stay as they are.
+    HYPERFRAMES_NO_TELEMETRY: "1",
+  };
 }
 
 export const lastLine = (text) => String(text).trim().split(/\r?\n/).pop() ?? "";

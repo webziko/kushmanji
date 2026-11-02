@@ -842,11 +842,11 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
 - [ ] M7-06 Lessons: a short course inside Kushmanji on directing the assistant (the brief, checking and correcting,
       timing, sound, captions, shapes), each with a practice video that has one deliberate fault to fix. Our own words
       and videos; in English, Kannada and Hindi
-- [ ] M9-16 HyperFrames' own anonymous usage reporting is on for everything Kushmanji runs ("Tracked commands: 1851" on
+- [x] M9-16 HyperFrames' own anonymous usage reporting is on for everything Kushmanji runs ("Tracked commands: 1851" on
       the owner's PC), and Studio's page can send its own events to PostHog from inside Kushmanji's window. Today's
       rule (ARCHITECTURE, SECURITY) leaves it at the person's own HyperFrames setting. To switch it off for Kushmanji:
       `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for the CLI and the assistants, and refuse `*.posthog.com` in
-      `studioRequests.js`. **The owner said yes (2026-11-02): switch it off.** Next after the allowance resets
+      `studioRequests.js`. **The owner said yes (2026-11-02); done (Claude, 2026-11-02).**
 - [ ] M16-15 (owner, 2026-11-02) Many styles of motion video, picked from pictures or a short preview of each, not by
       name ("maybe like skills ... with photo ... or a preview"). With M16-13 and M7-01. Test every feature on real
       videos, try new editing techniques, and add the tools that are missing

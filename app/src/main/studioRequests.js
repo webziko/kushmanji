@@ -6,9 +6,16 @@
 // shows the button only when its server answers GET /api/open-in-desktop (upstream
 // packages/studio/src/components/OpenInDesktopButton.tsx: no answer, no button), and POST there would open HeyGen's
 // app. Refusing that one path hides the button and leaves the rest of Studio alone.
+//
+// Studio's page also reports usage to PostHog. The owner said yes to switching HyperFrames' reporting off (M9-16),
+// so anything the page sends to posthog.com is refused too.
 
 /** The URL patterns main.js listens to. A pattern without a port matches every port. */
-export const STUDIO_REQUESTS = ["http://127.0.0.1/api/projects/*", "http://127.0.0.1/api/open-in-desktop*"];
+export const STUDIO_REQUESTS = [
+  "http://127.0.0.1/api/projects/*",
+  "http://127.0.0.1/api/open-in-desktop*",
+  "https://*.posthog.com/*",
+];
 
 /** Whether Kushmanji answers this request with "no". */
 export function refused(url) {
@@ -18,5 +25,6 @@ export function refused(url) {
   } catch {
     return false;
   }
-  return parsed.hostname === "127.0.0.1" && parsed.pathname === "/api/open-in-desktop";
+  if (parsed.hostname === "127.0.0.1") return parsed.pathname === "/api/open-in-desktop";
+  return parsed.protocol === "https:" && (parsed.hostname === "posthog.com" || parsed.hostname.endsWith(".posthog.com"));
 }
