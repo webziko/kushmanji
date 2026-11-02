@@ -351,3 +351,56 @@ took 45 s, "what can you do on this blank screen" 67 s.
   (`HFWIN_SMOKE_THINK_SECONDS=20`); 48.6 and 23.4 s when sending at once.
 - **What is left is the person's to decide:** switching off Google Cloud Data Cloud in Antigravity, if they do
   not use it, should save about 10 s more on every Gemini message.
+
+## The official HyperFrames app for Windows (looked at 2026-11-02)
+
+The owner downloaded `HyperFrames-win-x64.zip` (131 MB, unpacked 362 MB, 7,967 files) to `C:\hyperframes`. What
+follows was learned by reading file names, package descriptions, a plain-data catalogue and two short type files.
+HeyGen's own code is closed: it carries no licence (the `LICENSE` beside it is only Electron's MIT text), so
+**nothing from it may be copied into Kushmanji**; only facts and ideas are kept here.
+
+**What the zip holds, and does not.** Only `LICENSE`, an empty `locales` folder and `resources/app.asar.unpacked`.
+There is no `HyperFrames.exe`, no Chromium files and no `app.asar` (the main archive with the window and the
+screens), so it cannot run as it is, and its screens could not be seen. The unpacked part is the engine room:
+`package.json` names it `hyperframes-desktop`, product "HyperFrames", version 0.1.0, channel "prod", built
+2026-10-31 to 11-02.
+
+**What it is built on.** HyperFrames 0.8.230 (`@hyperframes/core`, `studio-server`, `lint`, `inspector`; Kushmanji
+is on 0.8.193). It bundles its own Node and FFmpeg for Windows, ONNX Runtime (models on the computer), sharp and
+esbuild. It sends telemetry to Datadog (`dd-trace`, `@datadog/electron-sdk`, with a `telemetryGate`) and signs in
+to HeyGen with its own OAuth client. Its own assistant, "HyperFrames agent" (`dsh`, bundled), is built on DeepSeek's
+agent toolkit (`@deepseek-ai/*`).
+
+**The assistants it drives** (its catalogue, plain data): Claude Code, Codex, Antigravity (`agy`), Grok, OpenCode
+and GitHub Copilot, plus its own; Hermes and OpenClaw are only listed. Facts in it worth knowing:
+- Install lines on Windows: Claude `irm https://claude.ai/install.ps1 | iex`; **Codex `irm
+  https://chatgpt.com/codex/install.ps1 | iex` (a native installer: Codex no longer needs Node or npm)**; Grok
+  `irm https://x.ai/cli/install.ps1 | iex`; agy as Kushmanji has it. Sign-in: `claude auth login`, `codex login`,
+  `grok login`, `agy`. Updates: `claude update`, `agy update`, Codex through npm.
+- Lowest versions it accepts: Claude Code 2.1.259 (2.1.280 for `claude-opus-5-5`), Codex 0.147.0 (0.153.0 for
+  gpt-6-astra and gpt-6.1-sol, 0.155.0 for gpt-6-sol and gpt-6-luna), agy 1.3.5, Grok 1.0.46.
+- On Windows it runs Codex only with full access (its sandbox trouble there is known: M2-22, M12-01); OpenCode and
+  Copilot always.
+- After installing an assistant on Windows it adds `%USERPROFILE%\.local\bin` to PATH (where Claude's installer
+  puts it); installs run with a short list of Windows variables and the shell's proxy settings.
+- It does not give agy a home of its own: Kushmanji's speed fix (M12-08) is ours.
+
+**What it does, by the names of its parts** (`@app/agent-runtime`, `@app/studio-contracts`): HeyGen accounts,
+billing and credits; installing, signing in, probing and updating the assistants; brand kits made from a website;
+caption looks; a catalogue; cloud rendering and export; HeyGen's paid media (avatars, voice cloning and matching,
+"re-perform" lip changes, video generation, translation, speakers, background removal); a whole **podcast editor**
+(speakers, camera choice per speaker, face tracking, noise cleaning, captions, pull quotes, show notes, promos);
+**reference videos** ("make it like this", importing social videos, "viral clone"); a style library taken from
+examples; lessons; review and share links; drawing and comments with images; storyboards; agent jobs with
+questions, approvals, plans and limits.
+
+**Its skills.** The public ones (`vendor/`) are pinned to heygen-com/hyperframes at `6f90ca1` (2026-11-02), so they
+are Apache-2.0 like the rest of HyperFrames; two are newer than Kushmanji's reference copy: `podcast-captions` and
+`reverse-any-video`. Its own `skills/` folder (desktop skills: creator-remix, hf-media, lip-pass, moments,
+moment-film-harness, planning, studio, talking-head, viral-clone and its harness, with `STANDARDS.md`) is HeyGen's
+closed code: not to be used.
+
+**What it means for Kushmanji.** A Windows build of the official app is coming (this is a "prod" build, the
+executable missing from the zip). It does far more, much of it through HeyGen's paid services and a HeyGen account,
+with telemetry. Kushmanji's own ground stays: no HeyGen account, no telemetry, open source, the person's own Claude,
+ChatGPT and Gemini subscriptions only, Kannada and Hindi, plain words for people who have never used a terminal.

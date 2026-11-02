@@ -800,6 +800,25 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       good short that way, with two faults a look would have caught (lips not matching the words, a strip
       across the top). Find a way for Codex to take still frames inside its sandbox (with M2-21)
 
+## Found in the official HyperFrames app for Windows (2026-11-02; docs/FINDINGS.md, last section)
+
+Ideas and public facts only: HeyGen's own code there is closed and not to be copied.
+
+- [ ] M2-25 Install Codex with its native Windows installer (`irm https://chatgpt.com/codex/install.ps1 | iex`)
+      instead of npm, so ChatGPT needs no Node on a stranger's PC (M5-06). Check `codex update` too
+- [ ] M12-09 Lowest versions per assistant and per model (Claude 2.1.259, 2.1.280 for Opus 5.5; Codex 0.147, 0.155
+      for GPT-6-Luna; agy 1.3.5): say plainly when an installed one is too old, with one press to update it
+- [ ] M5-08 HyperFrames 0.8.193 to 0.8.230 (the official app's version), by the MAINTENANCE routine
+- [ ] M10-29 After installing an assistant on Windows, put `%USERPROFILE%\.local\bin` on the PATH the app gives it
+      (where Claude's installer puts itself), so "Check again" finds it without restarting Windows
+- [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok
+      login`), GitHub Copilot, OpenCode. The owner's choice which, if any
+- [ ] M10-30 Ideas to weigh: an interview and podcast editor (speakers, camera per speaker, pull quotes, show notes),
+      "make it like this video" from a reference, a style library from examples, review links. Built our own way,
+      with the person's assistants and no paid service
+- [ ] UP-04 Refresh the read-only `upstream/` reference copy: the public skills `podcast-captions` and
+      `reverse-any-video` are newer than it
+
 ## Found on the night of 24 to 25 October (the trailer test, the owner's questions, the research)
 
 The owner asked to "note it down what we might need extra". Each line is a task; the research behind the M8,
