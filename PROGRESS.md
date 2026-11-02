@@ -113,7 +113,14 @@ Do not build them.
       "Project edits" is proven for both agents: each ran the project check from inside it
 - [~] M2-07 Home prompt box: describe a video, the app makes the project and asks the agent (Claude).
       Built. The "Make it" button's path has not been run end to end yet
-- [ ] M2-08 Install and refresh HyperFrames skills for the agent (project creation skips them for speed)
+- [ ] M2-08 Install and refresh HyperFrames skills for the agent (project creation skips them for speed). Done by
+      hand on the owner's PC on 2026-11-02 (Claude): HyperFrames now publishes 4 core skills (hyperframes,
+      hyperframes-cli, hyperframes-registry, media-use; figma, slideshow and remotion-to-hyperframes on demand) and has
+      retired 13 (their knowledge moved into `hyperframes`). `hyperframes skills update` (it runs `npx skills add ...
+      --global --agent claude-code universal --copy`, so it needs Node) wrote `.claude` and `.agents`, linked
+      `.gemini` and `.gemini\antigravity`, skipped `.codex` (copied by hand), and never removes a skill: the retired
+      ones were moved into `%APPDATA%\Kushmanji\backups\hyperframes-skills-2026-11-02`. Still open: the app doing
+      this itself on a stranger's PC (with M10-09), without Node
 - [x] M2-09 While the agent works: queue the next message, or steer (stop and restart with it) (Claude,
       2026-10-14). While a reply is being written the person can type on: "Send when done" (also Enter) keeps
       the message and sends it as soon as the turn ends; "Stop and send now" stops the turn first. A note shows
@@ -827,8 +834,8 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
 - [ ] M10-30 Ideas to weigh: an interview and podcast editor (speakers, camera per speaker, pull quotes, show notes),
       "make it like this video" from a reference, a style library from examples, review links. Built our own way,
       with the person's assistants and no paid service
-- [ ] UP-04 Refresh the read-only `upstream/` reference copy: the public skills `podcast-captions` and
-      `reverse-any-video` are newer than it
+- [x] UP-04 (Claude, 2026-11-02) Refresh the read-only `upstream/` reference copy: the public skills `podcast-captions` and
+      `reverse-any-video` are newer than it. Pulled to `618c4867` (2026-11-02, after v0.9.2)
 
 ## Found on the night of 24 to 25 October (the trailer test, the owner's questions, the research)
 

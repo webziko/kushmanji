@@ -406,6 +406,7 @@ So nothing is a surprise later. All of it was done with your go-ahead.
 | ChatGPT's Codex updated from 0.162.1 to 0.164.0, 24 October, as you asked | Global npm package | `npm install -g @openai/codex@0.162.1` |
 | Kushmanji closed and opened again from the Desktop shortcut, 24 October | Your running app | Nothing to undo |
 | The four trailer test videos added to the top of your Home list ("My videos"), 25 October, as you asked | Kushmanji's settings file (`%APPDATA%\Kushmanji\state.json`; the old one kept as `state.json.before-trailers`) | On each card: "⋯" → "Remove from list" (the folders are not touched) |
+| The assistants' HyperFrames skills updated to the newest set (4 skills: hyperframes, hyperframes-cli, hyperframes-registry, media-use) with HyperFrames' own `skills update`, 2 November, as you asked; the 13 skills HyperFrames has retired moved out | `.claude\skills`, `.agents\skills`, `.codex\skills`, `.gemini\skills`, `.gemini\antigravity\skills` in your user folder | Everything from before is in `%APPDATA%\Kushmanji\backups\hyperframes-skills-2026-11-02` (one folder per assistant; `retired` and `replaced` hold what was moved): copy those folders back |
 
 The vlog work added files only inside this folder (`reviews/`, which is never uploaded to GitHub). Original
 footage stayed untouched.
