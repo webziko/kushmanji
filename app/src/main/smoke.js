@@ -562,6 +562,11 @@ async function editorArrowStep({ win, result, inPage }) {
   // player is whichever starts playing when Play is pressed.
   const previews = frames().filter((frame) => frame.parent === studio && /\/preview(\?|\/|$)/.test(frame.url));
   if (!studio || previews.length === 0) throw new Error("The editor's picture was not found for the arrow-key check.");
+  // HyperFrames 0.9's "Install the desktop app" button (HeyGen's app, HyperFrames' logo) must not show: the main
+  // process refuses the request that decides it (studioRequests.js).
+  result.desktopAppButton = await studio.executeJavaScript(
+    "Boolean(document.querySelector('[data-testid=\"header-open-in-desktop\"]'))");
+  if (result.desktopAppButton) throw new Error("The editor shows HyperFrames' \"Install the desktop app\" button.");
   let picture = previews[0];
   const press = (label) => studio.executeJavaScript(
     `(() => { const b = [...document.querySelectorAll('button')].find((b) => ${label}.test(b.getAttribute('aria-label') || b.title || ''));

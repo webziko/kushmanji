@@ -306,6 +306,40 @@ Undo copies (UP-02): the practice vlog's 536 MB of clips take 1 MB in `~/.cache/
 went through the chat on 0.8.193 (83 s, the app's check found nothing). Claude Code was signed out on this PC
 that night, so no Claude request was tried.
 
+## HyperFrames 0.8.193 to 0.9.2 (measured 2026-11-02, on the owner's PC)
+
+Forty releases in nine days; 0.9.2 came out the same morning (the official Windows app ships 0.8.230). 0.9.0's
+breaking change is only the cloud renderers' plan format (AWS Lambda, Cloud Run), which Kushmanji does not use. What
+matters here: the preview draws only the scenes near the playhead, so long videos scrub faster (0.8.20x); cuts in the
+preview no longer click (audio fades play as ramps); undo keeps the media it deletes; a leftover history lock no
+longer sticks Studio after a restart; a scene that has ended gives up its WebGL context (0.9.2); a loud peak no longer
+turns down a whole export (0.8.228); `init` works where Windows refuses hard links; snapshot names a clip it cannot
+read instead of saving a black frame. Nothing Kushmanji leans on moved: the preview route, `.cache` skipped by the
+watcher (`PREVIEW_IGNORED_DIRS`) and by history (`isHistoryPath`), `app-history.jsonl` for catch-up, the `--json` ready
+line, and the Studio face (its test passed unchanged).
+
+Two new things in Studio. **HyperFrames' own lighter preview copies** of "heavy" clips (shown at half their pixels or
+less, over 8-bit, or 40 Mbps and up; `previewProxyBox.ts`, 2026-10-26): with Kushmanji's copies (M16-07) answering
+first, HyperFrames made none of its own on the practice vlog, so nothing is encoded twice. **An "Install the desktop
+app" button** in Studio's header, with HyperFrames' logo, offering HeyGen's app: Studio shows it only when its server
+answers `GET /api/open-in-desktop`, so Kushmanji refuses that request (`studioRequests.js`) and the self-test checks the
+button is absent.
+
+The practice vlog, two runs each, one version straight after the other:
+
+| | 0.8.193 | 0.9.2 |
+| --- | --- | --- |
+| Jump, watching (middle / slowest) | 49 / 134, 57 / 116 ms | 34 / 100, 32 / 76 ms |
+| Jump, editor | 83 / 167, 51 / 120 ms | 51 / 82, 35 / 153 ms |
+| Pictures dropped, watching (two stretches) | 9 + 4, 7 + 5 | 4 + 5, 7 + 4 |
+| Pictures dropped, editor | 9 + 6, 7 + 4 | 7 + 1, 4 + 5 |
+| Opening the video | 2.5, 2.4 s | 3.9, 1.8 s |
+| Opening the editor | 1.3, 1.3 s | 0.8, 1.1 s |
+
+Lighter copies played in every run (`pictureShortSides` [720]). One real Claude request on 0.9.2 through the chat
+(Sonnet, "Auto"): the title changed in 20 s. One self-test run failed the editor's arrow-key check (20.62 to 21.33,
+playing) and the next passed; seen once, not reproduced.
+
 ## Gemini with a home of its own (measured 2026-10-25, agy 1.4.7, on the owner's PC)
 
 The owner: "on antigravity its so fast but why on my app its so slow". `agy mcp list` and `agy plugin list` showed

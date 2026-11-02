@@ -813,7 +813,11 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       pressed for real: it would install a second Codex on the owner's PC
 - [ ] M12-09 Lowest versions per assistant and per model (Claude 2.1.259, 2.1.280 for Opus 5.5; Codex 0.147, 0.155
       for GPT-6-Luna; agy 1.3.5): say plainly when an installed one is too old, with one press to update it
-- [ ] M5-08 HyperFrames 0.8.193 to 0.8.230 (the official app's version), by the MAINTENANCE routine
+- [x] M5-08 (Claude, 2026-11-02) HyperFrames 0.8.193 to 0.9.2 (the newest; the official app has 0.8.230), by the
+      MAINTENANCE routine: check, tests, self-test, one real Claude request (20 s on Sonnet), and the practice vlog
+      measured twice on each version: jumps about a third quicker, the editor opens in about 1 s instead of 1.3,
+      fewer dropped pictures (FINDINGS). Studio 0.9's new "Install the desktop app" button (HeyGen's app, HyperFrames'
+      logo) is hidden by refusing its one request (`studioRequests.js`), and the self-test checks it stays hidden
 - [ ] M10-29 After installing an assistant on Windows, put `%USERPROFILE%\.local\bin` on the PATH the app gives it
       (where Claude's installer puts itself), so "Check again" finds it without restarting Windows
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok

@@ -53,10 +53,14 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
 6. Measure the old and the new version the same day, one after the other (`HFWIN_SMOKE_PLAYBACK=1` on a real
    project): the PC's own state moves the numbers more than a version does. Without the owner's footage, use the
    practice vlog (`node scripts/test-vlog.mjs <folder>` on Electron's Node) and run each measurement twice: the
-   first run also makes the lighter copies. Last done: 0.8.169 to 0.8.193 (2026-10-25, `docs/FINDINGS.md`).
+   first run also makes the lighter copies. Last done: 0.8.193 to 0.9.2 (2026-11-02, `docs/FINDINGS.md`).
 7. Kushmanji's face on the editor (`studioFace.js`) hides Studio's logo by its label (`aria-label="Hyperframes"`)
    and replaces four accent colours by name. `test/studioFace.test.mjs` reads Studio's built files and fails when
    either changes; then open "Edit by hand" and look.
+8. Studio grows things that point at HeyGen's own app or services. Since 0.9, an "Install the desktop app" button
+   (`data-testid="header-open-in-desktop"`) is hidden by refusing `GET /api/open-in-desktop` (`studioRequests.js`);
+   the self-test fails if it shows (`result.desktopAppButton`). After an update, look along Studio's header for
+   anything new of that kind and refuse its request the same way, or hide it in `studioFace.js`.
 
 ## Whisper, the speech tool (every few months)
 

@@ -28,6 +28,7 @@ import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { dressStudio } from "./studioFace.js";
+import { refused, STUDIO_REQUESTS } from "./studioRequests.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
 import { importMedia, mediaFilesIn, MEDIA_EXTENSIONS } from "./mediaImport.js";
 import { listMentionable, validateDropped } from "./mentions.js";
@@ -87,9 +88,11 @@ function lockDownSession() {
   session.defaultSession.setPermissionCheckHandler((_contents, permission, origin) => allowed(permission, origin));
   // A video Studio's preview asks for is answered with its lighter copy when one is ready (lightCopies.js).
   // Electron keeps one listener per event: anything else that needs onBeforeRequest has to share this one.
-  // The same requests show when Studio is still preparing a project's first open (editorPrep.js).
-  const filter = { urls: ["http://127.0.0.1/api/projects/*"] };
+  // The same requests show when Studio is still preparing a project's first open (editorPrep.js). A few requests
+  // are refused outright (studioRequests.js).
+  const filter = { urls: STUDIO_REQUESTS };
   session.defaultSession.webRequest.onBeforeRequest(filter, (details, respond) => {
+    if (refused(details.url)) return respond({ cancel: true });
     editorPrep.started(details, preview.current);
     const redirectURL = details.method === "GET" ? lightCopies.redirect(details.url, preview.current) : null;
     respond(redirectURL ? { redirectURL } : {});

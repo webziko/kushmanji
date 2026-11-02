@@ -104,6 +104,7 @@ app/src/main/            the main process (Node): the only code with file and pr
   exporter.js            "Save video": the video file, made into the Downloads folder
   log.js                 the problem report: a daily log file with nothing private in it (`redact`)
   lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them
+  studioRequests.js      the few requests from Studio's page that the app refuses (the "Install the desktop app" button)
   covers.js              Home's picture of each video, captured from the player
   drawings.js            "Draw on the picture": the window's picture with the person's coral marks, kept in .hyperframes/notes
   storage.js             Home's "Undo copies take ..." and "Free up space" (upstream's `hyperframes clean`)

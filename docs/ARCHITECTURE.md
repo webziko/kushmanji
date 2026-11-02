@@ -73,6 +73,12 @@ unloads clips a few seconds away from the playhead), so the copies take over wit
 renders with the CLI in its own browser and always reads the full files. The top bar says "Making clips smooth
 to edit (5 of 19)" while it works. Without FFmpeg nothing is made and the originals play. Measured: a jump went
 from 0.28 to 0.04 seconds, and a dragged playhead from 1 or 2 pictures a second to 33 (`docs/FINDINGS.md`).
+Since 0.8.20x HyperFrames makes lighter copies of its own for "heavy" clips; with ours answering first it made none
+on the practice vlog (measured with 0.9.2), so the two do not encode the same clip twice.
+
+**Requests Kushmanji refuses** (`main/studioRequests.js`). The same `onBeforeRequest` listener first cancels the few
+requests from Studio's page that must not go through: today only `GET /api/open-in-desktop`, whose answer makes
+Studio 0.9 show an "Install the desktop app" button for HeyGen's app with HyperFrames' logo. No answer, no button.
 
 **The problem report** (M9-07, `main/log.js`). When something goes wrong the owner needs a file to send, and that
 file must hold nothing private. `createLog` writes `<userData>/logs/kushmanji-YYYY-MM-DD.log` (the person's own
