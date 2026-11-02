@@ -442,6 +442,31 @@ are Apache-2.0 like the rest of HyperFrames; two are newer than Kushmanji's refe
 moment-film-harness, planning, studio, talking-head, viral-clone and its harness, with `STANDARDS.md`) is HeyGen's
 closed code: not to be used.
 
+**The full Windows app, 2026-11-02 afternoon.** The first zip lacked the program itself. The one on the official
+page later that day ("Download for Windows" on hyperframes.studio/studio, a 307 to
+`static.heygen.ai/hyperframes-oss/desktop/HyperFrames-win-x64.zip`, 286.6 MB, 6,708 files) has `HyperFrames.exe`,
+signed by HeyGen Technology Inc (valid), version 0.1.0, build b656 of 2026-11-02, Electron 44.10.0. It runs as an
+unpacked folder (no installer) and opens to a sidebar: Home, Brand kits, Projects, Learn HyperFrames, "Free · Get Pro",
+Settings. Its own part (`resources/app.asar`: 862 main-process modules, the screens, lessons, desktop skills) names no
+licence in its `package.json` and ships no licence for itself; the `LICENSE` beside the program is Electron's MIT
+text. So all rights stay with HeyGen: nothing from it may be copied into Kushmanji.
+
+**Ideas worth building our own way** (learned from part names, lesson titles and button wording only):
+- **Cut pauses, "um"s and false starts**: a choice between "cut out" and "all stay", with counts (their `wordsCut`,
+  `silenceAnalysis`, `cutReductions`). Ours: the study's word times already exist; the app finds the cuts itself (no
+  allowance), shows the plan with the time saved, and hands the ticked list to the assistant (M10-20, M10-19, M10-22).
+- **Speak instead of typing** (a dictation button): ours would hear the person with the speech models already on the
+  PC (Parakeet, Whisper for Kannada and Hindi), audio only, refused to everything but the app's own page (M3-06).
+- **"Make it like this video"**: choose a reference video; ours would study it like footage (cuts a minute, shot
+  lengths, caption style, pace) into `REFERENCE.md` for the assistant (M10-30).
+- **Caption looks and a style library** to pick from (M16-13), **brand kits** from a website or PDF (M10-25).
+- **Lessons**: a course of 32 lessons of 8 to 20 minutes (the brief, review and correct, timing, sound, J and L cuts,
+  captions, ducking music, safe areas, grading, a capstone), many with a practice video that has a deliberate fault to
+  fix ("music too loud", "fix the sting") (M7-06).
+- **Keep the computer awake** while it renders or an assistant works (`keepAwake`) (M4-05).
+- **A podcast editor** with speakers, **remove background**, **storyboard offers**, a "Get inspired" feed. Its HeyGen
+  paid parts (avatars, voice clones, lip sync, translation) are not for Kushmanji.
+
 **What it means for Kushmanji.** A Windows build of the official app is coming (this is a "prod" build, the
 executable missing from the zip). It does far more, much of it through HeyGen's paid services and a HeyGen account,
 with telemetry. Kushmanji's own ground stays: no HeyGen account, no telemetry, open source, the person's own Claude,

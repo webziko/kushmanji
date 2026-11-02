@@ -831,6 +831,22 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       (where Claude's installer puts itself), so "Check again" finds it without restarting Windows
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok
       login`), GitHub Copilot, OpenCode. The owner's choice which, if any
+- [ ] M4-05 Keep the computer awake (Electron `powerSaveBlocker`) while "Save video" runs and while an assistant works,
+      so a long job is not stopped by sleep or a dark screen. Released when the job ends
+- [ ] M3-06 Speak instead of typing: a microphone button beside the message box; the words are heard on this PC by the
+      speech models already there (Parakeet; Whisper for Kannada and Hindi) and land in the box for the person to
+      check. Audio only, allowed for the app's own page and nothing else (SECURITY.md), nothing kept
+- [ ] M10-31 "Tidy my talking": the app finds pauses, "um"s and false starts from the study's words itself (no
+      allowance), shows them with the time saved and a tick for each, and hands the ticked list to the assistant.
+      Builds on M10-19, M10-20, M10-22; the official app has the same choice ("cut out" or "all stay")
+- [ ] M7-06 Lessons: a short course inside Kushmanji on directing the assistant (the brief, checking and correcting,
+      timing, sound, captions, shapes), each with a practice video that has one deliberate fault to fix. Our own words
+      and videos; in English, Kannada and Hindi
+- [ ] M9-16 HyperFrames' own anonymous usage reporting is on for everything Kushmanji runs ("Tracked commands: 1851" on
+      the owner's PC), and Studio's page can send its own events to PostHog from inside Kushmanji's window. Today's
+      rule (ARCHITECTURE, SECURITY) leaves it at the person's own HyperFrames setting. To switch it off for Kushmanji:
+      `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for the CLI and the assistants, and refuse `*.posthog.com` in
+      `studioRequests.js`. Waits on the owner's choice
 - [ ] M10-30 Ideas to weigh: an interview and podcast editor (speakers, camera per speaker, pull quotes, show notes),
       "make it like this video" from a reference, a style library from examples, review links. Built our own way,
       with the person's assistants and no paid service

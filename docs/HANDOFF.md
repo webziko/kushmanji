@@ -5,6 +5,33 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-11-02 · Claude · Codex's own installer, HyperFrames 0.9.2, undo fixed, skills refreshed, the official app
+
+**Done and pushed:** M2-25 (Codex installs with OpenAI's `install.ps1`, `CODEX_NON_INTERACTIVE=1`; the bridge finds
+`%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`; "too old" says `codex update`). M5-08 (HyperFrames 0.9.2 by the
+routine; jumps about a third quicker, FINDINGS). Studio 0.9's "Install the desktop app" button is hidden by refusing
+`GET /api/open-in-desktop` (`studioRequests.js`). **Undo had silently broken on 0.9**: a preview started with
+`HYPERFRAMES_DESKTOP_PROJECT` keeps no history since upstream c21a7091; `preview.js` no longer sets it and the
+self-test requires `historyStatus` 200. The assistants' HyperFrames skills were refreshed on the owner's PC at their
+request (4 core skills; 13 retired ones moved to `%APPDATA%\Kushmanji\backups\hyperframes-skills-2026-11-02`;
+CHECKLIST's table). `upstream/` pulled to `618c4867` (UP-04).
+
+**The official HyperFrames app for Windows** now downloads whole and runs (FINDINGS, its last section): signed by
+HeyGen, no licence for its own code, so ideas only. The ideas became M4-05, M3-06, M10-31, M7-06.
+
+**Not done:** Claude's trailer (the owner paused it to look at HyperFrames; `claude-wide` has its REQUEST.txt and an
+empty start, the earlier signed-out chat kept as `studio-win-chat.signed-out-2026-10-25.json`). The free-media chat
+try (M8-12). M12-09, M10-29, the rest of M10-09. **Waiting on the owner:** M9-16, whether to switch HyperFrames' own
+usage reporting off inside Kushmanji (it is on: "Tracked commands: 1851"; today's documented rule leaves it at the
+person's setting). Stopped at 90% of the 5-hour Claude allowance.
+
+**What would surprise you**
+- `hyperframes skills update` never removes a skill and skipped `.codex\skills`; it needs Node (`npx skills add`).
+- One self-test run failed the editor's arrow-key check on 0.9.2 and the next passed (FINDINGS).
+- Bash `cd` in a tool call moves the session's working folder in this app; use absolute paths.
+
+---
+
 ## 2026-10-25 · ChatGPT · M5-05 app updates
 
 Settings > About now checks the fixed GitHub releases endpoint only after the person presses the button. The main

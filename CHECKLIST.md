@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-10-25. The app is now called **Kushmanji**._
+_Updated 2026-11-02. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -13,11 +13,12 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
-- [ ] **Sign Claude Code in again** (it signed itself out on this PC on the night of 24 October, so Kushmanji
-      cannot use Claude). Easiest: close Kushmanji and open it again, open any video, choose Claude in the chat,
-      and press the new **Open PowerShell for me** button; sign in in the browser window that opens, then press
-      "Check again". (Or open PowerShell yourself and type `claude auth login`.) Then tell me, and Claude's
-      trailer gets made.
+- [ ] **HyperFrames' own usage reporting: switch it off inside Kushmanji?** It is on for everything Kushmanji runs
+      (anonymous counts sent to HeyGen's PostHog; "Tracked commands: 1851" on your PC). Until now Kushmanji left it
+      at HyperFrames' own setting. Say yes and Kushmanji switches it off for everyone who uses it.
+- [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around) and working Undo.
+- [x] **Claude Code is signed in again** (checked 2 November). Claude's trailer was started, then paused while you
+      looked at the official HyperFrames app; it carries on next.
 - [ ] **ChatGPT's free allowance is used up until 17 November** (Codex said: "You've hit your usage limit.
       Upgrade to Plus ... or try again at Nov 17th"). Until then Kushmanji's chat cannot use ChatGPT, and
       ChatGPT cannot build the app. Claude and Gemini still can.
@@ -80,6 +81,22 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 7. [~] **An editing guide every assistant follows** (the first version is in; it grows from what you send back)
 
 Then the list further down, starting with one-click export.
+
+## New on 2 November
+
+- [x] **The newest HyperFrames engine (0.9.2)**, measured on the practice vlog before and after: jumping to a moment
+      about a third quicker (33 ms instead of 53), the editor opens in about 1 second, fewer dropped pictures.
+- [x] **Undo works with it**: the new engine had quietly switched off undo inside apps like ours; found and fixed the
+      same day, and the self-test now checks it every time.
+- [x] **No HeyGen advert in the editor**: the new engine added an "Install the desktop app" button with HyperFrames'
+      logo; Kushmanji hides it.
+- [x] **Your assistants have HyperFrames' newest guides** (the `npx skills add heygen-com/hyperframes` you asked for,
+      done with HyperFrames' own updater): 4 up-to-date skills for Claude, ChatGPT and Gemini. The old ones are kept
+      in a backup folder (table at the bottom).
+- [x] **ChatGPT installs without Node**: "Open PowerShell for me" now uses OpenAI's own Windows installer.
+- [x] **The official HyperFrames app studied** (it runs now that you downloaded the full one). Its own code has no
+      licence, so nothing is copied; its ideas became new tasks: cut pauses and "um"s, speak instead of typing,
+      "make it like this video", lessons with practice videos, keeping the PC awake while it works.
 
 ## New on the night of 24 to 25 October (you were asleep)
 
