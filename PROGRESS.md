@@ -804,8 +804,13 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
 
 Ideas and public facts only: HeyGen's own code there is closed and not to be copied.
 
-- [ ] M2-25 Install Codex with its native Windows installer (`irm https://chatgpt.com/codex/install.ps1 | iex`)
-      instead of npm, so ChatGPT needs no Node on a stranger's PC (M5-06). Check `codex update` too
+- [x] M2-25 (Claude, 2026-11-02) Install Codex with its native Windows installer (`irm https://chatgpt.com/codex/install.ps1 | iex`)
+      instead of npm, so ChatGPT needs no Node on a stranger's PC (M5-06). "Open PowerShell for me" now runs it with
+      `CODEX_NON_INTERACTIVE=1` (read in the script: no "Start Codex now?", no offer to remove an npm Codex; it then
+      puts its own folder first on PATH), then `codex login`. The bridge also looks in the installer's folder,
+      `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`, so an app that was already open finds it. "Too old"
+      now says `codex update`, which updates either kind (Codex's npm launcher sets CODEX_MANAGED_BY_NPM). Not
+      pressed for real: it would install a second Codex on the owner's PC
 - [ ] M12-09 Lowest versions per assistant and per model (Claude 2.1.259, 2.1.280 for Opus 5.5; Codex 0.147, 0.155
       for GPT-6-Luna; agy 1.3.5): say plainly when an installed one is too old, with one press to update it
 - [ ] M5-08 HyperFrames 0.8.193 to 0.8.230 (the official app's version), by the MAINTENANCE routine

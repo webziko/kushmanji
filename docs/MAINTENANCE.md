@@ -6,7 +6,8 @@ and Electron. None of them ask first. This page is the routine for each.
 ## The agents update (weekly, sometimes daily)
 
 Claude Code and Antigravity update themselves in the background. Codex updates when someone runs
-`npm install -g @openai/codex@latest`. Any update can change the events an agent prints, a flag's name, or the
+`codex update` (it updates either kind of install: OpenAI's native Windows one, which Kushmanji's "Open PowerShell
+for me" now installs (M2-25), or an older npm one). Any update can change the events an agent prints, a flag's name, or the
 models on offer.
 
 **How the app copes by itself**

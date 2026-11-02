@@ -17,7 +17,10 @@ export const about = {
   // What the person reads in menus and messages (docs/UX.md, "The words"); see claude.js.
   label: "ChatGPT",
   product: "Codex",
-  install: ["npm install -g @openai/codex"],
+  // OpenAI's own Windows installer (M2-25): one codex.exe, no Node or npm, so a stranger's PC needs nothing else.
+  // Asked to run without questions, it neither starts Codex at its end (the sign-in follows here instead) nor
+  // offers to remove an npm Codex the person may already have (it then puts its own folder first on PATH).
+  install: ["$env:CODEX_NON_INTERACTIVE = '1'", "irm https://chatgpt.com/codex/install.ps1 | iex"],
   signIn: ["codex login"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
   tested: "0.164.0",
@@ -137,7 +140,9 @@ function explain(message) {
     // lose the reason Codex gave.
     return say("ChatGPT's tool (Codex) is older than the version chosen in its settings. To update it, " +
       "open PowerShell, paste this line and press Enter: {command}\n{text}",
-    { command: "npm install -g @openai/codex@latest", text });
+    // `codex update` updates either kind of install: Codex's npm launcher marks itself (CODEX_MANAGED_BY_NPM),
+    // so Codex runs npm for that one and its own updater for the native one.
+    { command: "codex update", text });
   }
   return text || say("{name} could not finish this change.", { name: about.label });
 }
@@ -156,7 +161,12 @@ const SANDBOX_HELP =
   say("ChatGPT could not run any program, because neither of its two safety boxes would start. If the " +
     "Codex app is open, close it and send your message again. Or pick another assistant in the menu above.");
 
-const findCodex = () => resolveTool("codex");
+// The native installer's folder (M2-25). It is on the user's PATH only for programs started after the install, and
+// an app that was already open keeps its old PATH, so "Check again" looks there too.
+export const nativeCodex = (env = process.env) =>
+  path.join(env.LOCALAPPDATA ?? path.join(os.homedir(), "AppData", "Local"), "Programs", "OpenAI", "Codex", "bin",
+    "codex.exe");
+const findCodex = () => resolveTool("codex", [nativeCodex()]);
 
 export async function status() {
   const tool = findCodex();

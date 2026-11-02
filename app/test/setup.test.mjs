@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { openSetupWindow, setupScript } from "../src/main/agents/setup.js";
 import { about as claude } from "../src/main/agents/claude.js";
-import { about as codex } from "../src/main/agents/codex.js";
+import { about as codex, nativeCodex } from "../src/main/agents/codex.js";
 import { about as antigravity } from "../src/main/agents/antigravity.js";
 
 test("signing in runs only the sign-in line; installing runs the installer, refreshes PATH, then signs in", () => {
@@ -13,6 +13,15 @@ test("signing in runs only the sign-in line; installing runs the installer, refr
   assert.ok(install.endsWith("; claude auth login"));
   assert.equal(setupScript(codex, "signIn"), "codex login");
   assert.equal(setupScript(antigravity, "signIn"), "agy");
+});
+
+test("Codex installs with OpenAI's own Windows installer, without questions and without npm (M2-25)", () => {
+  const install = setupScript(codex, "install");
+  assert.ok(install.startsWith("$env:CODEX_NON_INTERACTIVE = '1'; irm https://chatgpt.com/codex/install.ps1 | iex; "));
+  assert.ok(install.endsWith("; codex login"));
+  assert.doesNotMatch(install, /npm/);
+  assert.equal(nativeCodex({ LOCALAPPDATA: "C:\\Users\\José Müller\\AppData\\Local" }),
+    "C:\\Users\\José Müller\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin\\codex.exe");
 });
 
 test("anything else runs nothing", () => {
