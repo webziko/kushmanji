@@ -817,7 +817,9 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       MAINTENANCE routine: check, tests, self-test, one real Claude request (20 s on Sonnet), and the practice vlog
       measured twice on each version: jumps about a third quicker, the editor opens in about 1 s instead of 1.3,
       fewer dropped pictures (FINDINGS). Studio 0.9's new "Install the desktop app" button (HeyGen's app, HyperFrames'
-      logo) is hidden by refusing its one request (`studioRequests.js`), and the self-test checks it stays hidden
+      logo) is hidden by refusing its one request (`studioRequests.js`), and the self-test checks it stays hidden.
+      Found after: on 0.9.2 undo was off (the preview was told it ran inside a desktop app, and such a server now
+      keeps no history), so "Undo this change" silently vanished; fixed in `preview.js`, checked by the self-test
 - [ ] M10-29 After installing an assistant on Windows, put `%USERPROFILE%\.local\bin` on the PATH the app gives it
       (where Claude's installer puts itself), so "Check again" finds it without restarting Windows
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok

@@ -336,6 +336,14 @@ The practice vlog, two runs each, one version straight after the other:
 | Opening the video | 2.5, 2.4 s | 3.9, 1.8 s |
 | Opening the editor | 1.3, 1.3 s | 0.8, 1.1 s |
 
+**Undo broke, and was fixed the same day.** Since 2026-10-27 (upstream c21a7091) a preview server started with
+`HYPERFRAMES_DESKTOP_PROJECT` ("inside a desktop app") leaves the project's history to that app and keeps none: the
+history routes answer 404 "This project has no history here." Kushmanji set that variable on its preview only to quiet
+the "get the desktop app" hint, which `--json` never prints, so on 0.9.2 Studio's undo and every chat turn's "Undo
+this change" were silently gone (a Claude turn was saved without its `undo` entry). `preview.js` no longer sets it
+("Save video" still does), and the self-test now requires the history route to answer 200 (`result.historyStatus`).
+Seen again after the fix: a real Claude turn saved with its undo entry.
+
 Lighter copies played in every run (`pictureShortSides` [720]). One real Claude request on 0.9.2 through the chat
 (Sonnet, "Auto"): the title changed in 20 s. One self-test run failed the editor's arrow-key check (20.62 to 21.33,
 playing) and the next passed; seen once, not reproduced.

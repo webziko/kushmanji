@@ -94,9 +94,12 @@ export class PreviewManager {
     if (this.#session?.dir === dir) return this.#session.ready;
     this.stop();
 
+    // Not told it runs inside a desktop app (no `projectDir`): since HyperFrames 0.8.2xx a preview server that is
+    // told so leaves the project's history to that app and keeps none, which turns off Studio's undo and each chat
+    // turn's "Undo this change" (agents/turnHistory.js). In --json mode it prints no "get the desktop app" hint anyway.
     const child = spawnCli(
       ["preview", dir, "--foreground", "--no-open", "--force-new", "--json", "--port", String(BASE_PORT)],
-      { cwd: dir, projectDir: dir },
+      { cwd: dir },
     );
     // Decode as a stream, or a character split across two chunks arrives as two broken halves.
     child.stdout.setEncoding("utf8");

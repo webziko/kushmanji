@@ -567,6 +567,13 @@ async function editorArrowStep({ win, result, inPage }) {
   result.desktopAppButton = await studio.executeJavaScript(
     "Boolean(document.querySelector('[data-testid=\"header-open-in-desktop\"]'))");
   if (result.desktopAppButton) throw new Error("The editor shows HyperFrames' \"Install the desktop app\" button.");
+  // Undo needs the preview server's history: Studio's own undo and each chat turn's "Undo this change"
+  // (turnHistory.js). A server told it runs inside a desktop app keeps none and answers 404 here (preview.js).
+  result.historyStatus = await studio.executeJavaScript(`(async () => {
+    const name = decodeURIComponent(location.hash.replace(/^#project\\//, "").split(/[/?]/)[0]);
+    return (await fetch("/api/projects/" + encodeURIComponent(name) + "/history")).status;
+  })()`);
+  if (result.historyStatus !== 200) throw new Error(`The editor keeps no undo history (${result.historyStatus}).`);
   let picture = previews[0];
   const press = (label) => studio.executeJavaScript(
     `(() => { const b = [...document.querySelectorAll('button')].find((b) => ${label}.test(b.getAttribute('aria-label') || b.title || ''));

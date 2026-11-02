@@ -61,6 +61,10 @@ The version is pinned exactly in `app/package.json`. Moving to a newer one is a 
    (`data-testid="header-open-in-desktop"`) is hidden by refusing `GET /api/open-in-desktop` (`studioRequests.js`);
    the self-test fails if it shows (`result.desktopAppButton`). After an update, look along Studio's header for
    anything new of that kind and refuse its request the same way, or hide it in `studioFace.js`.
+9. Undo rests on the preview server keeping the project's history (`agents/turnHistory.js`). A turn that cannot open
+   its history window simply has no undo, so nothing in the chat fails when history goes missing: the self-test's
+   `result.historyStatus` (must be 200) is the check. 0.8.2xx turned history off for previews started with
+   `HYPERFRAMES_DESKTOP_PROJECT`; never pass that to `preview`.
 
 ## Whisper, the speech tool (every few months)
 
