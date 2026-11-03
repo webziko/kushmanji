@@ -106,6 +106,8 @@ app/src/main/            the main process (Node): the only code with file and pr
   lightCopies.js         720p copies of big clips for smooth watching and editing, and the redirect to them
   studioRequests.js      the few requests from Studio's page that the app refuses (the "Install the desktop app" button)
   keepAwake.js           no sleep while a video saves or an assistant works
+  dictation.js           "speak instead of typing": a recording written down on this computer (the page's button is
+                         renderer/dictation.js; the self-test's microphone plays test/fixtures/voice-request.wav)
   tidy.js                "Tidy my talking": pauses from the sound, "um"s and doubled words from the words, the request
   styles.js              "Pick a style": each style's written contract, written into a video as STYLE.md (pictures in
                          renderer/styles/, their source in docs/style-previews/)

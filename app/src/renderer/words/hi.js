@@ -726,4 +726,17 @@ export default {
   "Hand-drawn lines that draw themselves": "हाथ से बनी रेखाएँ जो ख़ुद बनती हैं",
   "This saves the style in your video's STYLE.md and writes a message for you. Sending uses your chosen assistant.": "यह स्टाइल को आपके वीडियो की STYLE.md में सेव करता है और आपके लिए मैसेज लिखता है। भेजने पर आपका चुना हुआ असिस्टेंट इस्तेमाल होता है।",
   "Use this style": "यह स्टाइल इस्तेमाल करें",
+  // dictation.js (page and main): speak instead of typing (M3-06)
+  "Speak instead of typing": "टाइप करने के बजाय बोलें",
+  "Stop and write down what I said": "रोकें और मैंने जो कहा उसे लिखें",
+  "No microphone was found on this computer.": "इस कंप्यूटर पर कोई माइक्रोफ़ोन नहीं मिला।",
+  "Kushmanji may not use the microphone. In Windows Settings, open Privacy and security, then Microphone, and let desktop apps use it.": "Kushmanji को माइक्रोफ़ोन इस्तेमाल करने की अनुमति नहीं है। Windows सेटिंग्स में Privacy and security, फिर Microphone खोलें, और डेस्कटॉप ऐप्स को अनुमति दें।",
+  "Listening... {seconds} s. Press ■ when you have finished.": "सुन रहा है... {seconds} सेकंड। ख़त्म होने पर ■ दबाएँ।",
+  "Writing down what you said...": "आपने जो कहा वह लिखा जा रहा है...",
+  "No words were heard.": "कोई शब्द सुनाई नहीं दिया।",
+  "That recording could not be used. Try again, a little shorter.": "वह रिकॉर्डिंग इस्तेमाल नहीं हो सकी। थोड़ा छोटा करके फिर कोशिश करें।",
+  "To write down this language, the speech tool must be on this computer first: open a video, choose the language under Spoken language, and press Get it.": "इस भाषा को लिखने के लिए पहले बोलने का टूल इस कंप्यूटर पर होना चाहिए: कोई वीडियो खोलें, \"बोली जाने वाली भाषा\" में भाषा चुनें, और \"डाउनलोड करें\" दबाएँ।",
+  "No speech tool is on this computer yet, so your words could not be written down.": "इस कंप्यूटर पर अभी बोलने का टूल नहीं है, इसलिए आपके शब्द नहीं लिखे जा सके।",
+  "Writing down what you said took too long, so it was stopped.": "आपने जो कहा उसे लिखने में बहुत समय लगा, इसलिए रोक दिया गया।",
+  "No words were heard. Speak a little closer to the microphone and try again.": "कोई शब्द सुनाई नहीं दिया। माइक्रोफ़ोन के थोड़ा पास बोलें और फिर कोशिश करें।",
 };

@@ -6,6 +6,7 @@
 import { h } from "./dom.js";
 import { createStudyBar } from "./study.js";
 import { createEditActions } from "./editActions.js";
+import { createMic } from "./dictation.js";
 import { createShortsCard } from "./shorts.js";
 import {
   ASSISTANTS_CHANGED, changeTeam, confirmTest, fixCard, fixSentence, GOOD_FOR, lastTestText, menuName, STATE_NOTES,
@@ -360,6 +361,20 @@ export function createChat(dir, { onEdit, onSave, onOtherSizes } = {}) {
     input.setSelectionRange(input.value.length, input.value.length);
   } });
   const send = h("button", { class: "primary", type: "submit", disabled: true }, t("Send"));
+  // Speak instead of typing (M3-06): the words are added to what is already in the box, for the person to check.
+  const micNote = h("p", { class: "composer-note muted mic-note", role: "status", hidden: true });
+  const mic = createMic({
+    onText: (text) => {
+      input.value = input.value.trim() ? `${input.value.trimEnd()} ${text}` : text;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    },
+    onNote: (text) => {
+      micNote.textContent = text;
+      micNote.hidden = !text;
+    },
+  });
   const stop = h(
     "button",
     { class: "secondary", type: "button", hidden: true, onclick: () => api.agent.stop().catch(() => {}) },
@@ -1161,6 +1176,7 @@ export function createChat(dir, { onEdit, onSave, onOtherSizes } = {}) {
     { class: "composer", onsubmit: onSubmit },
     askNote,
     dropNote,
+    micNote,
     queuedNote,
     pointingChip,
     h("div", { class: "composer-context" }, h("label", { for: "chat-request" }, t("Your message")), momentChip),
@@ -1168,6 +1184,7 @@ export function createChat(dir, { onEdit, onSave, onOtherSizes } = {}) {
     h(
       "div",
       { class: "composer-row" },
+      mic.element,
       h("span", { class: "spacer" }),
       later,
       now,

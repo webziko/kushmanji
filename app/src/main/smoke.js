@@ -894,6 +894,23 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   if (result.styles.cards < 6 || result.styles.pictures !== result.styles.cards || !result.styles.waitsForAChoice ||
     !result.styles.chosen) throw new Error("Pick a style did not show every style as a picture to choose.");
   await inPage("document.querySelector('.edit-action-close').click()");
+  // Speak instead of typing (M3-06): the self-test's microphone plays a recorded "Make the title bigger and add some
+  // music." The words must land in the box after what was typed, and the box then goes back to the draft.
+  await inPage("document.querySelector('.mic-button').click()");
+  if (!(await until(() => inPage("document.querySelector('.mic-button').dataset.state === 'recording'"), { timeoutMs: 10_000 })))
+    throw new Error(`The microphone did not start: ${await inPage("document.querySelector('.mic-note')?.textContent ?? ''")}`);
+  await wait(3500);
+  await shot("voice-recording");
+  await inPage("document.querySelector('.mic-button').click()");
+  if (!(await until(() => inPage("document.querySelector('.mic-button').dataset.state === 'idle'"), { timeoutMs: 240_000, everyMs: 500 })))
+    throw new Error("Writing down the spoken request never finished.");
+  result.voice = await inPage(`({ box: document.querySelector('.composer textarea').value,
+    note: document.querySelector('.mic-note').hidden ? '' : document.querySelector('.mic-note').textContent })`);
+  await shot("voice-heard");
+  if (!/title/i.test(result.voice.box) && !/speech tool/i.test(result.voice.note))
+    throw new Error(`The spoken request was not written into the box: ${result.voice.note || result.voice.box.slice(-80)}`);
+  await inPage(`(() => { const box = document.querySelector('.composer textarea'); box.value = ${inJs(draft)};
+    box.dispatchEvent(new Event('input', { bubbles: true })); })()`);
   await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Add a title').click(); document.querySelector('.edit-action-use').click()");
   const addedDraft = await inPage("document.querySelector('.composer textarea').value");
   if (!addedDraft.startsWith(draft) || !addedDraft.includes("Add a title that says:") ||

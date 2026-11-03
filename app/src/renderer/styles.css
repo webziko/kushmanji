@@ -2960,3 +2960,23 @@ dialog[open]::backdrop {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Speak instead of typing (M3-06): the microphone beside Send, coral while it records. */
+.mic-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mic-button[data-state="recording"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.mic-button[data-state="hearing"] {
+  opacity: 0.6;
+  cursor: progress;
+}

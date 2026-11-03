@@ -8,7 +8,9 @@ import { catchStudioAsks } from "./askAgent.js";
 import { checkTurn } from "./agents/turnCheck.js";
 import { turnHistory } from "./agents/turnHistory.js";
 import { whereAll } from "./agents/launcher.js";
-import { cliVersion } from "./cli.js";
+import { cliVersion, spawnCli } from "./cli.js";
+import { collect } from "./proc.js";
+import { hear } from "./dictation.js";
 import { dialogTitle } from "./dialogTitle.js";
 import { captureDrawing } from "./drawings.js";
 import { useOwnHome as useGeminiHome } from "./agents/antigravity.js";
@@ -52,7 +54,7 @@ import { makeOtherSizes, offeredShapes, SHAPES } from "./otherSizes.js";
 import { madeRecord, recordMade, ShortsMaker } from "./shortsMaker.js";
 import { say } from "./say.js";
 import { runSmoke } from "./smoke.js";
-import { SpeechTool } from "./speechTool.js";
+import { SpeechTool, whisperReady } from "./speechTool.js";
 import { FootageStudy } from "./study.js";
 import { readClipStudy } from "./studyRead.js";
 import { projectsRoot, readState, updateState } from "./state.js";
@@ -78,6 +80,21 @@ function fromAppPage(frame) {
 const ALLOWED_PERMISSIONS = new Set(["clipboard-read", "clipboard-sanitized-write", "fullscreen", "local-fonts"]);
 
 /**
+ * Speak instead of typing (M3-06, the owner's yes on 2026-11-04): the microphone, sound only, for the app's own page
+ * only. Studio, a video's own page and anything they embed never get it, and the camera is never allowed.
+ */
+function microphone(permission, url, mediaTypes = [], mainFrame = true) {
+  if (permission !== "media" || !mainFrame) return false;
+  const kinds = (mediaTypes ?? []).filter(Boolean);
+  if (kinds.length === 0 || kinds.some((kind) => kind !== "audio")) return false;
+  try {
+    return path.resolve(fileURLToPath(String(url))).toLowerCase() === path.resolve(RENDERER).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Refuse browser permissions app-wide, except the few above, and those only for Studio's own local server. A
  * composition can embed any web content, and that content must not inherit what the editor is trusted with.
  */
@@ -85,10 +102,18 @@ function lockDownSession() {
   // Trusted askers: Studio's local server, and the app's own page (the only file: page that can ever load here).
   const trusted = (origin) => isLocal(origin) || origin.startsWith("file://");
   const allowed = (permission, origin) => ALLOWED_PERMISSIONS.has(permission) && trusted(String(origin ?? ""));
-  session.defaultSession.setPermissionRequestHandler((_contents, permission, respond, details) =>
-    respond(allowed(permission, details.requestingUrl)),
+  // A file: origin is only "file://", so the microphone is matched on the asking page's own address.
+  // The window's own address is used only when no asking address is given at all; an embedded frame (Studio, a
+  // video's page) always gives its own, which is never the app's page, and is not the main frame either.
+  const pageOf = (contents, details) => details?.requestingUrl || (contents?.getURL?.() ?? "");
+  session.defaultSession.setPermissionRequestHandler((contents, permission, respond, details) =>
+    respond(allowed(permission, details.requestingUrl) ||
+      microphone(permission, pageOf(contents, details), details.mediaTypes, details.isMainFrame !== false)),
   );
-  session.defaultSession.setPermissionCheckHandler((_contents, permission, origin) => allowed(permission, origin));
+  session.defaultSession.setPermissionCheckHandler((contents, permission, origin, details) =>
+    allowed(permission, origin) ||
+    (String(origin ?? "").startsWith("file:") &&
+      microphone(permission, pageOf(contents, details), [details?.mediaType], details?.isMainFrame !== false)));
   // A video Studio's preview asks for is answered with its lighter copy when one is ready (lightCopies.js).
   // Electron keeps one listener per event: anything else that needs onBeforeRequest has to share this one.
   // The same requests show when Studio is still preparing a project's first open (editorPrep.js). A few requests
@@ -207,6 +232,17 @@ const exporter = new ExportManager({
 const samePath = (a, b) => Boolean(a && b) && path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
 /** The last "Tidy my talking" plan of each video, by its folder (lower case). */
 const tidyPlans = new Map();
+/** Whether HyperFrames' Parakeet model is on this computer, asked once (the footage study asks the same way). */
+let parakeetKnown = null;
+const parakeetHere = () => (parakeetKnown ??= collect(spawnCli(["models", "list", "--json"]), { timeoutMs: 60_000 })
+  .then((listed) => {
+    try {
+      return JSON.parse(listed.stdout.trim().split(/\r?\n/).pop()).models
+        .some((model) => model.engine === "parakeet" && model.installed);
+    } catch {
+      return false;
+    }
+  }));
 
 /** A project folder passed on the command line, the way the official app is handed one by `hyperframes open`. */
 function folderFromArgv(argv, cwd) {
@@ -585,6 +621,15 @@ function registerIpc() {
         .sort((a, b) => (a.at ?? 0) - (b.at ?? 0)),
     };
   });
+  // Speak instead of typing (M3-06): the page's recording, heard on this computer, comes back as words.
+  handle("voice:hear", async ({ audio, language: pageLanguage } = {}) => hear(audio, {
+    pageLanguage: String(pageLanguage ?? "en"),
+    tools: {
+      ffmpeg: realTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
+      parakeet: await parakeetHere(),
+      whisper: whisperReady({ program: realTool("whisper-cli", process.env.HYPERFRAMES_WHISPER_PATH) }),
+    },
+  }));
   // "Pick a style" (M16-15): the chosen style becomes the video's STYLE.md, and the page gets the message to send.
   handle("styles:use", ({ dir, id } = {}) => {
     dir = requireProject(dir);
@@ -674,6 +719,11 @@ if (process.env.HFWIN_SMOKE) {
   app.setPath("userData", path.join(process.env.HFWIN_SMOKE, "user-data"));
   // The self-test saves a video too, and must not leave it in the person's real Downloads folder.
   app.setPath("downloads", path.join(process.env.HFWIN_SMOKE, "downloads"));
+  // The self-test's microphone is a recorded request played as if spoken ("speak instead of typing", M3-06), so the
+  // whole way from the button to the words in the box is tried without anyone talking.
+  app.commandLine.appendSwitch("use-fake-device-for-media-stream");
+  app.commandLine.appendSwitch("use-file-for-fake-audio-capture",
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "test", "fixtures", "voice-request.wav"));
 }
 // The playback measurement counts pictures really put on screen. Windows stops painting a window that another
 // one covers, which would read as a frozen video, so for the self-test the window is always painted. The plain

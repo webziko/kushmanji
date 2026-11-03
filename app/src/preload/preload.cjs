@@ -87,6 +87,9 @@ contextBridge.exposeInMainWorld("hfwin", {
   styles: {
     use: call("styles:use"),
   },
+  voice: {
+    hear: call("voice:hear"),
+  },
   agent: {
     status: call("agent:status"),
     history: call("agent:history"),

@@ -726,4 +726,17 @@ export default {
   "Hand-drawn lines that draw themselves": "ತಾವಾಗಿಯೇ ಮೂಡುವ ಕೈಯಿಂದ ಬರೆದ ರೇಖೆಗಳು",
   "This saves the style in your video's STYLE.md and writes a message for you. Sending uses your chosen assistant.": "ಇದು ಶೈಲಿಯನ್ನು ನಿಮ್ಮ ವಿಡಿಯೋದ STYLE.md ನಲ್ಲಿ ಉಳಿಸಿ ನಿಮಗಾಗಿ ಸಂದೇಶ ಬರೆಯುತ್ತದೆ. ಕಳುಹಿಸಲು ನೀವು ಆರಿಸಿದ ಸಹಾಯಕ ಬಳಕೆಯಾಗುತ್ತದೆ.",
   "Use this style": "ಈ ಶೈಲಿ ಬಳಸಿ",
+  // dictation.js (page and main): speak instead of typing (M3-06)
+  "Speak instead of typing": "ಟೈಪ್ ಮಾಡುವ ಬದಲು ಮಾತನಾಡಿ",
+  "Stop and write down what I said": "ನಿಲ್ಲಿಸಿ, ನಾನು ಹೇಳಿದ್ದನ್ನು ಬರೆಯಿರಿ",
+  "No microphone was found on this computer.": "ಈ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ ಮೈಕ್ರೊಫೋನ್ ಸಿಗಲಿಲ್ಲ.",
+  "Kushmanji may not use the microphone. In Windows Settings, open Privacy and security, then Microphone, and let desktop apps use it.": "Kushmanji ಮೈಕ್ರೊಫೋನ್ ಬಳಸಲು ಅನುಮತಿ ಇಲ್ಲ. Windows ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ Privacy and security, ನಂತರ Microphone ತೆರೆಯಿರಿ, ಮತ್ತು ಡೆಸ್ಕ್‌ಟಾಪ್ ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿ ಕೊಡಿ.",
+  "Listening... {seconds} s. Press ■ when you have finished.": "ಕೇಳುತ್ತಿದೆ... {seconds} ಸೆ. ಮುಗಿದ ಮೇಲೆ ■ ಒತ್ತಿ.",
+  "Writing down what you said...": "ನೀವು ಹೇಳಿದ್ದನ್ನು ಬರೆಯುತ್ತಿದೆ...",
+  "No words were heard.": "ಯಾವ ಪದವೂ ಕೇಳಿಸಲಿಲ್ಲ.",
+  "That recording could not be used. Try again, a little shorter.": "ಆ ರೆಕಾರ್ಡಿಂಗ್ ಬಳಸಲು ಆಗಲಿಲ್ಲ. ಸ್ವಲ್ಪ ಚಿಕ್ಕದಾಗಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "To write down this language, the speech tool must be on this computer first: open a video, choose the language under Spoken language, and press Get it.": "ಈ ಭಾಷೆಯನ್ನು ಬರೆಯಲು ಮೊದಲು ಮಾತಿನ ಉಪಕರಣ ಈ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ ಇರಬೇಕು: ಒಂದು ವಿಡಿಯೋ ತೆರೆಯಿರಿ, \"ಮಾತನಾಡುವ ಭಾಷೆ\" ಅಡಿಯಲ್ಲಿ ಭಾಷೆ ಆರಿಸಿ, ಮತ್ತು \"ಪಡೆಯಿರಿ\" ಒತ್ತಿ.",
+  "No speech tool is on this computer yet, so your words could not be written down.": "ಈ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ ಇನ್ನೂ ಮಾತಿನ ಉಪಕರಣ ಇಲ್ಲ, ಹಾಗಾಗಿ ನಿಮ್ಮ ಪದಗಳನ್ನು ಬರೆಯಲು ಆಗಲಿಲ್ಲ.",
+  "Writing down what you said took too long, so it was stopped.": "ನೀವು ಹೇಳಿದ್ದನ್ನು ಬರೆಯಲು ತುಂಬಾ ಸಮಯ ಹಿಡಿಯಿತು, ಹಾಗಾಗಿ ನಿಲ್ಲಿಸಲಾಯಿತು.",
+  "No words were heard. Speak a little closer to the microphone and try again.": "ಯಾವ ಪದವೂ ಕೇಳಿಸಲಿಲ್ಲ. ಮೈಕ್ರೊಫೋನ್‌ಗೆ ಸ್ವಲ್ಪ ಹತ್ತಿರ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
 };
