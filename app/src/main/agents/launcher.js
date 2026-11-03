@@ -108,14 +108,38 @@ const PARENT_SESSIONS = [
  * own settings pass through untouched. ELECTRON_RUN_AS_NODE always goes: it is ours, and it would break any
  * Electron app the agent starts.
  */
-export function agentEnv(env = process.env) {
+export function agentEnv(env = process.env, { exists = fs.existsSync } = {}) {
   const active = PARENT_SESSIONS.filter(({ markers }) => markers.some((name) => name in env));
   const dropped = (key) => active.some(({ vars, keep }) => vars.test(key) && !keep.includes(key));
+  const kept = Object.fromEntries(Object.entries(env).filter(([key]) => key !== "ELECTRON_RUN_AS_NODE" && !dropped(key)));
   return {
-    ...Object.fromEntries(Object.entries(env).filter(([key]) => key !== "ELECTRON_RUN_AS_NODE" && !dropped(key))),
+    ...kept,
+    ...withToolFolders(kept, { exists }),
     // Only HyperFrames' own anonymous reporting (M9-16, the owner's yes). The assistants' own settings stay as they are.
     HYPERFRAMES_NO_TELEMETRY: "1",
   };
+}
+
+/**
+ * Where the assistants' own installers put them (M10-29): Claude's `%USERPROFILE%\.local\bin` (the official
+ * HyperFrames app adds it to PATH too), Codex's native folder and agy's. An installer adds its folder to the user's
+ * PATH for programs started afterwards; Kushmanji, open all along, still has the old PATH, and so would every
+ * assistant it starts, which then cannot find the others (or itself, for a skill that runs `claude`). Each folder
+ * that exists and is missing is added at the end, so nothing the person put first is overridden.
+ */
+export function withToolFolders(env, { exists = fs.existsSync } = {}) {
+  const key = Object.keys(env).find((name) => name.toLowerCase() === "path") ?? "Path";
+  const home = env.USERPROFILE || env.HOME || "";
+  const local = env.LOCALAPPDATA || (home ? path.join(home, "AppData", "Local") : "");
+  const folders = [
+    home && path.join(home, ".local", "bin"),
+    local && path.join(local, "Programs", "OpenAI", "Codex", "bin"),
+    local && path.join(local, "agy", "bin"),
+  ].filter(Boolean);
+  const current = String(env[key] ?? "");
+  const has = new Set(current.split(";").map((item) => path.resolve(item.trim() || ".").toLowerCase()));
+  const missing = folders.filter((folder) => exists(folder) && !has.has(path.resolve(folder).toLowerCase()));
+  return missing.length ? { [key]: [current, ...missing].filter(Boolean).join(";") } : {};
 }
 
 export const lastLine = (text) => String(text).trim().split(/\r?\n/).pop() ?? "";

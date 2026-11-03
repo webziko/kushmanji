@@ -54,3 +54,16 @@ test("an unknown version is never called newer", () => {
   assert.equal(isNewer("1.0.0", undefined), false);
   assert.equal(isNewer("", ""), false);
 });
+
+test("the assistants' own folders go on PATH when they exist and are missing, at the end (M10-29)", async () => {
+  const { withToolFolders } = await import("../src/main/agents/launcher.js");
+  const home = "C:\\Users\\José Müller";
+  const local = `${home}\\AppData\\Local`;
+  const there = new Set([`${home}\\.local\\bin`, `${local}\\agy\\bin`]);
+  const env = { Path: `C:\\Windows;${local}\\agy\\bin`, USERPROFILE: home, LOCALAPPDATA: local };
+  assert.deepEqual(withToolFolders(env, { exists: (folder) => there.has(folder) }),
+    { Path: `C:\\Windows;${local}\\agy\\bin;${home}\\.local\\bin` });
+  assert.deepEqual(withToolFolders({ ...env, Path: `${home}\\.LOCAL\\bin;${local}\\agy\\bin` },
+    { exists: (folder) => there.has(folder) }), {});
+  assert.deepEqual(withToolFolders({ PATH: "x" }, { exists: () => true }), {});
+});
