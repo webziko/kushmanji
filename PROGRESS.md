@@ -845,8 +845,11 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       (Whisper's words have no gaps, and the owner's mall clips never drop below -41 dB), "um"s in English, Hindi
       and Kannada and doubled words from the study's words; each spot is placed on the video's clock (read from the
       running composition, `player.js`) so ▶ plays it in the player; the request names each cut in the clip's own
-      seconds. On a real 29 s Kannada clip of the owner's: 5 pauses, 4.3 s saved, found in 0.3 s. Open: a real cut
-      through the chat on talking footage, and "um"s that Whisper leaves out of its words (they need the sound)
+      seconds. On a real 29 s Kannada clip of the owner's: 5 pauses, 4.3 s saved, found in 0.3 s. In the real app on
+      three of the owner's clips (`reviews/tidy-test`, `HFWIN_SMOKE_TIDY=1` with `HFWIN_SMOKE_REAL_PROJECT`): 19
+      spots, 16.3 s off 92 s, and ▶ played the first one. A video with sound counts without words (Parakeet writes
+      none for Kannada); cuts under 0.4 s are not listed. Open: a real cut through the chat; "um"s Whisper leaves
+      out of its words; the dialog's backdrop blurs the video while ▶ plays it (heard, not seen)
 - [ ] M7-06 Lessons: a short course inside Kushmanji on directing the assistant (the brief, checking and correcting,
       timing, sound, captions, shapes), each with a practice video that has one deliberate fault to fix. Our own words
       and videos; in English, Kannada and Hindi
