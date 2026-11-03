@@ -872,6 +872,14 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
       await shot(`editing-${label.toLowerCase().replaceAll(" ", "-")}`);
     await inPage("document.querySelector('.edit-action-close').click()");
   }
+  // "Tidy my talking" (M10-31) listens to the clips itself: it must finish, with a list or a plain sentence.
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Tidy my talking').click()");
+  if (!(await until(() => inPage("['done', 'empty', 'ffmpeg', 'failed'].includes(document.querySelector('.tidy-list')?.dataset.state)"),
+    { timeoutMs: 60_000 }))) throw new Error("Tidy my talking never finished listening to the clips.");
+  result.tidy = await inPage("({ state: document.querySelector('.tidy-list').dataset.state, spots: document.querySelectorAll('.tidy-item').length })");
+  await shot("editing-tidy");
+  if (result.tidy.state === "failed") throw new Error("Tidy my talking could not listen to the clips.");
+  await inPage("document.querySelector('.edit-action-close').click()");
   await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Add a title').click(); document.querySelector('.edit-action-use').click()");
   const addedDraft = await inPage("document.querySelector('.composer textarea').value");
   if (!addedDraft.startsWith(draft) || !addedDraft.includes("Add a title that says:") ||
@@ -1784,6 +1792,30 @@ export async function runSmoke({ win, outDir }) {
       if (!(await until(() => inPage("document.body.dataset.screen === 'edit' && document.body.dataset.studio === 'loaded'"),
         { timeoutMs: 90_000 }))) throw new Error("The project did not switch to its editor.");
       await agentStep({ result, inPage, shot, dir });
+      result.ok = true;
+      fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
+      return app.exit(0);
+    }
+    // HFWIN_SMOKE_TIDY with HFWIN_SMOKE_REAL_PROJECT: open real footage and press "Tidy my talking" the way a person
+    // does (M10-31): what it found, a picture of the list, and whether ▶ moves the player to the first spot.
+    if (process.env.HFWIN_SMOKE_TIDY && process.env.HFWIN_SMOKE_REAL_PROJECT) {
+      page.send("app:open-project", { dir: process.env.HFWIN_SMOKE_REAL_PROJECT });
+      if (!(await until(() => inPage("document.body.dataset.studio === 'loaded'"), { timeoutMs: 180_000 })))
+        throw new Error("The project did not open.");
+      await inPage("document.querySelector('.edit-actions')?.setAttribute('open', '')");
+      await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Tidy my talking').click()");
+      if (!(await until(() => inPage("['done', 'empty', 'ffmpeg', 'failed'].includes(document.querySelector('.tidy-list')?.dataset.state)"),
+        { timeoutMs: 900_000, everyMs: 1000 }))) throw new Error("Tidy my talking never finished listening to the clips.");
+      result.tidy = await inPage(`({ state: document.querySelector('.tidy-list').dataset.state,
+        total: document.querySelector('.tidy-total')?.textContent ?? '',
+        spots: [...document.querySelectorAll('.tidy-item')].map((li) => li.innerText.replace(/\\s+/g, ' ').trim()) })`);
+      await shot("tidy-real");
+      if (result.tidy.spots.length > 0) {
+        await inPage("document.querySelector('.tidy-hear').click()");
+        await wait(1500);
+        result.tidy.heard = await inPage("document.querySelector('.player-time')?.textContent ?? ''");
+        await shot("tidy-real-heard");
+      }
       result.ok = true;
       fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
       return app.exit(0);

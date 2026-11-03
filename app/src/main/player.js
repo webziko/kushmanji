@@ -59,6 +59,29 @@ export async function runPlayerCommand(frame, { action, value } = {}) {
   );
 }
 
+// This fixed function runs in the composition's frame too. Where each clip and sound sits in the whole video, so a
+// moment inside a clip's own file can be found on the video's clock ("Tidy my talking", tidy.js). A clip inside a
+// scene starts at the scene's start plus its own, so every data-start up the tree is added.
+function mediaInFrame() {
+  return [...document.querySelectorAll("video[data-start], audio[data-start]")].map((element) => {
+    let start = 0;
+    for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
+      start += Number(node.getAttribute("data-start")) || 0;
+    }
+    return {
+      src: element.getAttribute("src") ?? "",
+      start,
+      duration: Number(element.getAttribute("data-duration")) || 0,
+      mediaStart: Number(element.getAttribute("data-media-start")) || 0,
+    };
+  });
+}
+
+/** `[{ src, start, duration, mediaStart }]` for every clip and sound in the open video. */
+export async function readMediaPlacement(frame) {
+  return frame.executeJavaScript(`(${mediaInFrame.toString()})()`);
+}
+
 /** Read at Send, before the footage study can delay the turn. Never use a hidden editor scene's clock. */
 export async function readPlaybackMoment(frame) {
   const got = frame ? await runPlayerCommand(frame, { action: "state" }) : null;

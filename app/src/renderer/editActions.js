@@ -32,6 +32,14 @@ const ACTIONS = [
       "quiet gaps. Keep every sentence whole and the story clear. Move titles, subtitles and sounds with the clips.",
   },
   {
+    // M10-31: the app finds the spots itself (main/tidy.js); the person ticks which go; the assistant cuts them.
+    label: t("Tidy my talking"),
+    about: t("The app listens to the clips where someone talks and finds long pauses, \"um\"s and words said " +
+      "twice. Untick anything you want to keep, and press ▶ to hear a spot first. The assistant then cuts the " +
+      "ticked ones."),
+    tidy: true,
+  },
+  {
     label: t("Add music"),
     about: t("Use Add clips to bring in your own music, then ask the assistant to play it under the video. " +
       "Finding music for you and making new music are not ready yet."),
@@ -92,7 +100,67 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
   const about = h("p", { id: "edit-action-about" });
   const note = h("p", { class: "muted" });
   const choices = h("div", { class: "size-choices", hidden: true });
+  const tidyList = h("div", { class: "tidy-list", hidden: true });
   let chosen;
+  let tidyStop = null;
+
+  const clock = (seconds) => {
+    const whole = Math.max(0, Math.floor(seconds));
+    return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+  };
+  const tidyKind = (item) => item.kind === "pause" ? t("Long pause")
+    : item.kind === "filler" ? t("\"{word}\"", { word: item.text })
+    : t("\"{word}\" said twice", { word: item.text });
+
+  // Hearing a spot: the watching screen's player jumps to just before it and plays a little past it.
+  async function hear(item) {
+    clearTimeout(tidyStop);
+    const command = (action, value) => api.player.command({ dir, action, value });
+    try {
+      await command("seek", Math.max(0, item.at - 0.6));
+      await command("play");
+      tidyStop = setTimeout(() => void command("pause").catch(() => {}), (item.seconds + 1.2) * 1000);
+    } catch {
+      // The player is still loading: the button simply does nothing this time.
+    }
+  }
+
+  function tidyTotal() {
+    const kept = [...tidyList.querySelectorAll("input:checked")];
+    const seconds = kept.reduce((sum, box) => sum + Number(box.dataset.seconds), 0);
+    tidyList.querySelector(".tidy-total").textContent =
+      t("{count} spots ticked: the video gets {seconds} seconds shorter.", { count: kept.length, seconds: seconds.toFixed(1) });
+    use.disabled = kept.length === 0;
+  }
+
+  function renderTidy(found) {
+    if (found?.needsFfmpeg) {
+      tidyList.dataset.state = "ffmpeg";
+      tidyList.replaceChildren(h("p", {}, t("This needs FFmpeg. Home's \"Before you start\" can get it with one press.")));
+      return;
+    }
+    const items = Array.isArray(found?.items) ? found.items : [];
+    if (items.length === 0) {
+      tidyList.dataset.state = "empty";
+      tidyList.replaceChildren(h("p", {}, t("No long pauses or \"um\"s were found where someone talks.")));
+      return;
+    }
+    const watching = document.body.dataset.screen !== "edit";
+    const rows = items.map((item) => {
+      const box = h("input", { type: "checkbox", value: String(item.id), checked: true,
+        "data-seconds": String(item.seconds), onchange: tidyTotal });
+      const play = h("button", { class: "secondary tidy-hear", type: "button", "aria-label": t("Hear it"),
+        disabled: !watching || item.at === null,
+        title: watching ? t("Hear it") : t("Go back to Watch video to hear it"), onclick: () => void hear(item) }, "▶");
+      return h("li", { class: "tidy-item" }, play,
+        h("label", {}, box, h("span", { class: "tidy-what" }, tidyKind(item)),
+          h("span", { class: "muted" }, item.at === null ? item.file
+            : t("at {time}, {seconds} s", { time: clock(item.at), seconds: item.seconds.toFixed(1) }))));
+    });
+    tidyList.dataset.state = "done";
+    tidyList.replaceChildren(h("p", { class: "tidy-total" }), h("ul", {}, rows));
+    tidyTotal();
+  }
 
   const shapeLabels = {
     upright: t("Upright (9:16, for Shorts and Reels)"),
@@ -118,7 +186,10 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
   const use = h("button", { class: "primary edit-action-use", type: "button", onclick: () => {
     dialog.close();
     if (chosen.request) onDraft(chosen.request);
-    else if (chosen.save) onSave();
+    else if (chosen.tidy) {
+      const keep = [...tidyList.querySelectorAll("input:checked")].map((box) => Number(box.value));
+      void api.tidy.request({ dir, keep }).then(onDraft).catch(() => {});
+    } else if (chosen.save) onSave();
     else if (chosen.otherSizes) {
       const selected = [...choices.querySelectorAll("input:checked")].map((b) => b.value);
       if (selected.length > 0 && onOtherSizes) onOtherSizes(selected);
@@ -126,8 +197,9 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
   } });
   const dialog = h("dialog", { class: "edit-action-dialog", "aria-labelledby": "edit-action-title",
     "aria-describedby": "edit-action-about" },
-    title, about, choices, note, h("div", { class: "notice-actions" }, close, use),
+    title, about, choices, tidyList, note, h("div", { class: "notice-actions" }, close, use),
   );
+  dialog.addEventListener("close", () => clearTimeout(tidyStop));
   document.body.append(dialog);
   const buttons = ACTIONS.map((action) => h("button", {
     class: "secondary edit-action", type: "button", onclick: () => {
@@ -149,13 +221,30 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
         choices.replaceChildren();
         use.disabled = false;
       }
-      note.textContent = action.request
+      tidyList.hidden = !action.tidy;
+      if (action.tidy) {
+        use.disabled = true;
+        tidyList.dataset.state = "listening";
+        tidyList.replaceChildren(h("p", { class: "muted" }, t("Listening to your clips...")));
+        if (dir && api?.tidy?.plan) {
+          void api.tidy.plan(dir).then((found) => {
+            if (chosen === action && dialog.open) renderTidy(found);
+          }).catch(() => {
+            if (chosen !== action || !dialog.open) return;
+            tidyList.dataset.state = "failed";
+            tidyList.replaceChildren(h("p", {}, t("The app could not listen to your clips. Try again in a moment.")));
+          });
+        }
+      }
+      note.textContent = action.tidy
+        ? t("This writes a message for you with the ticked spots. Sending uses your chosen assistant.")
+        : action.request
         ? t("This writes a message for you. You can change it before pressing Send. Sending uses your chosen assistant.")
         : action.save ? t("Nothing leaves your computer. You can stop saving at any time.")
         : action.otherSizes
           ? t("The new video appears in My videos and opens with a prepared message. Sending uses your chosen assistant.")
           : t("Your chat and message stay with you in the editor.");
-      use.textContent = action.request ? t("Write the message")
+      use.textContent = action.request || action.tidy ? t("Write the message")
         : action.save ? t("Save video")
         : action.otherSizes ? t("Make other sizes") : t("Open the editor");
       dialog.showModal();

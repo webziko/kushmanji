@@ -80,6 +80,10 @@ contextBridge.exposeInMainWorld("hfwin", {
     shapes: call("sizes:shapes"),
     make: call("sizes:make"),
   },
+  tidy: {
+    plan: call("tidy:plan"),
+    request: call("tidy:request"),
+  },
   agent: {
     status: call("agent:status"),
     history: call("agent:history"),

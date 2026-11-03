@@ -27,7 +27,8 @@ import { EditorPrep } from "./editorPrep.js";
 import { createLog, errorDetails } from "./log.js";
 import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
-import { readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
+import { readMediaPlacement, readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
+import { keepOnly, placeInVideo, tidyPlan, tidyRequest } from "./tidy.js";
 import { dressStudio } from "./studioFace.js";
 import { refused, STUDIO_REQUESTS } from "./studioRequests.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
@@ -203,6 +204,8 @@ const exporter = new ExportManager({
   },
 });
 const samePath = (a, b) => Boolean(a && b) && path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+/** The last "Tidy my talking" plan of each video, by its folder (lower case). */
+const tidyPlans = new Map();
 
 /** A project folder passed on the command line, the way the official app is handed one by `hyperframes open`. */
 function folderFromArgv(argv, cwd) {
@@ -559,6 +562,33 @@ function registerIpc() {
     for (const target of [...made].reverse()) rememberFolder(target.dir);
     rememberFolder(dir);
     return made;
+  });
+  // "Tidy my talking" (M10-31): the app finds the pauses, "um"s and doubled words itself; the person ticks which go
+  // and the assistant cuts them. The plan stays here, so the page only ever sends back the ids it kept ticked.
+  handle("tidy:plan", async (dir) => {
+    dir = requireProject(dir);
+    const ffmpegFile = realTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH);
+    if (!ffmpegFile) return { needsFfmpeg: true };
+    await study.ready(dir);
+    const plan = await tidyPlan(dir, { ffmpeg: ffmpegFile });
+    const current = preview.current;
+    const frame = win && current && samePath(current.dir, dir) ? rootPlayerFrame(win.webContents.mainFrame, current) : null;
+    const media = frame ? await readMediaPlacement(frame).catch(() => null) : null;
+    const placed = placeInVideo(plan, media);
+    tidyPlans.set(path.resolve(dir).toLowerCase(), placed);
+    return {
+      seconds: placed.seconds,
+      unused: placed.unused,
+      items: placed.clips.flatMap((clip) => clip.items.map(({ id, kind, text, seconds, at }) =>
+        ({ id, kind, text: text ?? "", seconds, at, file: path.basename(clip.file) })))
+        .sort((a, b) => (a.at ?? 0) - (b.at ?? 0)),
+    };
+  });
+  handle("tidy:request", ({ dir, keep } = {}) => {
+    dir = requireProject(dir);
+    const plan = tidyPlans.get(path.resolve(dir).toLowerCase());
+    if (!plan) throw new Error(say("Open Tidy my talking again: its list is out of date."));
+    return tidyRequest(keepOnly(plan, keep));
   });
   handle("speech:status", () => speech.status());
   // The person's yes to the download. When it is done, the clips of their video that have no words yet are heard.
