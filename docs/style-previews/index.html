@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fff; }
+      .scene { position: absolute; inset: 0; overflow: hidden; }
+      .round { font-family: Nunito, "Segoe UI", system-ui, sans-serif; }
+
+      /* Bold words */
+      #words { background: #F4644A; }
+      #words .stack { position: absolute; left: 140px; top: 120px; font: 900 250px/0.86 "Segoe UI Black", "Segoe UI", sans-serif; letter-spacing: -6px; color: #3A2420; }
+      #words .stack span { display: block; }
+      #words .stack .hollow { color: transparent; -webkit-text-stroke: 8px #FFF4E9; }
+      #words .stack .cream { color: #FFF4E9; }
+      #words .tag { position: absolute; right: 140px; bottom: 120px; font: 700 54px "Segoe UI", sans-serif; color: #FFF4E9; background: #3A2420; padding: 18px 34px; border-radius: 999px; }
+      #words .bar { position: absolute; right: 0; top: 0; width: 360px; height: 1080px; background: #3A2420; }
+
+      /* Paper cut-out */
+      #paper { background: #F3E6D3; }
+      #paper svg { position: absolute; inset: 0; }
+      #paper .strip { white-space: nowrap; position: absolute; left: 50%; top: 170px; transform: translateX(-50%) rotate(-2deg); background: #FFFDF8; padding: 34px 70px; font: 800 96px Nunito, "Segoe UI", sans-serif; color: #3A2420; box-shadow: 0 10px 0 rgba(58,36,32,0.12), 0 22px 40px rgba(58,36,32,0.16); }
+
+      /* Clean app tour */
+      #tour { background: #EEF1F4; }
+      #tour .win { position: absolute; left: 260px; top: 150px; width: 1400px; height: 800px; background: #fff; border-radius: 28px; box-shadow: 0 30px 80px rgba(30,40,60,0.18); overflow: hidden; }
+      #tour .top { height: 70px; background: #F7F8FA; border-bottom: 2px solid #E3E7EC; }
+      #tour .dot { position: absolute; top: 26px; width: 18px; height: 18px; border-radius: 50%; }
+      #tour .video { position: absolute; left: 40px; top: 110px; width: 860px; height: 484px; border-radius: 18px; background: linear-gradient(135deg, #7FB3D5, #2E5E8C); }
+      #tour .chat { position: absolute; right: 40px; top: 110px; width: 420px; height: 640px; border-radius: 18px; background: #F7F8FA; }
+      #tour .line { position: absolute; left: 40px; height: 16px; border-radius: 8px; background: #DDE2E8; }
+      #tour .ring { position: absolute; left: 1188px; top: 640px; width: 230px; height: 90px; border-radius: 22px; border: 6px solid #2F7DF6; }
+      #tour .send { position: absolute; left: 1210px; top: 660px; width: 186px; height: 50px; border-radius: 25px; background: #2F7DF6; font: 700 26px "Segoe UI", sans-serif; color: #fff; text-align: center; line-height: 50px; }
+      #tour .callout { position: absolute; left: 1030px; top: 470px; background: #1C2633; color: #fff; font: 700 44px "Segoe UI", sans-serif; padding: 22px 34px; border-radius: 20px; }
+      #tour .cursor { position: absolute; left: 1330px; top: 690px; width: 0; height: 0; border-left: 26px solid transparent; border-right: 26px solid transparent; border-bottom: 64px solid #1C2633; transform: rotate(-28deg); }
+
+      /* Bold shapes */
+      #shapes { background: #F4EFE6; }
+      #shapes .c { position: absolute; border-radius: 50%; }
+      #shapes .title { position: absolute; left: 120px; bottom: 120px; font: 900 96px/0.95 "Arial Black", "Segoe UI Black", sans-serif; color: #111; letter-spacing: -2px; }
+
+      /* Midnight calm */
+      #night { background: radial-gradient(circle at 70% 40%, #1E3A6B 0%, #0B1630 55%, #070E1F 100%); }
+      #night .orbit { position: absolute; border: 2px solid rgba(140, 170, 230, 0.35); border-radius: 50%; }
+      #night .title { position: absolute; left: 160px; top: 380px; font: 300 112px/1.05 "Segoe UI Light", "Segoe UI", sans-serif; color: #FFF6EA; letter-spacing: 1px; }
+      #night .title b { font-weight: 600; color: #FF7A59; }
+      #night .dot { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: #FF7A59; box-shadow: 0 0 0 10px rgba(255,122,89,0.18); }
+
+      /* Line drawing */
+      #ink { background: #FBF6EC; }
+      #ink svg { position: absolute; inset: 0; }
+      #ink .title { position: absolute; left: 980px; top: 360px; font: 400 104px/1.15 "Ink Free", "Segoe Print", "Segoe UI", sans-serif; color: #2B2522; }
+      #ink .title u { text-decoration-color: #E2553C; text-decoration-thickness: 8px; text-underline-offset: 14px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+
+      <div id="words" class="scene clip" data-start="0" data-duration="1" data-track-index="0">
+        <div class="bar"></div>
+        <div class="stack"><span>TALK</span><span class="hollow">TO</span><span class="cream">EDIT</span></div>
+        <div class="tag">Edit videos by talking</div>
+      </div>
+
+      <div id="paper" class="scene clip" data-start="1" data-duration="1" data-track-index="0">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+          <defs><filter id="ps" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#3A2420" flood-opacity="0.22"/></filter></defs>
+          <circle cx="1520" cy="300" r="130" fill="#F6B43C" filter="url(#ps)"/>
+          <path d="M0 640 C 300 520, 520 600, 780 560 S 1300 470, 1920 600 L1920 1080 L0 1080 Z" fill="#9CC9A9" filter="url(#ps)"/>
+          <path d="M0 760 C 380 680, 640 780, 980 720 S 1500 650, 1920 760 L1920 1080 L0 1080 Z" fill="#5FA27C" filter="url(#ps)"/>
+          <path d="M0 880 C 420 820, 760 900, 1120 850 S 1640 800, 1920 880 L1920 1080 L0 1080 Z" fill="#2F6E58" filter="url(#ps)"/>
+          <g filter="url(#ps)"><rect x="300" y="590" width="34" height="120" fill="#6B4A42"/><circle cx="317" cy="560" r="70" fill="#4E8F62"/></g>
+          <g filter="url(#ps)"><rect x="1300" y="560" width="30" height="110" fill="#6B4A42"/><circle cx="1315" cy="532" r="60" fill="#78B486"/></g>
+        </svg>
+        <div class="strip">Your clips. Your words.</div>
+      </div>
+
+      <div id="tour" class="scene clip" data-start="2" data-duration="1" data-track-index="0">
+        <div class="win">
+          <div class="top"></div>
+          <div class="dot" style="left:30px;background:#FF5F57"></div>
+          <div class="dot" style="left:60px;background:#FEBC2E"></div>
+          <div class="dot" style="left:90px;background:#28C840"></div>
+          <div class="video"></div>
+          <div class="line" style="top:630px;width:600px"></div>
+          <div class="line" style="top:665px;width:420px"></div>
+          <div class="chat"></div>
+        </div>
+        <div class="ring"></div>
+        <div class="send">Send</div>
+        <div class="callout">Add subtitles</div>
+        <div class="cursor"></div>
+      </div>
+
+      <div id="shapes" class="scene clip" data-start="3" data-duration="1" data-track-index="0">
+        <div class="c" style="left:980px;top:-180px;width:760px;height:760px;background:#E2392B"></div>
+        <div style="position:absolute;left:1380px;top:420px;width:540px;height:540px;background:#1F4FB4"></div>
+        <div class="c" style="left:1230px;top:640px;width:300px;height:300px;background:#F5C224"></div>
+        <div style="position:absolute;left:1000px;top:560px;width:110px;height:400px;background:#111"></div>
+        <div class="c" style="left:120px;top:110px;width:180px;height:180px;background:#111"></div>
+        <div class="title">EDIT VIDEOS<br />BY TALKING</div>
+      </div>
+
+      <div id="night" class="scene clip" data-start="4" data-duration="1" data-track-index="0">
+        <div class="orbit" style="left:1080px;top:110px;width:860px;height:860px"></div>
+        <div class="orbit" style="left:1230px;top:260px;width:560px;height:560px"></div>
+        <div class="orbit" style="left:1380px;top:410px;width:260px;height:260px"></div>
+        <div class="dot" style="left:1271px;top:239px"></div>
+        <div class="title">Edit videos<br /><b>by talking</b></div>
+      </div>
+
+      <div id="ink" class="scene clip" data-start="5" data-duration="1" data-track-index="0">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" stroke="#2B2522" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M260 380 q-10 -40 30 -44 l340 -6 q34 2 36 36 l6 300 q-2 34 -36 36 l-344 4 q-30 -2 -34 -32 z"/>
+          <path d="M676 470 l150 -80 q14 -6 14 10 l4 260 q0 16 -14 10 l-150 -84"/>
+          <circle cx="360" cy="320" r="46"/>
+          <circle cx="520" cy="314" r="52"/>
+          <path d="M330 520 q60 -50 120 0 t120 0" stroke="#E2553C"/>
+          <path d="M240 800 q300 -30 640 0" stroke-width="5"/>
+        </svg>
+        <div class="title">Edit videos<br />by <u>talking</u></div>
+      </div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+    </script>
+  </body>
+</html>

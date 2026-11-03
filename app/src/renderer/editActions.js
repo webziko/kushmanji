@@ -54,6 +54,13 @@ const ACTIONS = [
       "Make it feel: ",
   },
   {
+    // M16-15: chosen from pictures, not names. Each picture (styles/<id>.jpg) shows the same words in one style.
+    label: t("Pick a style"),
+    about: t("Choose how your video should look and move. Each picture shows one style. The assistant then remakes " +
+      "your video in the style you pick, keeping its story, words and timing."),
+    styles: true,
+  },
+  {
     label: t("Add a title"),
     about: t("Give the assistant the words to put on the screen. While you are watching, the moment you are " +
       "at goes with your message. You can also type a different time."),
@@ -95,6 +102,18 @@ const ACTIONS = [
   },
 ];
 
+// The styles to pick from, in the order shown. Their written contracts are in main/styles.js under the same ids.
+const STYLE_CARDS = [
+  { id: "story", name: t("Friendly story"), about: t("A small story with a friendly drawn character") },
+  { id: "figure", name: t("Character on a journey"), about: t("A drawn figure walks through a moving world") },
+  { id: "words", name: t("Bold words"), about: t("Huge words that move to the beat") },
+  { id: "paper", name: t("Paper cut-out"), about: t("Layers of paper, like a pop-up book") },
+  { id: "tour", name: t("App or website tour"), about: t("Show an app or website, one step at a time") },
+  { id: "shapes", name: t("Bold shapes"), about: t("Big bright circles and squares") },
+  { id: "night", name: t("Midnight calm"), about: t("Calm and premium, deep blue with one warm colour") },
+  { id: "ink", name: t("Line drawing"), about: t("Hand-drawn lines that draw themselves") },
+];
+
 export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }) {
   const title = h("h2", { id: "edit-action-title" });
   const about = h("p", { id: "edit-action-about" });
@@ -102,6 +121,18 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
   const choices = h("div", { class: "size-choices", hidden: true });
   const tidyList = h("div", { class: "tidy-list", hidden: true });
   let chosen;
+  let pickedStyle = null;
+
+  const styleCards = STYLE_CARDS.map((style) => h("button", {
+    class: "style-card", type: "button", "aria-pressed": "false", "data-style": style.id,
+    onclick: () => {
+      pickedStyle = style.id;
+      for (const card of styleGrid.children) card.setAttribute("aria-pressed", String(card.dataset.style === style.id));
+      use.disabled = false;
+    },
+  }, h("img", { src: `styles/${style.id}.jpg`, alt: "", width: "320", height: "180" }),
+  h("span", { class: "style-name" }, style.name), h("span", { class: "style-about muted" }, style.about)));
+  const styleGrid = h("div", { class: "style-grid", hidden: true }, styleCards);
   let tidyStop = null;
 
   const clock = (seconds) => {
@@ -186,7 +217,9 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
   const use = h("button", { class: "primary edit-action-use", type: "button", onclick: () => {
     dialog.close();
     if (chosen.request) onDraft(chosen.request);
-    else if (chosen.tidy) {
+    else if (chosen.styles) {
+      if (pickedStyle) void api.styles.use({ dir, id: pickedStyle }).then((made) => onDraft(made.request)).catch(() => {});
+    } else if (chosen.tidy) {
       const keep = [...tidyList.querySelectorAll("input:checked")].map((box) => Number(box.value));
       void api.tidy.request({ dir, keep }).then(onDraft).catch(() => {});
     } else if (chosen.save) onSave();
@@ -197,7 +230,7 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
   } });
   const dialog = h("dialog", { class: "edit-action-dialog", "aria-labelledby": "edit-action-title",
     "aria-describedby": "edit-action-about" },
-    title, about, choices, tidyList, note, h("div", { class: "notice-actions" }, close, use),
+    title, about, choices, tidyList, styleGrid, note, h("div", { class: "notice-actions" }, close, use),
   );
   dialog.addEventListener("close", () => clearTimeout(tidyStop));
   document.body.append(dialog);
@@ -222,6 +255,12 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
         use.disabled = false;
       }
       tidyList.hidden = !action.tidy;
+      styleGrid.hidden = !action.styles;
+      if (action.styles) {
+        pickedStyle = null;
+        for (const card of styleGrid.children) card.setAttribute("aria-pressed", "false");
+        use.disabled = true;
+      }
       if (action.tidy) {
         use.disabled = true;
         tidyList.dataset.state = "listening";
@@ -236,7 +275,9 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
           });
         }
       }
-      note.textContent = action.tidy
+      note.textContent = action.styles
+        ? t("This saves the style in your video's STYLE.md and writes a message for you. Sending uses your chosen assistant.")
+        : action.tidy
         ? t("This writes a message for you with the ticked spots. Sending uses your chosen assistant.")
         : action.request
         ? t("This writes a message for you. You can change it before pressing Send. Sending uses your chosen assistant.")
@@ -244,7 +285,8 @@ export function createEditActions({ dir, onDraft, onEdit, onSave, onOtherSizes }
         : action.otherSizes
           ? t("The new video appears in My videos and opens with a prepared message. Sending uses your chosen assistant.")
           : t("Your chat and message stay with you in the editor.");
-      use.textContent = action.request || action.tidy ? t("Write the message")
+      use.textContent = action.styles ? t("Use this style")
+        : action.request || action.tidy ? t("Write the message")
         : action.save ? t("Save video")
         : action.otherSizes ? t("Make other sizes") : t("Open the editor");
       dialog.showModal();

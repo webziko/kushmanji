@@ -84,6 +84,9 @@ contextBridge.exposeInMainWorld("hfwin", {
     plan: call("tidy:plan"),
     request: call("tidy:request"),
   },
+  styles: {
+    use: call("styles:use"),
+  },
   agent: {
     status: call("agent:status"),
     history: call("agent:history"),

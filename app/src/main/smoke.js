@@ -880,6 +880,20 @@ async function playerStep({ win, result, inPage, shot, dir, hasAudio }) {
   await shot("editing-tidy");
   if (result.tidy.state === "failed") throw new Error("Tidy my talking could not listen to the clips.");
   await inPage("document.querySelector('.edit-action-close').click()");
+  // "Pick a style" (M16-15): every style is shown as a picture, and choosing one is what allows "Use this style".
+  await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Pick a style').click()");
+  await until(() => inPage("[...document.querySelectorAll('.style-card img')].every((img) => img.complete)"), { timeoutMs: 5000 });
+  result.styles = await inPage(`(() => {
+    const images = [...document.querySelectorAll('.style-card img')];
+    const before = document.querySelector('.edit-action-use').disabled;
+    document.querySelector('.style-card[data-style="paper"]').click();
+    return { cards: images.length, pictures: images.filter((img) => img.naturalWidth > 0).length,
+      waitsForAChoice: before, chosen: !document.querySelector('.edit-action-use').disabled };
+  })()`);
+  await shot("editing-styles");
+  if (result.styles.cards < 6 || result.styles.pictures !== result.styles.cards || !result.styles.waitsForAChoice ||
+    !result.styles.chosen) throw new Error("Pick a style did not show every style as a picture to choose.");
+  await inPage("document.querySelector('.edit-action-close').click()");
   await inPage("[...document.querySelectorAll('.edit-action')].find((b) => b.textContent === 'Add a title').click(); document.querySelector('.edit-action-use').click()");
   const addedDraft = await inPage("document.querySelector('.composer textarea').value");
   if (!addedDraft.startsWith(draft) || !addedDraft.includes("Add a title that says:") ||

@@ -29,6 +29,7 @@ import { placeToOpen } from "./windowPlace.js";
 import { PreviewManager, studioPreviewFrame } from "./preview.js";
 import { readMediaPlacement, readPlaybackMoment, rootPlayerFrame, runPlayerCommand } from "./player.js";
 import { keepOnly, placeInVideo, tidyPlan, tidyRequest } from "./tidy.js";
+import { styleRequest, useStyle } from "./styles.js";
 import { dressStudio } from "./studioFace.js";
 import { refused, STUDIO_REQUESTS } from "./studioRequests.js";
 import { pointingAt, pointingNote, readSelection } from "./selection.js";
@@ -583,6 +584,13 @@ function registerIpc() {
         ({ id, kind, text: text ?? "", seconds, at, file: path.basename(clip.file) })))
         .sort((a, b) => (a.at ?? 0) - (b.at ?? 0)),
     };
+  });
+  // "Pick a style" (M16-15): the chosen style becomes the video's STYLE.md, and the page gets the message to send.
+  handle("styles:use", ({ dir, id } = {}) => {
+    dir = requireProject(dir);
+    if (agent.busy) throw new Error(say("The assistant is still working. Change the look when it has finished."));
+    const { name } = useStyle(dir, String(id));
+    return { name, request: styleRequest(String(id)) };
   });
   handle("tidy:request", ({ dir, keep } = {}) => {
     dir = requireProject(dir);

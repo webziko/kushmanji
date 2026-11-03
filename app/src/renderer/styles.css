@@ -2895,3 +2895,68 @@ dialog[open]::backdrop {
 .tidy-total {
   font-weight: 600;
 }
+
+/* "Pick a style" (M16-15): one picture per style, chosen by the picture rather than the name. */
+.edit-action-dialog:has(.style-grid:not([hidden])) {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+  max-height: min(56vh, 520px);
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.style-grid[hidden] {
+  display: none;
+}
+
+.style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 8px;
+  text-align: left;
+  background: var(--raised);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.style-card:hover {
+  background: var(--hover);
+}
+
+.style-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.style-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xs);
+  display: block;
+}
+
+.style-name {
+  font-weight: 600;
+  font-size: var(--fs-md);
+}
+
+.style-about {
+  font-size: var(--fs-sm);
+}
+
+/* A button keeps its words on one line; a card's name and line may wrap. */
+.style-name,
+.style-about {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
