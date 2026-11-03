@@ -15,7 +15,9 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 - [x] **HyperFrames' own usage reporting is switched off inside Kushmanji** (your yes, 2 November). The CLI and the
       assistants run with it off, and Studio's page may not reach PostHog. Takes effect when Kushmanji is reopened.
-- [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around) and working Undo.
+- [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around), working Undo, and the
+      new "Tidy my talking" button.
+- [ ] **Listen to the story ad once** (`reviews\READY\Kushmanji story ad`): is the music right?
 - [x] **Claude Code is signed in again** (checked 2 November). Claude's trailer was started, then paused while you
       looked at the official HyperFrames app; it carries on next.
 - [ ] **ChatGPT's free allowance is used up until 17 November** (Codex said: "You've hit your usage limit.
@@ -80,6 +82,21 @@ usage. So the order changed. The review you asked for is `docs/UX.md`.
 7. [~] **An editing guide every assistant follows** (the first version is in; it grows from what you send back)
 
 Then the list further down, starting with one-click export.
+
+## New on 3 November
+
+- [x] **A 45-second story ad for Kushmanji** (`reviews\READY\Kushmanji story ad`): Meera the home baker, lost in a
+      hard editor, then she just talks to Kushmanji. Made by Claude through Kushmanji's own chat. Read ABOUT.md there
+      for the music credit to paste when you post it, and **listen to it once**: nobody on the AI side can hear.
+- [x] **Claude's trailer** (wide) is finished and in `reviews\READY\Kushmanji trailer test`, with its part of
+      COMPARISON.md: the best of the three assistants. The upright one comes next.
+- [x] **Tidy my talking** (a new editing button): the app finds long pauses, "um"s and words said twice in the clips
+      where someone talks, in any language; untick what to keep, press ▶ to hear each spot, and the assistant cuts the
+      rest. On one of your real clips: 5 pauses, 4.3 seconds, found in a third of a second.
+- [x] **Your computer stays awake** while a video saves or an assistant works, so a long job is not stopped by sleep.
+- [x] **Free music and sounds work through the chat**: for the ad, Claude found the music and two sound effects
+      itself and wrote the credit lines.
+- [x] **HyperFrames' usage reporting is off inside Kushmanji** (your yes, done by the overnight run).
 
 ## New on 2 November
 

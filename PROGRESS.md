@@ -831,14 +831,22 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       (where Claude's installer puts itself), so "Check again" finds it without restarting Windows
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok
       login`), GitHub Copilot, OpenCode. The owner's choice which, if any
-- [ ] M4-05 Keep the computer awake (Electron `powerSaveBlocker`) while "Save video" runs and while an assistant works,
-      so a long job is not stopped by sleep or a dark screen. Released when the job ends
+- [x] M4-05 (Claude, 2026-11-03) Keep the computer awake (Electron `powerSaveBlocker`) while "Save video" runs and while an assistant works,
+      so a long job is not stopped by sleep or a dark screen. Released when the job ends. `keepAwake.js`: one
+      "prevent-app-suspension" hold while any reason is on ("saving", "assistant"), set from the exporter's and the
+      runner's events in main.js; the screen may still turn off. Unit-tested; not yet watched through a real sleep
 - [ ] M3-06 Speak instead of typing: a microphone button beside the message box; the words are heard on this PC by the
       speech models already there (Parakeet; Whisper for Kannada and Hindi) and land in the box for the person to
       check. Audio only, allowed for the app's own page and nothing else (SECURITY.md), nothing kept
-- [ ] M10-31 "Tidy my talking": the app finds pauses, "um"s and false starts from the study's words itself (no
+- [x] M10-31 (Claude, 2026-11-03) "Tidy my talking": the app finds pauses, "um"s and false starts itself (no
       allowance), shows them with the time saved and a tick for each, and hands the ticked list to the assistant.
-      Builds on M10-19, M10-20, M10-22; the official app has the same choice ("cut out" or "all stay")
+      Builds on M10-19, M10-20, M10-22; the official app has the same choice ("cut out" or "all stay"). Built as an
+      editing button (`tidy.js`, `editActions.js`): pauses come from each clip's sound against its own background
+      (Whisper's words have no gaps, and the owner's mall clips never drop below -41 dB), "um"s in English, Hindi
+      and Kannada and doubled words from the study's words; each spot is placed on the video's clock (read from the
+      running composition, `player.js`) so ▶ plays it in the player; the request names each cut in the clip's own
+      seconds. On a real 29 s Kannada clip of the owner's: 5 pauses, 4.3 s saved, found in 0.3 s. Open: a real cut
+      through the chat on talking footage, and "um"s that Whisper leaves out of its words (they need the sound)
 - [ ] M7-06 Lessons: a short course inside Kushmanji on directing the assistant (the brief, checking and correcting,
       timing, sound, captions, shapes), each with a practice video that has one deliberate fault to fix. Our own words
       and videos; in English, Kannada and Hindi
@@ -847,6 +855,10 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       rule (ARCHITECTURE, SECURITY) leaves it at the person's own HyperFrames setting. To switch it off for Kushmanji:
       `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for the CLI and the assistants, and refuse `*.posthog.com` in
       `studioRequests.js`. **The owner said yes (2026-11-02); done (Claude, 2026-11-02).**
+- [x] M16-16 (Claude, 2026-11-03) One high-quality story ad for Kushmanji, to show and to test with (owner: "1 clip to
+      test and for many things"): 45 s, friendly flat illustration, Meera the home baker; built by Claude through the
+      app's chat in 22 + 5 minutes (`reviews/kushmanji-ad`, rendered to `reviews/READY/Kushmanji story ad`). Open:
+      an upright version ("Make other sizes"), and the owner listening to the music
 - [ ] M16-15 (owner, 2026-11-02) Many styles of motion video, picked from pictures or a short preview of each, not by
       name ("maybe like skills ... with photo ... or a preview"). With M16-13 and M7-01. Test every feature on real
       videos, try new editing techniques, and add the tools that are missing
@@ -867,9 +879,11 @@ M10 and M17 lines is `docs/RESEARCH.md`.
       server beside look_at_video (`agents/tools/freeMedia.mjs`), for Claude Code and Codex; the house note sends
       them there first. Tried against the real Openverse: two sunset photos with previews, one saved with its CC BY
       credit, a CC0 whoosh. Picture searches take 15 to 30 s. After "Save video", "Copy credits (n)" copies the lines
-      the description needs (`credits.js`). Open: a panel for the person to search by hand,
-      Gemini (agy takes MCP servers only from its global settings), and a real
-      request through the chat
+      the description needs (`credits.js`). **Tried through the chat on 2026-11-03** (Claude, the story ad in
+      `reviews/kushmanji-ad`): asked for a warm acoustic track and two quiet effects, it found and saved "Lucky
+      Acoustic" by Jesse Keller (CC BY 3.0, Jamendo) and two CC0 Freesound effects in its first two minutes, and
+      `CREDITS.md` listed the one that needs credit. Open: a panel for the person to search by hand, and Gemini (agy
+      takes MCP servers only from its global settings)
 - [ ] M8-13 Quiet music made in code (an MIT synthesiser, no Python) as the answer to M8-09: audition first
 - [ ] M8-14 "Put the title behind me": HyperFrames `remove-background` (a 168 MB model, only on the person's yes)
 - [ ] M8-15 Pictures an assistant makes land in the video by themselves. Gemini's `generate_image` saves to

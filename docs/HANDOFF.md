@@ -5,6 +5,33 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-11-03 · Claude · Claude's trailer, the story ad, Tidy my talking, keep awake (and M9-16 overnight)
+
+**Overnight** (the scheduled run, Claude Sonnet): M9-16 committed and pushed (`cliEnv`, `agentEnv`, posthog refused),
+then it sent Claude's trailer request and stopped before the handoff.
+
+**Today:** Claude's wide trailer got its one round of fixes and was rendered (`reviews/READY/Kushmanji trailer test`,
+COMPARISON.md filled in; the upright one is still to do). The owner asked for one high-quality story ad to reuse
+for tests: researched styles (RESEARCH.md, the motion repos report), chose friendly flat illustration with paper
+depth and a cool-to-warm colour arc, and Claude built it through the chat in 22 minutes plus a 5-minute fix
+(`reviews/kushmanji-ad`, rendered into `reviews/READY/Kushmanji story ad` with ABOUT.md and the CC BY credit). That
+request also proved M8-12 through the chat: find_free_media and use_free_media found the music and two sounds.
+
+**Built:** M4-05 (`keepAwake.js`) and M10-31 "Tidy my talking" (`tidy.js`, `editActions.js`, `player.js`'s
+`readMediaPlacement`, calls `tidy.plan` and `tidy.request`). The finding that shaped it: Whisper's word times have
+no gaps (a word stretches across the pause after it) and the owner's mall clips never fall below about -41 dB, so
+pauses come from each clip's sound against its own background, not from the words or a fixed level.
+
+**What would surprise you**
+- The owner (2026-11-03): do not focus only on Kannada in tests. Whisper took 9 minutes on one 29 s clip with an
+  assistant running beside it; use real footage in other languages too.
+- `HFWIN_SMOKE_EXPECT` must be one unbroken piece of text in index.html; Claude writes kinetic words as separate
+  pieces ("Talk", "to", "edit"), so the first trailer run "failed" although the build was fine.
+- New projects from the starter have `"media": { "autoProxy": true }` in hyperframes.json (HyperFrames' own preview
+  copies); the practice vlog has not. Worth a look beside our lighter copies.
+
+---
+
 ## 2026-11-02 · Claude · Codex's own installer, HyperFrames 0.9.2, undo fixed, skills refreshed, the official app
 
 **Done and pushed:** M2-25 (Codex installs with OpenAI's `install.ps1`, `CODEX_NON_INTERACTIVE=1`; the bridge finds
