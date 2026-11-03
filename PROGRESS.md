@@ -722,6 +722,12 @@ The owner, 2026-10-13: "we did cut so fast", "nice transitions ... very smooth c
 - [x] M16-12 (Claude, 2026-10-25) Add the research's editing lines to the editing guide (hook in three seconds, cut padding, captions
       two frames early, effects with a cause, measured loudness): `docs/RESEARCH.md`, the session's report
 - [ ] M16-13 "Pick a look": 12 to 15 ready looks written as STYLE.md (with M10-04's presets)
+- [ ] M16-17 (owner, 2026-11-04: "all are important dont skip it") Research every link the owner sent for motion
+      styles, with licences, and build from it: head-of-content, openshorts, the Wikimedia Commons API (free videos
+      and pictures, M8-10), the owner's downloaded "Shorts Animator" skill (painted looks; incomplete zip, no
+      licence: ideas only), all styles of lemo-opuscar (51) and mg-styles-15 (15), the other six repos read fully,
+      and the "Opus 5.5 Motion Lab" article (its rules and numbers for MOTION_GUIDE.md, in our own words). The list
+      and a condensed summary are in the session notes folder, `owner-style-links-2026-11-04.md`
 - [ ] M16-14 "Smooth motion" (HyperFrames 0.8.191's motion blur) and "Slow motion into the beat" (speed ramps)
 - [x] M16-08 Measure the lighter copies on the owner's PC with the real vlog (Claude, 2026-10-14). Watching: a
       jump shows its picture in 54 ms (slowest 79), a drag shows 31 pictures a second. Editor: 133 ms (slowest
