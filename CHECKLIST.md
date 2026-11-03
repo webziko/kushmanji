@@ -18,6 +18,10 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 - [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around), working Undo, and the
       new "Tidy my talking" button.
 - [ ] **Listen to the story ad once** (`reviews\READY\Kushmanji story ad`): is the music right?
+- [ ] **Send your links to motion-design style collections** (GitHub repositories and websites): they start the
+      research for more "Pick a style" cards. Each one's licence gets checked before anything is used.
+- [ ] **Try the microphone once** (🎤 beside Send): Windows may ask whether Kushmanji may use it. In Kannada or Hindi
+      it uses Whisper, which takes a minute or more for a short request on this PC.
 - [x] **Claude Code is signed in again** (checked 2 November). Claude's trailer was started, then paused while you
       looked at the official HyperFrames app; it carries on next.
 - [ ] **ChatGPT's free allowance is used up until 17 November** (Codex said: "You've hit your usage limit.
@@ -89,6 +93,9 @@ Then the list further down, starting with one-click export.
       hard editor, then she just talks to Kushmanji. Made by Claude through Kushmanji's own chat. Read ABOUT.md there
       for the music credit to paste when you post it, and **listen to it once**: nobody on the AI side can hear.
       **Now also upright** (for Shorts and Reels), made with Kushmanji's own "Make other sizes" button.
+- [x] **Speak instead of typing** (🎤 beside Send, 4 November, your yes): press it, talk, press ■, and your words
+      appear in the message box to check before sending. Written down on this computer; the recording is deleted at
+      once. The microphone is allowed for Kushmanji's own window only, sound only.
 - [x] **Pick a style** (a new editing button): eight pictures (friendly story, a character on a journey, bold words,
       paper cut-out, app tour, bold shapes, midnight calm, line drawing). Choose one by its picture and the assistant
       remakes your video in that style, keeping the story and timing.

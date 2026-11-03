@@ -29,8 +29,13 @@ M12-09 (`about.lowest` and `about.update`, state "too-old", setup step "update")
 self-test now opens Tidy my talking and Pick a style; `HFWIN_SMOKE_TIDY=1` runs Tidy on a real project
 (`reviews/tidy-test`: three of the owner's clips, hard-linked).
 
-Next: Claude's upright trailer (or let the story ad stand for it); M3-06 speak instead of typing (needs audio-only
-permission for the app's own page, SECURITY.md); short moving previews and footage styles for Pick a style; the rest
+**4 November, past midnight:** M3-06 "speak instead of typing" with the owner's yes: `renderer/dictation.js`,
+`main/dictation.js`, the `microphone` rule in main.js (sound only, the app's own page as top frame; SECURITY.md).
+The self-test's Electron gets Chromium's fake microphone playing `test/fixtures/voice-request.wav` (a looping file,
+so the box can get the sentence and part of it again). The owner offered links to motion-design style
+collections: ask for them before the style research.
+
+Next: Claude's upright trailer (or let the story ad stand for it); the style research with the owner's links; short moving previews and footage styles for Pick a style; the rest
 of M10-09; M11-20; M5-05's install part; M2-24 and M2-27 wait on the owner.
 
 **What would surprise you**

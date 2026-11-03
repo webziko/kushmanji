@@ -844,9 +844,14 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       so a long job is not stopped by sleep or a dark screen. Released when the job ends. `keepAwake.js`: one
       "prevent-app-suspension" hold while any reason is on ("saving", "assistant"), set from the exporter's and the
       runner's events in main.js; the screen may still turn off. Unit-tested; not yet watched through a real sleep
-- [ ] M3-06 Speak instead of typing: a microphone button beside the message box; the words are heard on this PC by the
+- [x] M3-06 (Claude, 2026-11-04; the owner's yes) Speak instead of typing: a microphone button beside the message box; the words are heard on this PC by the
       speech models already there (Parakeet; Whisper for Kannada and Hindi) and land in the box for the person to
-      check. Audio only, allowed for the app's own page and nothing else (SECURITY.md), nothing kept
+      check. Audio only, allowed for the app's own page and nothing else (SECURITY.md), nothing kept. Built:
+      `renderer/dictation.js` (🎤, ■ while recording, at most a minute), `main/dictation.js` (FFmpeg to 16 kHz,
+      `transcribe` by the page's language, temporary folder deleted), the `microphone` rule in main.js. The self-test
+      plays a spoken request through a fake microphone (`test/fixtures/voice-request.wav`, made with HyperFrames'
+      own local voice): "Make the title bigger, and add some music." landed in the box. Open: a real microphone and
+      a real voice; Whisper is slow for Kannada and Hindi on a processor (a short request may take a minute or more)
 - [x] M10-31 (Claude, 2026-11-03) "Tidy my talking": the app finds pauses, "um"s and false starts itself (no
       allowance), shows them with the time saved and a tick for each, and hands the ticked list to the assistant.
       Builds on M10-19, M10-20, M10-22; the official app has the same choice ("cut out" or "all stay"). Built as an
