@@ -22,6 +22,17 @@ request also proved M8-12 through the chat: find_free_media and use_free_media f
 no gaps (a word stretches across the pause after it) and the owner's mall clips never fall below about -41 dB, so
 pauses come from each clip's sound against its own background, not from the words or a fixed level.
 
+**Later the same evening:** the upright ad, through "Make other sizes" (its first real run with an assistant: 15
+min, a real re-layout), rendered beside the wide one. Built and pushed: M10-29 (`withToolFolders` in launcher.js),
+M12-09 (`about.lowest` and `about.update`, state "too-old", setup step "update"), M16-15 "Pick a style"
+(`styles.js`, eight picture cards in editActions.js, pictures in `renderer/styles/` from `docs/style-previews/`). The
+self-test now opens Tidy my talking and Pick a style; `HFWIN_SMOKE_TIDY=1` runs Tidy on a real project
+(`reviews/tidy-test`: three of the owner's clips, hard-linked).
+
+Next: Claude's upright trailer (or let the story ad stand for it); M3-06 speak instead of typing (needs audio-only
+permission for the app's own page, SECURITY.md); short moving previews and footage styles for Pick a style; the rest
+of M10-09; M11-20; M5-05's install part; M2-24 and M2-27 wait on the owner.
+
 **What would surprise you**
 - The owner (2026-11-03): do not focus only on Kannada in tests. Whisper took 9 minutes on one 29 s clip with an
   assistant running beside it; use real footage in other languages too.

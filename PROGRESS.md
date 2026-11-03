@@ -818,8 +818,14 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`, so an app that was already open finds it. "Too old"
       now says `codex update`, which updates either kind (Codex's npm launcher sets CODEX_MANAGED_BY_NPM). Not
       pressed for real: it would install a second Codex on the owner's PC
-- [ ] M12-09 Lowest versions per assistant and per model (Claude 2.1.259, 2.1.280 for Opus 5.5; Codex 0.147, 0.155
-      for GPT-6-Luna; agy 1.3.5): say plainly when an installed one is too old, with one press to update it
+- [x] M12-09 (Claude, 2026-11-03) Lowest versions per assistant and per model (Claude 2.1.259, 2.1.280 for Opus 5.5; Codex 0.147, 0.155
+      for GPT-6-Luna; agy 1.3.5): say plainly when an installed one is too old, with one press to update it. Each
+      bridge has `about.lowest` and `about.update` (`claude update`, `codex update`, `agy update`); below it the
+      status is "too-old", the card says "Claude (Claude Code) 2.1.200 is too old for Kushmanji. It needs 2.1.259 or
+      newer." and "Open PowerShell for me" runs the updater (setup step "update"). Per model: Claude's menu uses the
+      "opus" alias, which an older Claude maps to the newest Opus it knows, so nothing more is needed; an old Codex
+      asked for GPT-6-Luna says so and the chat already answers with `codex update`. Unit-tested; no real old
+      install was tried
 - [x] M5-08 (Claude, 2026-11-02) HyperFrames 0.8.193 to 0.9.2 (the newest; the official app has 0.8.230), by the
       MAINTENANCE routine: check, tests, self-test, one real Claude request (20 s on Sonnet), and the practice vlog
       measured twice on each version: jumps about a third quicker, the editor opens in about 1 s instead of 1.3,
@@ -827,8 +833,11 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       logo) is hidden by refusing its one request (`studioRequests.js`), and the self-test checks it stays hidden.
       Found after: on 0.9.2 undo was off (the preview was told it ran inside a desktop app, and such a server now
       keeps no history), so "Undo this change" silently vanished; fixed in `preview.js`, checked by the self-test
-- [ ] M10-29 After installing an assistant on Windows, put `%USERPROFILE%\.local\bin` on the PATH the app gives it
-      (where Claude's installer puts itself), so "Check again" finds it without restarting Windows
+- [x] M10-29 (Claude, 2026-11-03) After installing an assistant on Windows, put `%USERPROFILE%\.local\bin` on the PATH the app gives it
+      (where Claude's installer puts itself), so "Check again" finds it without restarting Windows. "Check again"
+      already finds all three by their installers' folders (`resolveTool` extras); now `agentEnv` also adds Claude's
+      `.local\bin`, Codex's `Programs\OpenAI\Codex\bin` and `agy\bin` to the PATH each assistant starts with, when
+      they exist and are missing, at the end (`withToolFolders`, launcher.js)
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok
       login`), GitHub Copilot, OpenCode. The owner's choice which, if any
 - [x] M4-05 (Claude, 2026-11-03) Keep the computer awake (Electron `powerSaveBlocker`) while "Save video" runs and while an assistant works,
@@ -862,9 +871,15 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       test and for many things"): 45 s, friendly flat illustration, Meera the home baker; built by Claude through the
       app's chat in 22 + 5 minutes (`reviews/kushmanji-ad`, rendered to `reviews/READY/Kushmanji story ad`). Open:
       an upright version ("Make other sizes"), and the owner listening to the music
-- [ ] M16-15 (owner, 2026-11-02) Many styles of motion video, picked from pictures or a short preview of each, not by
+- [x] M16-15 (Claude, 2026-11-03; owner, 2026-11-02) Many styles of motion video, picked from pictures or a short preview of each, not by
       name ("maybe like skills ... with photo ... or a preview"). With M16-13 and M7-01. Test every feature on real
-      videos, try new editing techniques, and add the tools that are missing
+      videos, try new editing techniques, and add the tools that are missing. First part built: "Pick a style", an
+      editing button with eight picture cards (friendly story, character on a journey, bold words, paper cut-out,
+      app tour, bold shapes, midnight calm, line drawing). Six pictures drawn with the same headline in each style
+      (`docs/style-previews`), two are frames of the story ad and Claude's trailer. Picking one writes its contract
+      as STYLE.md (`styles.js`) and prepares "Restyle this video in the ... style". Open: short moving previews
+      instead of stills, more styles (footage-based ones such as vlog pop or cinematic titles), offering the styles
+      on Home's "From an idea" too, and a real restyle through the chat
 - [ ] M10-30 Ideas to weigh: an interview and podcast editor (speakers, camera per speaker, pull quotes, show notes),
       "make it like this video" from a reference, a style library from examples, review links. Built our own way,
       with the person's assistants and no paid service
@@ -939,7 +954,10 @@ M10 and M17 lines is `docs/RESEARCH.md`.
       button "Make other sizes" offers the shapes the video is not (upright 9:16, square 1:1), makes each as a new
       video beside it (text files copied, assets hard-linked or copied, nothing from .hyperframes or .cache, links
       never followed; `otherSizes.js`), lists it on Home and opens it with a prepared request (not sent) to adapt
-      the layout with the motion guide. Not yet tried with a real assistant
+      the layout with the motion guide. **Tried with a real assistant on 2026-11-03** (Claude, the story ad): the
+      button's own code made `reviews/kushmanji-ad-upright` and its message, and Claude adapted all 45 s to 1080 by
+      1920 in 15 minutes (words up top, Meera larger, the phones in a row, the logo centred, the small line split in
+      two), checked the platforms' button areas itself and fixed three things it found
 - [ ] M9-14 Keep the repository easy for people and AIs to find their way in: CONTRIBUTING's file map true, a
       tidy-up pass (with M9-05)
 - [ ] M9-15 The self-test deletes `app/.smoke-<name>` at its start and stops with a raw EPERM when a shell sits

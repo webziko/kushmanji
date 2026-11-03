@@ -88,6 +88,12 @@ Then the list further down, starting with one-click export.
 - [x] **A 45-second story ad for Kushmanji** (`reviews\READY\Kushmanji story ad`): Meera the home baker, lost in a
       hard editor, then she just talks to Kushmanji. Made by Claude through Kushmanji's own chat. Read ABOUT.md there
       for the music credit to paste when you post it, and **listen to it once**: nobody on the AI side can hear.
+      **Now also upright** (for Shorts and Reels), made with Kushmanji's own "Make other sizes" button.
+- [x] **Pick a style** (a new editing button): eight pictures (friendly story, a character on a journey, bold words,
+      paper cut-out, app tour, bold shapes, midnight calm, line drawing). Choose one by its picture and the assistant
+      remakes your video in that style, keeping the story and timing.
+- [x] **An assistant that is too old** now says so with its version and the one Kushmanji needs, and "Open
+      PowerShell for me" updates it. An assistant installed while Kushmanji is open is found without restarting.
 - [x] **Claude's trailer** (wide) is finished and in `reviews\READY\Kushmanji trailer test`, with its part of
       COMPARISON.md: the best of the three assistants. The upright one comes next.
 - [x] **Tidy my talking** (a new editing button): the app finds long pauses, "um"s and words said twice in the clips
