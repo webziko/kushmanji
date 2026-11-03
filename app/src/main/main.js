@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, screen, session, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, powerSaveBlocker, screen, session, shell } from "electron";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,7 @@ import { FfmpegTool } from "./ffmpegTool.js";
 import { freeUpSpace, storageStatus } from "./storage.js";
 import { hasStyle, listKits, saveKit, useKit } from "./kits.js";
 import { LightCopies } from "./lightCopies.js";
+import { KeepAwake } from "./keepAwake.js";
 import { EditorPrep } from "./editorPrep.js";
 import { createLog, errorDetails } from "./log.js";
 import { placeToOpen } from "./windowPlace.js";
@@ -146,8 +147,12 @@ const study = new FootageStudy({
 let speech = null;
 /** FFmpeg, fetched only when the person presses "Get it now" (ffmpegTool.js). Made with the speech tool. */
 let ffmpeg = null;
+/** No sleep while a video saves or an assistant works (keepAwake.js, M4-05). */
+const awake = new KeepAwake({ blocker: powerSaveBlocker });
 const agent = new AgentRunner({
   emit: (payload) => {
+    // Every event of a turn passes here, the last one after the turn has ended, so `busy` is always current.
+    awake.set("assistant", agent.busy);
     const { event } = payload;
     if (event?.type === "done") {
       note("turn", {
@@ -191,6 +196,7 @@ const exporter = new ExportManager({
   folder: () => app.getPath("downloads"),
   ffmpeg: () => realTool("ffmpeg", process.env.HYPERFRAMES_FFMPEG_PATH),
   emit: (payload) => {
+    awake.set("saving", payload.status.state === "saving");
     if (payload.status.state === "failed") note("save-failed", { message: payload.status.message });
     win?.setProgressBar(payload.status.state === "saving" ? Math.max(0.02, payload.status.percent / 100) : -1);
     win?.webContents.send("save:event", payload);
