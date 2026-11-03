@@ -40,6 +40,9 @@ export const about = {
   install: ["irm https://antigravity.google/cli/install.ps1 | iex"],
   // The first interactive run walks through Google sign-in in the browser. It shares the Antigravity IDE's sign-in.
   signIn: ["agy"],
+  // The lowest version Kushmanji works with (M12-09), and its own updater.
+  lowest: "1.3.5",
+  update: ["agy update"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
   tested: "1.4.7",
 };

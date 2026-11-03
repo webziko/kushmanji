@@ -46,3 +46,10 @@ test("a hidden PowerShell opens a normal window and hands it the script encoded,
   const encoded = /'([A-Za-z0-9+/=]+)'$/.exec(inner)[1];
   assert.equal(Buffer.from(encoded, "base64").toString("utf16le"), script);
 });
+
+test("an assistant that is too old is updated with its own updater, in one press (M12-09)", () => {
+  assert.equal(setupScript(claude, "update"), "claude update");
+  assert.equal(setupScript(codex, "update"), "codex update");
+  assert.equal(setupScript(antigravity, "update"), "agy update");
+  for (const about of [claude, codex, antigravity]) assert.match(about.lowest, /^\d+\.\d+\.\d+$/);
+});

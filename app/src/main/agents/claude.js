@@ -20,6 +20,9 @@ export const about = {
   product: "Claude Code",
   install: ["irm https://claude.ai/install.ps1 | iex"],
   signIn: ["claude auth login"],
+  // The lowest version Kushmanji works with (M12-09; the official HyperFrames app asks the same), and its own updater.
+  lowest: "2.1.259",
+  update: ["claude update"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
   tested: "2.1.280",
 };

@@ -132,7 +132,11 @@ export class AgentRunner {
     const team = teamOf(readState());
     return Promise.all(
       Object.entries(BRIDGES).map(async ([id, bridge]) => {
-        const state = await bridge.status().catch((error) => ({ state: "broken", detail: error.message }));
+        const found = await bridge.status().catch((error) => ({ state: "broken", detail: error.message }));
+        // Older than the lowest version Kushmanji works with (M12-09): said plainly, with a one-press update.
+        const tooOld = (found.state === "ready" || found.state === "not-signed-in") &&
+          isNewer(bridge.about.lowest, found.version);
+        const state = tooOld ? { ...found, state: "too-old" } : found;
         const models = state.state === "ready" ? await bridge.models().catch(() => []) : [];
         return {
           id,

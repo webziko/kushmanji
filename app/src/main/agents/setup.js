@@ -8,7 +8,7 @@
 // read and close: sign-in needs their browser and their answers.
 import { spawn } from "node:child_process";
 
-export const STEPS = ["install", "signIn"];
+export const STEPS = ["install", "signIn", "update"];
 
 // After an installer, the tool's folder is on the user's PATH in the registry but not yet in this window.
 const REFRESH_PATH =
@@ -20,7 +20,7 @@ export function setupScript(about, step) {
   const install = about?.install ?? [];
   const signIn = about?.signIn ?? [];
   const lines = step === "install" ? [...install, ...(install.length && signIn.length ? [REFRESH_PATH] : []), ...signIn]
-    : step === "signIn" ? signIn : [];
+    : step === "signIn" ? signIn : step === "update" ? (about?.update ?? []) : [];
   return lines.length ? lines.join("; ") : null;
 }
 

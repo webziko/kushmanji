@@ -17,6 +17,7 @@ export const GOOD_FOR = {
 export const STATE_NOTES = {
   "not-installed": t("not on this computer yet"),
   "not-signed-in": t("sign in first"),
+  "too-old": t("needs an update"),
   broken: t("will not start"),
 };
 
@@ -65,16 +66,21 @@ export function fixSentence(agent) {
   const who = menuName(agent);
   return agent.state === "not-installed" ? t("{name} is not on this computer yet.", { name: who })
     : agent.state === "not-signed-in" ? t("{name} needs you to sign in first.", { name: who })
-      : t("{name} is on this computer, but it will not start.", { name: who });
+      : agent.state === "too-old"
+        ? t("{name} {version} is too old for Kushmanji. It needs {lowest} or newer.",
+          { name: who, version: agent.version ?? "", lowest: agent.lowest ?? "" })
+        : t("{name} is on this computer, but it will not start.", { name: who });
 }
 
-/** What "Open PowerShell for me" would do: install it, sign in, or nothing (it is ready, or broken in a way it cannot mend). */
+/** What "Open PowerShell for me" would do: install it, sign in, update it, or nothing (ready, or broken). */
 export const setupStep = (agent) =>
-  agent.state === "not-installed" ? "install" : agent.state === "not-signed-in" ? "signIn" : null;
+  agent.state === "not-installed" ? "install" : agent.state === "not-signed-in" ? "signIn"
+    : agent.state === "too-old" ? "update" : null;
 
 /** The lines that fix it, as the bridge lists them: the same ones "Open PowerShell for me" runs. */
 export function setupCommands(agent) {
   if (agent.state === "not-installed") return [...(agent.install ?? []), ...(agent.signIn ?? [])];
+  if (agent.state === "too-old") return agent.update ?? [];
   return agent.state === "not-signed-in" ? (agent.signIn ?? []) : [];
 }
 

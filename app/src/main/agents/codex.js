@@ -22,6 +22,10 @@ export const about = {
   // offers to remove an npm Codex the person may already have (it then puts its own folder first on PATH).
   install: ["$env:CODEX_NON_INTERACTIVE = '1'", "irm https://chatgpt.com/codex/install.ps1 | iex"],
   signIn: ["codex login"],
+  // The lowest version Kushmanji works with (M12-09). GPT-6-Luna and GPT-6-Sol need 0.155.0; an older Codex that
+  // is asked for one says so, and explain() below turns that into "codex update" too.
+  lowest: "0.147.0",
+  update: ["codex update"],
   // The newest version this bridge was run against. A newer install gets a note in the chat (docs/MAINTENANCE.md).
   tested: "0.164.0",
 };

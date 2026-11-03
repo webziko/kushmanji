@@ -58,6 +58,14 @@ test("an assistant that is not on this computer gets its install and sign-in lin
   assert.deepEqual(setupCommands({ state: "not-installed" }), [], "a bridge with no lines offers nothing to run");
 });
 
+test("an assistant too old for Kushmanji says so with both versions, and is updated with its own updater (M12-09)", () => {
+  const agent = { state: "too-old", label: "Claude", product: "Claude Code", version: "2.1.200", lowest: "2.1.259",
+    install: ["irm x | iex"], signIn: ["claude auth login"], update: ["claude update"] };
+  assert.equal(setupStep(agent), "update");
+  assert.deepEqual(setupCommands(agent), ["claude update"]);
+  assert.equal(fixSentence(agent), "Claude (Claude Code) 2.1.200 is too old for Kushmanji. It needs 2.1.259 or newer.");
+});
+
 test("a ready or broken assistant has nothing to install or sign in to", () => {
   const lines = { install: ["a"], signIn: ["b"] };
   for (const state of ["ready", "broken"]) {

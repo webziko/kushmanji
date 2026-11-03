@@ -702,4 +702,7 @@ export default {
   "The app could not listen to your clips. Try again in a moment.": "ऐप आपकी क्लिप्स नहीं सुन सका। थोड़ी देर बाद फिर कोशिश करें।",
   "This writes a message for you with the ticked spots. Sending uses your chosen assistant.": "यह टिक की गई जगहों के साथ आपके लिए मैसेज लिखता है। भेजने पर आपका चुना हुआ असिस्टेंट इस्तेमाल होता है।",
   "Open Tidy my talking again: its list is out of date.": "\"मेरी बातचीत साफ़ करें\" फिर से खोलें: इसकी सूची पुरानी हो गई है।",
+  // assistants.js: an assistant older than Kushmanji works with (M12-09)
+  "needs an update": "अपडेट चाहिए",
+  "{name} {version} is too old for Kushmanji. It needs {lowest} or newer.": "{name} {version} Kushmanji के लिए बहुत पुराना है। इसे {lowest} या नया चाहिए।",
 };
