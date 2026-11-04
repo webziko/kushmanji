@@ -794,7 +794,13 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       real key presses. The owner hit this twice: "its not going forward its pausing". Not yet said anywhere
       in Help (with M14-05)
 - [~] M17-04 (Claude; 2026-11-04: each short may now carry a hook line and each piece a layout, fill, blur, stack
-      or screen, from openshorts' ideas, in SHORTS.md, SHORT.md and both requests; not yet tried through the chat)
+      or screen, from openshorts' ideas, in SHORTS.md, SHORT.md and both requests. **Tried through the chat the same
+      day** on three of the owner's clips (`reviews/tidy-test`, Claude on Sonnet, 4.5 min): STYLE.md first, then
+      SHORTS.md with three shorts of 16 to 21 s, each with a hook and a layout (fill, blur, fill), read without
+      complaint by `readShortsPlan`. Found: the study's words were Parakeet's guess in an assumed language (the clips
+      are Kannada), so there was no "strongest line" to find; the assistant wrote its hooks from the few words it
+      trusted ("hospital", "friend", "3 o'clock") and said so. Shorts of speech outside Parakeet's languages need
+      Whisper's words first (M10-12). Not yet: making a short from the plan)
       "Make shorts from this video" as something the app does: pick the moments, make an upright project
       in the video's own look, keep her face in frame. Today it is done by hand with three requests. Design worked out
       in the cloud on 2026-10-14, to build on the owner's PC with real assistants: step one, in the source video,
@@ -857,6 +863,12 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       they exist and are missing, at the end (`withToolFolders`, launcher.js)
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok
       login`), GitHub Copilot, OpenCode. The owner's choice which, if any
+- [ ] M2-28 A turn said "Claude is signed out" while Claude was signed in (2026-11-04, 08:35 UTC: the first message
+      after three idle hours stopped in 22 s with `problem: "signed-out"`; a minute later `claude auth status` said
+      loggedIn and `claude -p` answered). Perhaps the saved sign-in was being renewed at that moment. The raw words
+      were not kept: log the assistant's own error line (scrubbed, `log.js`) whenever `problems.js` recognises one,
+      and when a turn fails as signed out within seconds with nothing changed, check `claude auth status` and try
+      once more before telling the person to sign in
 - [x] M4-05 (Claude, 2026-11-03) Keep the computer awake (Electron `powerSaveBlocker`) while "Save video" runs and while an assistant works,
       so a long job is not stopped by sleep or a dark screen. Released when the job ends. `keepAwake.js`: one
       "prevent-app-suspension" hold while any reason is on ("saving", "assistant"), set from the exporter's and the
@@ -889,12 +901,20 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       rule (ARCHITECTURE, SECURITY) leaves it at the person's own HyperFrames setting. To switch it off for Kushmanji:
       `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for the CLI and the assistants, and refuse `*.posthog.com` in
       `studioRequests.js`. **The owner said yes (2026-11-02); done (Claude, 2026-11-02).**
-- [ ] M16-18 (owner, 2026-11-04: the story ad is "so bad": "everything is saying edit videos just by talking",
+- [~] M16-18 (Claude; the wide one done 2026-11-04, the upright one waits for the allowance) (owner, 2026-11-04: the
+      story ad is "so bad": "everything is saying edit videos just by talking",
       weak music and hook, "no fast pace") Remake the Kushmanji ad: a hook in the first 1 to 2 s; a new idea every
       1 to 2 s on the beat of energetic music (about 120 to 128 BPM, chosen by its energy); show what Kushmanji does
       (shorts in one click with layouts and hooks, subtitles in many languages, free music and video clips, Pick a
       style, Tidy my talking, speak instead of typing, Claude, ChatGPT and Gemini, free and open source); kinetic
-      type; 30 s; wide and upright. Brief in the session notes, `better-make-shorts-plan.md` and below
+      type; 30 s; wide and upright. Brief in the session notes, `better-make-shorts-plan.md` and below. **Wide one
+      done** through the app's chat (`reviews/kushmanji-ad-2`): Claude chose "Arcade Aroma" (CC0, 107 BPM measured
+      with `hyperframes beats`) from the first try's saved music and built it in 15 min; one fix round on Sonnet in
+      11 min (truthful words: "many languages", the real 1:32 to 1:16 of Tidy my talking; a fuller subtitles scene;
+      a 2% push on held shots). A feature about every 2.5 s. Rendered at delivery quality, sound brought to -14.0
+      LUFS, in `reviews/READY/Kushmanji fast ad` with ABOUT.md and stills. The build cost about 45% of the 5-hour
+      window, the Sonnet fix about 12%. The upright copy is made (`reviews/kushmanji-ad-2-upright`, "Make other
+      sizes" code and its prepared REQUEST.txt), not yet sent
 - [x] M16-16 (Claude, 2026-11-03) One high-quality story ad for Kushmanji, to show and to test with (owner: "1 clip to
       test and for many things"): 45 s, friendly flat illustration, Meera the home baker; built by Claude through the
       app's chat in 22 + 5 minutes (`reviews/kushmanji-ad`, rendered to `reviews/READY/Kushmanji story ad`). Open:

@@ -5,6 +5,28 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-11-04 (afternoon) · Claude · The fast ad (wide), and Make shorts tried through the chat
+
+**Done:** M16-18's wide ad, through the app's chat (`reviews/kushmanji-ad-2`, REQUEST-2.txt, then FIX-1.txt).
+Claude chose "Arcade Aroma" (CC0, 107 BPM, measured with `hyperframes beats`) from the first try's saved music and
+built 30 s in 15 min; one fix round on Sonnet in 11 min. Rendered `--quality delivery` (41 s), two-pass loudnorm to
+-14.0 LUFS (picture copied) into `reviews/READY/Kushmanji fast ad` with ABOUT.md and stills, sent to the owner.
+M17-04's planning request tried through the chat on `reviews/tidy-test` (Sonnet, 4.5 min): SHORTS.md with hooks and
+layouts parses; the study's words were wrong for the owner's Kannada (PROGRESS, M17-04).
+
+**Waiting: the upright ad.** `reviews/kushmanji-ad-2-upright` was made with `makeOtherSizes` and holds its prepared
+request in REQUEST.txt; not sent yet, because the build cost about 45% of the 5-hour window and the fix about 12%.
+Send it with `HFWIN_SMOKE_REQUEST_FILE` pointing at that REQUEST.txt, check stills, render the same way.
+
+**What would surprise you**
+- The first message after three idle hours failed in 22 s as "signed out" while Claude was signed in (M2-28).
+- A fix round in a fresh chat on Sonnet (the build's chat file renamed aside, `HFWIN_SMOKE_MODEL=sonnet`) cost about
+  a quarter of the build: resuming the build's conversation would have re-read all of its pictures.
+- Set-aside chats in `reviews/kushmanji-ad-2/.hyperframes/`: `studio-win-chat.first-try-`, `.signed-out-` and
+  `.build-2026-11-04.json`.
+
+---
+
 ## 2026-11-04 · Claude · Hand-over at a full context window (the owner: "lets continue on next chat")
 
 **Pushed today (all on main):** M3-06 speak instead of typing; M16-17 research of the owner's links (RESEARCH.md),

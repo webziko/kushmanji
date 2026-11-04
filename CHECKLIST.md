@@ -4,7 +4,7 @@ The short version, for the owner: what works, what is waiting on you, what comes
 The full task list is `PROGRESS.md`. Every feature of the official app, one by one, is in `docs/PARITY.md`.
 Whoever finishes a work session updates this page.
 
-_Updated 2026-11-02. The app is now called **Kushmanji**._
+_Updated 2026-11-04. The app is now called **Kushmanji**._
 
 ## How to open it
 
@@ -13,6 +13,10 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
+- [ ] **Watch the new fast ad** (`reviews\READY\Kushmanji fast ad`, 30 s, wide), made after you called the story ad
+      "so bad": a hook in the first second, a new feature about every 2.5 seconds, loud punchy music (public domain,
+      no credit needed), sound at YouTube's level. Is it fast and exciting enough now? The upright one for Shorts and
+      Reels follows when Claude's allowance comes back.
 - [x] **HyperFrames' own usage reporting is switched off inside Kushmanji** (your yes, 2 November). The CLI and the
       assistants run with it off, and Studio's page may not reach PostHog. Takes effect when Kushmanji is reopened.
 - [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around), working Undo, and the
