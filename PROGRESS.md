@@ -793,7 +793,9 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       a control that uses arrows, the editor keeps its key. `main/editorKeys.js`. Tried in the self-test with
       real key presses. The owner hit this twice: "its not going forward its pausing". Not yet said anywhere
       in Help (with M14-05)
-- [~] M17-04 (Claude) "Make shorts from this video" as something the app does: pick the moments, make an upright project
+- [~] M17-04 (Claude; 2026-11-04: each short may now carry a hook line and each piece a layout, fill, blur, stack
+      or screen, from openshorts' ideas, in SHORTS.md, SHORT.md and both requests; not yet tried through the chat)
+      "Make shorts from this video" as something the app does: pick the moments, make an upright project
       in the video's own look, keep her face in frame. Today it is done by hand with three requests. Design worked out
       in the cloud on 2026-10-14, to build on the owner's PC with real assistants: step one, in the source video,
       the assistant writes the chosen moments into `SHORTS.md` (a JSON block: clip, in and out times in the
@@ -887,6 +889,12 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       rule (ARCHITECTURE, SECURITY) leaves it at the person's own HyperFrames setting. To switch it off for Kushmanji:
       `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for the CLI and the assistants, and refuse `*.posthog.com` in
       `studioRequests.js`. **The owner said yes (2026-11-02); done (Claude, 2026-11-02).**
+- [ ] M16-18 (owner, 2026-11-04: the story ad is "so bad": "everything is saying edit videos just by talking",
+      weak music and hook, "no fast pace") Remake the Kushmanji ad: a hook in the first 1 to 2 s; a new idea every
+      1 to 2 s on the beat of energetic music (about 120 to 128 BPM, chosen by its energy); show what Kushmanji does
+      (shorts in one click with layouts and hooks, subtitles in many languages, free music and video clips, Pick a
+      style, Tidy my talking, speak instead of typing, Claude, ChatGPT and Gemini, free and open source); kinetic
+      type; 30 s; wide and upright. Brief in the session notes, `better-make-shorts-plan.md` and below
 - [x] M16-16 (Claude, 2026-11-03) One high-quality story ad for Kushmanji, to show and to test with (owner: "1 clip to
       test and for many things"): 45 s, friendly flat illustration, Meera the home baker; built by Claude through the
       app's chat in 22 + 5 minutes (`reviews/kushmanji-ad`, rendered to `reviews/READY/Kushmanji story ad`). Open:
