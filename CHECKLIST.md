@@ -96,6 +96,9 @@ Then the list further down, starting with one-click export.
       hard editor, then she just talks to Kushmanji. Made by Claude through Kushmanji's own chat. Read ABOUT.md there
       for the music credit to paste when you post it, and **listen to it once**: nobody on the AI side can hear.
       **Now also upright** (for Shorts and Reels), made with Kushmanji's own "Make other sizes" button.
+- [x] **Free video clips** (from your Wikimedia Commons link): ask the assistant for "a short free clip of bread
+      baking" and it finds one on Wikimedia Commons, only clips a video may use, saves a small copy into your video,
+      and adds its credit to CREDITS.md. Tried for real: an 18-second bakery clip in under 2 seconds.
 - [x] **Speak instead of typing** (🎤 beside Send, 4 November, your yes): press it, talk, press ■, and your words
       appear in the message box to check before sending. Written down on this computer; the recording is deleted at
       once. The microphone is allowed for Kushmanji's own window only, sound only.

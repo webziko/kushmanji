@@ -299,8 +299,12 @@ is making sure each one runs on Windows from inside the app, and making it easy 
 - [ ] M8-08 Transitions and motion graphics: prove one real request through the chat (the skills are installed
       for all three agents), then add starter buttons
 - [ ] M8-09 Music made on this PC with MusicGen: a few gigabytes of Python packages, needs the owner's yes
-- [ ] M8-10 Free stock footage and images without HeyGen: Wikimedia, NASA, Archive.org (no key), Pexels and
-      Pixabay (free keys the owner would create)
+- [~] M8-10 Free stock footage and images without HeyGen: Wikimedia, NASA, Archive.org (no key), Pexels and
+      Pixabay (free keys the owner would create). Wikimedia Commons videos done (Claude, 2026-11-04, the owner's
+      link): `find_free_media` and `use_free_media` take kind "video"; only public domain, CC0 and CC BY files (no
+      share-alike, which would bind the whole video), and Commons' own 720p or 480p WebM copy, never the original
+      (files reach gigabytes); credit kept in CREDITS.md like Openverse's. Tried live: "bakery bread" found three in
+      1 s, an 18 s clip saved as 1.2 MB in under 2 s. Open: NASA and Archive.org, Pexels and Pixabay keys
 
 ## M9 · Ready for other people (organisation, security, upkeep)
 
