@@ -86,12 +86,13 @@ test("a good plan is read: title, pieces and the seconds added up", () => {
   assert.equal(plan.shorts.length, 2);
   const [first] = plan.shorts;
   assert.equal(first.title, "ಮಾಲ್ ದಿನ");
-  assert.deepEqual(first.pieces[0], { clip: "assets/prepared/03.mp4", from: 8, to: 14, words: "Hello" });
-  assert.deepEqual(first.pieces[1], { clip: "assets/prepared/03.mp4", from: 1.23, to: 5.68, words: "" });
+  assert.deepEqual(first.pieces[0], { clip: "assets/prepared/03.mp4", from: 8, to: 14, words: "Hello", layout: "fill" });
+  assert.deepEqual(first.pieces[1], { clip: "assets/prepared/03.mp4", from: 1.23, to: 5.68, words: "", layout: "fill" });
   // 6.00 and 4.45 seconds are 10.45, and a hundredth over the half rounds up.
   assert.equal(first.seconds, 10.5);
   assert.equal(plan.shorts[1].seconds, 6);
-  assert.deepEqual(Object.keys(first).sort(), ["pieces", "seconds", "title"]);
+  assert.deepEqual(Object.keys(first).sort(), ["hook", "pieces", "seconds", "title"]);
+  assert.equal(first.hook, "");
 });
 
 test("only the first json block counts, and a block without the word json is accepted when it reads as a plan", () => {
@@ -375,17 +376,21 @@ test("SHORT.md lists the pieces in order, with what is said in each", (t) => {
   const { dir } = source(t);
   const plan = parse(short({
     title: "Boring day? Mall time!",
-    pieces: [piece({ words: "The thing is... my day is so boring." }), piece({ clip: "assets/prepared/04.mp4", from: 1.5, to: 7, words: "" })],
+    hook: "  What a boring day!  ",
+    pieces: [piece({ words: "The thing is... my day is so boring.", layout: "blur" }),
+      piece({ clip: "assets/prepared/04.mp4", from: 1.5, to: 7, words: "", layout: "sideways" })],
   }));
+  assert.deepEqual(plan.shorts[0].pieces.map((p) => p.layout), ["blur", "fill"], "an unknown layout is the plain one");
   const made = makeShortProject(dir, plan.shorts[0], 2);
-  assert.equal(
-    fs.readFileSync(path.join(made, "SHORT.md"), "utf8"),
+  const notes = fs.readFileSync(path.join(made, "SHORT.md"), "utf8");
+  assert.ok(notes.startsWith(
     "# Short 2: Boring day? Mall time!\n\n" +
       "About 11.5 seconds, from the video \"City vlog\". Use these pieces, in this order " +
       "(times are inside each clip's own file, in seconds):\n\n" +
-      "- assets/prepared/03.mp4, 8 to 14: \"The thing is... my day is so boring.\"\n" +
-      "- assets/prepared/04.mp4, 1.5 to 7\n",
-  );
+      "- assets/prepared/03.mp4, 8 to 14, layout blur: \"The thing is... my day is so boring.\"\n" +
+      "- assets/prepared/04.mp4, 1.5 to 7, layout fill\n\n" +
+      "Hook, on screen for the first 2.5 seconds: \"What a boring day!\"\n\n"), notes);
+  assert.match(notes, /blur = the whole wide picture across the middle/);
   // Both clips are used, so both are there.
   assert.ok(fs.existsSync(path.join(made, "assets", "prepared", "04.mp4")));
   assert.ok(fs.existsSync(path.join(made, "assets", "prepared", "03.mp4")));

@@ -48,11 +48,13 @@ export const SHORT_REQUEST = [
     "STYLE.md and do not invent a look of your own.",
   "The rules for every short:",
   "- Upright, 1080 by 1920, 30 pictures a second. index.html is already that size; build in it.",
-  "- Full screen. A wide clip fills the whole height and is cropped at the sides to keep the person speaking in " +
-    "the picture: look at the clip's still frames in the study and place it so their whole face is inside the " +
-    "frame for the part used. A slow, gentle push-in is welcome.",
-  "- The first two seconds decide everything: the face, the words as a big caption, and the short's title (from " +
-    "SHORT.md, four words or fewer) near the top. No logo first, no slow start.",
+  "- Full screen, each piece in the layout SHORT.md gives it. fill: the wide clip fills the whole height and is " +
+    "cropped at the sides to keep the person speaking in the picture: look at the clip's still frames in the study " +
+    "and place it so their whole face is inside the frame for the part used (a slow, gentle push-in is welcome). " +
+    "blur: the same clip twice, one scaled to cover the frame, blurred and a little darker, the other whole across " +
+    "the middle. stack and screen: two crops of the clip, one above the other, as SHORT.md describes.",
+  "- The first two seconds decide everything: the face, the hook from SHORT.md as a big caption (or the first " +
+    "words if it has none), and the short's title (four words or fewer) near the top. No logo first, no slow start.",
   "- Subtitles for every spoken line, from the words in SHORT.md and the study, in the language STYLE.md asks " +
     "for (English if it does not say), in STYLE.md's subtitle look, big enough for a phone (about 64 px, two " +
     "lines at most), in the lower middle under the face. Keep every word out of the top 220 px, the bottom " +

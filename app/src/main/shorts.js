@@ -122,8 +122,20 @@ function parsePiece(raw, short, piece) {
   }
   // Cut, not refused: an overlong line is not worth losing a good plan for. One line, so SHORT.md stays tidy.
   const words = Array.from(tidy(typeof raw.words === "string" ? raw.words : "")).slice(0, MAX_WORDS).join("").trim();
-  return { clip: parts.join("/"), from: hundredths(from) / 100, to: hundredths(to) / 100, words };
+  // How this piece fills the upright frame (from openshorts' layout per scene, MIT; docs/RESEARCH.md). An unknown
+  // or missing layout is the plain one: an old plan stays good.
+  const layout = LAYOUTS.includes(raw.layout) ? raw.layout : "fill";
+  return { clip: parts.join("/"), from: hundredths(from) / 100, to: hundredths(to) / 100, words, layout };
 }
+
+/**
+ * How a piece of wide footage fills an upright short: "fill" crops 9:16 around the subject; "blur" shows the whole
+ * wide picture in the middle with the same clip blurred and darkened behind it; "stack" puts two people who talk to
+ * each other one above the other; "screen" puts a screen recording on top and the presenter below.
+ */
+export const LAYOUTS = ["fill", "blur", "stack", "screen"];
+// The hook: a few words on screen for the first seconds, the reason to keep watching. Cut, never refused.
+const MAX_HOOK = 60;
 
 /**
  * Turn the text of SHORTS.md into `{ shorts: [{ title, pieces: [{ clip, from, to, words }], seconds }] }`, or throw
@@ -165,7 +177,8 @@ export function parseShortsPlan(text) {
       throw new Error(say("Short {number} would be {seconds} seconds long; a short is {min} to {max} seconds.",
         { number: n, seconds, min: MIN_SECONDS, max: MAX_SECONDS }));
     }
-    return { title, pieces, seconds };
+    const hook = Array.from(tidy(typeof raw.hook === "string" ? raw.hook : "")).slice(0, MAX_HOOK).join("").trim();
+    return { title, hook, pieces, seconds };
   });
   return { shorts };
 }
@@ -278,8 +291,10 @@ function secondsOf(short) {
 function shortNotes(sourceDir, short, index) {
   const pieces = (short.pieces ?? []).map((piece) => {
     const words = tidy(piece.words);
-    return `- ${piece.clip}, ${piece.from} to ${piece.to}${words ? `: "${words}"` : ""}`;
+    const layout = LAYOUTS.includes(piece.layout) ? piece.layout : "fill";
+    return `- ${piece.clip}, ${piece.from} to ${piece.to}, layout ${layout}${words ? `: "${words}"` : ""}`;
   });
+  const hook = tidy(short.hook);
   return [
     `# Short ${index}: ${tidy(short.title)}`,
     "",
@@ -287,6 +302,12 @@ function shortNotes(sourceDir, short, index) {
       "order (times are inside each clip's own file, in seconds):",
     "",
     ...pieces,
+    "",
+    ...(hook ? [`Hook, on screen for the first 2.5 seconds: "${hook}"`, ""] : []),
+    "Layouts: fill = crop 9:16 around the subject (look at the frames to choose where, and follow the subject if it " +
+      "moves); blur = the whole wide picture across the middle, the same clip behind it scaled to fill the frame, " +
+      "blurred and a little darker; stack = two people talking, each cropped around their face, one above the " +
+      "other; screen = the screen recording on top, the presenter's face below.",
     "",
   ].join("\n");
 }

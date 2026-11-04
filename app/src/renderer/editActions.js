@@ -87,9 +87,13 @@ const ACTIONS = [
     request: "Pick the best two or three moments of this video for upright shorts of 15 to 40 seconds each. " +
       "Each short tells one small story and starts on its strongest line. Use the footage study " +
       "(.hyperframes/study/index.json) for the clips, the times inside each clip's own file, and the words. " +
+      "A good short opens cold on its strongest line, carries one idea, ends on a finished thought and needs " +
+      "nothing outside it. Give each short a hook of at most eight words for the first seconds, and each piece a " +
+      "layout: fill (crop around the subject), blur (the whole wide picture on a blurred copy of itself), stack " +
+      "(two people talking, one above the other) or screen (a screen recording above the presenter). " +
       "Write the plan into SHORTS.md as one json block in this shape: {\"shorts\": [{\"title\": \"four words or " +
-      "fewer\", \"pieces\": [{\"clip\": \"assets/...mp4\", \"from\": 8.0, \"to\": 14.0, \"words\": \"what is " +
-      "said\"}]}]}. If this video has no STYLE.md yet, write its look there first (colours, fonts, titles, " +
+      "fewer\", \"hook\": \"a few words\", \"pieces\": [{\"clip\": \"assets/...mp4\", \"from\": 8.0, \"to\": 14.0, " +
+      "\"words\": \"what is said\", \"layout\": \"fill\"}]}]}. If this video has no STYLE.md yet, write its look there first (colours, fonts, titles, " +
       "subtitles, the name card and the ending card), so that every short shares it. Do not make the shorts " +
       "yourself. ",
   },
