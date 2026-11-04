@@ -23,7 +23,12 @@ const ENDPOINT = { image: "images", sound: "audio" };
 const MAX_RESULTS = 8;
 const MAX_PREVIEWS = 6;
 const PREVIEW_BYTES = 400_000;
-const MAX_BYTES = { image: 40_000_000, sound: 25_000_000 };
+const MAX_BYTES = { image: 40_000_000, sound: 25_000_000, video: 150_000_000 };
+// Videos come from Wikimedia Commons, which Openverse does not cover (M8-10, the owner's link on 2026-11-04). Its
+// files can be gigabytes, so a smaller copy Commons made itself is fetched (a 720p or 480p WebM), never the original.
+export const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
+const COMMONS_ID = /^commons-(\d{1,12})$/;
+const COPIES = ["720p.vp9.webm", "720p.webm", "480p.vp9.webm", "480p.webm", "360p.vp9.webm", "360p.webm"];
 const TIMEOUT_MS = 30_000;
 // Openverse's picture search can take 15 to 30 seconds and more (seen 2026-10-25); a download is quicker.
 const API_TIMEOUT_MS = 60_000;
@@ -34,13 +39,15 @@ const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const FIND_TOOL = {
   name: "find_free_media",
   description:
-    "Search Openverse for free pictures or sounds (sound effects, ambience, some music) that a video may use: " +
-    "public domain, or free with credit. Answers with up to eight results, each with its id, licence and source, " +
-    "and small previews of the pictures. Nothing is saved: choose one and call use_free_media with its id.",
+    "Search for free pictures or sounds (sound effects, ambience, some music) on Openverse, or free video clips on " +
+    "Wikimedia Commons, that a video may use: public domain, or free with credit. Answers with up to eight results, " +
+    "each with its id, licence and source (and length for videos), and small previews of the pictures. Nothing is " +
+    "saved: choose one and call use_free_media with its id.",
   inputSchema: {
     type: "object",
     properties: {
-      kind: { type: "string", enum: ["image", "sound"], description: "image for pictures, sound for sounds" },
+      kind: { type: "string", enum: ["image", "sound", "video"],
+        description: "image for pictures, sound for sounds, video for video clips" },
       query: { type: "string", minLength: 1, maxLength: 120, description: "A few plain English words" },
       count: { type: "integer", minimum: 1, maximum: MAX_RESULTS, description: `At most ${MAX_RESULTS}` },
     },
@@ -57,7 +64,7 @@ export const USE_TOOL = {
   inputSchema: {
     type: "object",
     properties: {
-      kind: { type: "string", enum: ["image", "sound"] },
+      kind: { type: "string", enum: ["image", "sound", "video"] },
       id: { type: "string", description: "The id find_free_media gave" },
     },
     required: ["kind", "id"],
@@ -73,15 +80,72 @@ export function plainLicence(code, version) {
 }
 
 const kindOf = (kind) => {
-  if (!Object.hasOwn(ENDPOINT, kind)) throw new Error('kind must be "image" or "sound".');
+  if (!Object.hasOwn(ENDPOINT, kind) && kind !== "video") throw new Error('kind must be "image", "sound" or "video".');
   return kind;
 };
+
+/** A Commons licence code ("cc-by-4.0", "cc0", "pd-...") as ours, or null when a video may not use it freely. */
+export function commonsLicence(code) {
+  const text = String(code ?? "").toLowerCase().trim();
+  if (text === "cc0") return { license: "cc0", version: "" };
+  if (text === "pd" || text.startsWith("pd-") || text === "public domain") return { license: "pdm", version: "" };
+  const by = /^cc-by-(\d(?:\.\d)?)$/.exec(text);
+  // Share-alike, non-commercial and the rest would bind or limit the whole video: left out.
+  return by ? { license: "by", version: by[1] } : null;
+}
+
+/** The Commons search for video files, with their licence fields and Commons' own smaller copies. */
+export function commonsUrl({ query, count = MAX_RESULTS, pageid } = {}) {
+  const url = new URL(COMMONS_API);
+  const params = { action: "query", format: "json", formatversion: "2", prop: "videoinfo",
+    viprop: "url|size|mime|extmetadata|derivatives",
+    viextmetadatafilter: "License|LicenseShortName|LicenseUrl|Artist|Attribution" };
+  if (pageid) params.pageids = String(pageid);
+  else {
+    const words = String(query ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
+    if (!words) throw new Error("Give a few words to search for.");
+    Object.assign(params, { generator: "search", gsrnamespace: "6", gsrsearch: `filetype:video ${words}`,
+      gsrlimit: String(Math.min(Math.max(Math.trunc(Number(count)) || MAX_RESULTS, 1), MAX_RESULTS)) });
+  }
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  return url;
+}
+
+const textOf = (html) => oneLine(String(html ?? "").replace(/<[^>]+>/g, " "));
+
+/** One Commons page as a usable video, in the fields the rest of this file uses; null when it may not be used. */
+export function commonsItem(page) {
+  const info = page?.videoinfo?.[0];
+  const meta = info?.extmetadata ?? {};
+  const licence = commonsLicence(meta.License?.value);
+  if (!info || !licence || !Number.isInteger(page.pageid)) return null;
+  const copy = COPIES.map((key) => (info.derivatives ?? []).find((item) => item?.transcodekey === key))
+    .find((item) => item && /^https:\/\/upload\.wikimedia\.org\//.test(String(item.src)));
+  if (!copy) return null;
+  const title = oneLine(String(page.title ?? "").replace(/^File:/i, "").replace(/\.[a-z0-9]+$/i, "")) || "untitled";
+  const creator = textOf(meta.Attribution?.value) || textOf(meta.Artist?.value) || "unknown";
+  const name = oneLine(meta.LicenseShortName?.value, 40);
+  return {
+    id: `commons-${page.pageid}`, title, creator, license: licence.license, license_version: licence.version,
+    license_url: String(meta.LicenseUrl?.value ?? ""), foreign_landing_url: String(info.descriptionurl ?? ""),
+    attribution: `"${title}" by ${creator}, ${name || plainLicence(licence.license, licence.version)}, via Wikimedia Commons`,
+    url: String(copy.src), size: `${copy.width} by ${copy.height}`,
+    seconds: Number.isFinite(info.duration) ? Math.round(info.duration * 10) / 10 : null,
+    licence: plainLicence(licence.license, licence.version), source: "Wikimedia Commons",
+  };
+}
+
+/** The Commons results a video may use. */
+export const usableCommons = (json) => (Array.isArray(json?.query?.pages) ? json.query.pages : [])
+  .map(commonsItem).filter(Boolean);
 
 /** The search address: only the licences above, nothing marked mature. */
 export function searchUrl(kind, query, count = MAX_RESULTS) {
   const words = String(query ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
   if (!words) throw new Error("Give a few words to search for.");
-  const url = new URL(`${API}/${ENDPOINT[kindOf(kind)]}/`);
+  // Openverse has pictures and sounds only; videos are searched on Commons (commonsUrl).
+  if (!Object.hasOwn(ENDPOINT, kind)) throw new Error('Openverse searches "image" or "sound".');
+  const url = new URL(`${API}/${ENDPOINT[kind]}/`);
   url.searchParams.set("q", words);
   url.searchParams.set("license", LICENCES.join(","));
   url.searchParams.set("mature", "false");
@@ -112,7 +176,10 @@ export function usableResults(json) {
 
 /** The results as lines for the assistant. */
 export function describeResults(kind, items) {
-  if (!items.length) return `No usable free ${kind === "image" ? "pictures" : "sounds"} found. Try other words.`;
+  if (!items.length) {
+    return `No usable free ${{ image: "pictures", sound: "sounds", video: "videos" }[kind] ?? "files"} found. ` +
+      "Try other words.";
+  }
   return items.map((item, index) => [
     `${index + 1}. id ${item.id}: "${item.title}" by ${item.creator}`,
     item.licence, item.source && `from ${item.source}`, item.size, item.seconds != null && `${item.seconds} s`,
@@ -188,6 +255,8 @@ export function fileType(bytes) {
   if (text(0, 8) === "\x89PNG\r\n\x1a\n") return { kind: "image", ext: "png" };
   if (text(0, 4) === "GIF8") return { kind: "image", ext: "gif" };
   if (text(0, 4) === "RIFF" && text(8, 12) === "WEBP") return { kind: "image", ext: "webp" };
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return { kind: "video", ext: "webm" };
+  if (text(4, 8) === "ftyp") return { kind: "video", ext: "mp4" };
   if (text(0, 4) === "RIFF" && text(8, 12) === "WAVE") return { kind: "sound", ext: "wav" };
   if (text(0, 4) === "OggS") return { kind: "sound", ext: "ogg" };
   if (text(0, 4) === "fLaC") return { kind: "sound", ext: "flac" };
@@ -242,8 +311,9 @@ export function creditsText(records) {
   return [
     "# Credits",
     "",
-    "Pictures and sounds in this video found with Openverse (openverse.org). Openverse does not endorse this video,",
-    "and does not check licences: each file's original page is listed, so it can be checked there.",
+    "Pictures, sounds and clips in this video found with Openverse (openverse.org) or Wikimedia Commons",
+    "(commons.wikimedia.org). Neither endorses this video, and neither checks every licence: each file's original page",
+    "is listed, so it can be checked there.",
     "",
     "## Credit needed (copy these lines where the video is posted)",
     "",
@@ -259,7 +329,7 @@ export function creditsText(records) {
 /** Keep `bytes` as this item's file in the project, and record it. Returns the record. */
 export function saveMedia(projectDir, item, bytes, type) {
   const folder = mediaFolder(projectDir);
-  const name = `${slug(item.title)}-${item.id.slice(0, 8)}.${type.ext}`;
+  const name = `${slug(item.title)}-${item.id.replace(/^commons-/, "").slice(0, 8)}.${type.ext}`;
   writeSafely(path.join(folder, name), bytes);
   const ledgerFile = path.join(folder, "ledger.json");
   let ledger = [];
@@ -284,21 +354,25 @@ export function saveMedia(projectDir, item, bytes, type) {
 /** The two tools for one project. `fetchImpl` and `lookup` stand in for the internet in tests. */
 export function freeMediaTools(projectDir, { fetchImpl = fetch, lookup = dns.lookup, version = "0" } = {}) {
   const userAgent = `Kushmanji/${version} (+https://github.com/webziko/kushmanji)`;
-  const askApi = async (url) => {
+  const askApi = async (url, site = "Openverse") => {
     let response;
     try {
       response = await fetchImpl(url, { headers: { "User-Agent": userAgent, Accept: "application/json" },
         signal: AbortSignal.timeout(API_TIMEOUT_MS) });
     } catch {
-      throw new Error("Openverse could not be reached; check the internet, or go on without it");
+      throw new Error(`${site} could not be reached; check the internet, or go on without it`);
     }
-    if (response.status === 429) throw new Error("Openverse asks to wait a minute before searching again");
-    if (!response.ok) throw new Error(`Openverse answered ${response.status}`);
+    if (response.status === 429) throw new Error(`${site} asks to wait a minute before searching again`);
+    if (!response.ok) throw new Error(`${site} answered ${response.status}`);
     return response.json();
   };
 
   async function find(args) {
     const kind = kindOf(args?.kind);
+    if (kind === "video") {
+      const videos = usableCommons(await askApi(commonsUrl({ query: args?.query, count: args?.count }), "Wikimedia Commons"));
+      return [{ type: "text", text: describeResults(kind, videos) }];
+    }
     const items = usableResults(await askApi(searchUrl(kind, args?.query, args?.count)));
     const content = [{ type: "text", text: describeResults(kind, items) }];
     if (kind === "image") {
@@ -320,13 +394,24 @@ export function freeMediaTools(projectDir, { fetchImpl = fetch, lookup = dns.loo
   async function use(args) {
     const kind = kindOf(args?.kind);
     const id = String(args?.id ?? "");
-    if (!ID.test(id)) throw new Error("Give an id that find_free_media gave.");
-    const item = await askApi(new URL(`${API}/${ENDPOINT[kind]}/${id}/`));
-    if (!LICENCES.includes(item?.license)) throw new Error("that file's licence does not let a video use it freely");
-    if (item.mature === true) throw new Error("that file is marked for adults only");
+    let item;
+    if (kind === "video") {
+      const pageid = COMMONS_ID.exec(id)?.[1];
+      if (!pageid) throw new Error("Give an id that find_free_media gave.");
+      const json = await askApi(commonsUrl({ pageid }), "Wikimedia Commons");
+      item = commonsItem(json?.query?.pages?.[0]);
+      if (!item) throw new Error("that file's licence does not let a video use it freely");
+    } else {
+      if (!ID.test(id)) throw new Error("Give an id that find_free_media gave.");
+      item = await askApi(new URL(`${API}/${ENDPOINT[kind]}/${id}/`));
+      if (!LICENCES.includes(item?.license)) throw new Error("that file's licence does not let a video use it freely");
+      if (item.mature === true) throw new Error("that file is marked for adults only");
+    }
     const bytes = await download(String(item.url ?? ""), { fetchImpl, lookup, maxBytes: MAX_BYTES[kind], userAgent });
     const type = fileType(bytes);
-    if (type?.kind !== kind) throw new Error(`the file is not a ${kind === "image" ? "picture" : "sound"} this app can use`);
+    if (type?.kind !== kind) {
+      throw new Error(`the file is not a ${{ image: "picture", sound: "sound", video: "video" }[kind]} this app can use`);
+    }
     const record = saveMedia(projectDir, item, bytes, type);
     return [{ type: "text", text:
       `Saved as ${record.file} (${plainLicence(record.license, record.license_version)}). ` +

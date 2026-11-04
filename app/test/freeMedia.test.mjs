@@ -5,8 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import {
-  creditsText, download, fileType, FIND_TOOL, freeMediaTools, isPrivateAddress, plainLicence, searchUrl, slug,
-  usableResults, USE_TOOL,
+  commonsItem, commonsLicence, commonsUrl, creditsText, download, fileType, FIND_TOOL, freeMediaTools,
+  isPrivateAddress, plainLicence, searchUrl, slug, usableCommons, usableResults, USE_TOOL,
 } from "../src/main/agents/tools/freeMedia.mjs";
 import { answer, TOOL } from "../src/main/agents/tools/look.mjs";
 
@@ -136,7 +136,7 @@ test("using a result saves it in assets/free-media, with its credit in the ledge
     assert.equal(ledger.length, 1);
     assert.equal(ledger[0].page, "https://www.flickr.com/photos/x/1");
     const credits = fs.readFileSync(path.join(dir, "CREDITS.md"), "utf8");
-    assert.match(credits, /Openverse does not endorse/);
+    assert.match(credits, /Neither endorses this video/);
     assert.match(credits, /## Credit needed[\s\S]*Kiwi Tom is licensed under CC BY 2\.0/);
     // The same file again replaces its record, not doubles it.
     await tools.use({ kind: "image", id: ID });
@@ -209,4 +209,56 @@ test("the credits file lists what needs credit apart from what does not", () => 
   ]);
   assert.ok(text.indexOf("b.mp3") < text.indexOf("## Public domain"));
   assert.ok(text.indexOf("a.jpg") > text.indexOf("## Public domain"));
+});
+
+// Wikimedia Commons videos (M8-10, the owner's link on 2026-11-04).
+const WEBM = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86, 0x81]);
+const page = (license, extra = {}) => ({
+  pageid: 152251774, title: "File:Baking bread in a stone oven.webm",
+  videoinfo: [{ duration: 12.34, descriptionurl: "https://commons.wikimedia.org/wiki/File:Baking.webm",
+    extmetadata: { License: { value: license }, LicenseShortName: { value: "CC BY 3.0" },
+      Artist: { value: "<a href=\"x\">Street Food Tourists</a>" } },
+    derivatives: [
+      { transcodekey: "1080p.vp9.webm", src: "https://upload.wikimedia.org/t/1080.webm", width: 1920, height: 1080 },
+      { transcodekey: "480p.vp9.webm", src: "https://upload.wikimedia.org/t/480.webm", width: 854, height: 480 },
+    ] }],
+  ...extra,
+});
+
+test("a Commons video is offered only when its licence lets a video use it freely, as a smaller copy", () => {
+  assert.deepEqual(commonsLicence("cc-by-4.0"), { license: "by", version: "4.0" });
+  assert.deepEqual(commonsLicence("cc0"), { license: "cc0", version: "" });
+  assert.deepEqual(commonsLicence("pd-usgov"), { license: "pdm", version: "" });
+  assert.equal(commonsLicence("cc-by-sa-4.0"), null);
+  assert.equal(commonsLicence("cc-by-nc-2.0"), null);
+  const video = commonsItem(page("cc-by-3.0"));
+  assert.equal(video.id, "commons-152251774");
+  assert.equal(video.url, "https://upload.wikimedia.org/t/480.webm");
+  assert.equal(video.creator, "Street Food Tourists");
+  assert.equal(video.seconds, 12.3);
+  assert.match(video.attribution, /^"Baking bread in a stone oven" by Street Food Tourists, CC BY 3\.0, via Wikimedia Commons$/);
+  assert.equal(commonsItem(page("cc-by-sa-3.0")), null);
+  assert.deepEqual(usableCommons({ query: { pages: [page("cc-by-sa-3.0"), page("cc0")] } }).map((v) => v.licence),
+    ["public domain (CC0)"]);
+  const search = commonsUrl({ query: "bread oven", count: 99 });
+  assert.equal(search.searchParams.get("gsrsearch"), "filetype:video bread oven");
+  assert.equal(search.searchParams.get("gsrlimit"), "8");
+  assert.equal(fileType(WEBM).kind, "video");
+});
+
+test("finding and using a Commons video saves the small copy with its credit", async () => {
+  const dir = tempProject();
+  const info = commonsUrl({ pageid: "152251774" }).href;
+  const tools = freeMediaTools(dir, { lookup: publicLookup, fetchImpl: fakeFetch({
+    [commonsUrl({ query: "bread" }).href]: { json: { query: { pages: [page("cc-by-3.0")] } } },
+    [info]: { json: { query: { pages: [page("cc-by-3.0")] } } },
+    "https://upload.wikimedia.org/t/480.webm": { bytes: WEBM },
+  }) });
+  const [found] = await tools.find({ kind: "video", query: "bread" });
+  assert.match(found.text, /id commons-152251774: "Baking bread in a stone oven" by Street Food Tourists, free with credit \(CC BY 3\.0\), from Wikimedia Commons, 854 by 480, 12\.3 s/);
+  const [saved] = await tools.use({ kind: "video", id: "commons-152251774" });
+  assert.match(saved.text, /Saved as assets\/free-media\/baking-bread-in-a-stone-oven-15225177\.webm/);
+  assert.match(fs.readFileSync(path.join(dir, "CREDITS.md"), "utf8"), /via Wikimedia Commons/);
+  await assert.rejects(tools.use({ kind: "video", id: "commons-x" }), /id that find_free_media gave/);
+  fs.rmSync(dir, { recursive: true, force: true });
 });
