@@ -5,6 +5,27 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-11-04 · Claude · Hand-over at a full context window (the owner: "lets continue on next chat")
+
+**Pushed today (all on main):** M3-06 speak instead of typing; M16-17 research of the owner's links (RESEARCH.md),
+the motion guide's new rules, six more styles (14 cards); M8-10 Commons videos in find_free_media/use_free_media;
+M17-04 hooks and layouts (fill, blur, stack, screen) in the shorts plan, SHORT.md and both requests.
+
+**Unfinished, do first: M16-18, the fast ad remake.** The owner called the Meera story ad "so bad" (memory note
+`ad-feedback-fast-hook-more-features`). `reviews/kushmanji-ad-2` holds REQUEST.txt (30 s, hook in 2 s, a feature
+every 2 s on the beat, energetic music). The first try (Claude through the chat, 20 min) only found music: it
+saved `assets/free-media/` candidates (arcade-aroma, are-you-having-fun-instrumental-version, pop-made-by-duffybro,
+plus a click and a whoosh) and then stopped: "Claude could not reach the internet". index.html is still the
+starter. Send it again (HFWIN_SMOKE_JUST_ASK, as in the 2026-11-03 entry) telling it to pick from the saved music
+(by energy and tempo) instead of searching again; look at stills; one fix round; render with `--quality delivery`
+and even the sound to -14 LUFS (ffmpeg loudnorm, picture copied) into `reviews/READY/Kushmanji fast ad`; then the
+upright version through "Make other sizes".
+
+Then: try "Make shorts" with hooks and layouts through the chat on `reviews/tidy-test` (the owner's three clips);
+the rest of M16-17 (a drawn character module, the review rubric M13-07, a music-video maker).
+
+---
+
 ## 2026-11-03 · Claude · Claude's trailer, the story ad, Tidy my talking, keep awake (and M9-16 overnight)
 
 **Overnight** (the scheduled run, Claude Sonnet): M9-16 committed and pushed (`cliEnv`, `agentEnv`, posthog refused),
