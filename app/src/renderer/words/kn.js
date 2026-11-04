@@ -739,4 +739,17 @@ export default {
   "No speech tool is on this computer yet, so your words could not be written down.": "ಈ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ ಇನ್ನೂ ಮಾತಿನ ಉಪಕರಣ ಇಲ್ಲ, ಹಾಗಾಗಿ ನಿಮ್ಮ ಪದಗಳನ್ನು ಬರೆಯಲು ಆಗಲಿಲ್ಲ.",
   "Writing down what you said took too long, so it was stopped.": "ನೀವು ಹೇಳಿದ್ದನ್ನು ಬರೆಯಲು ತುಂಬಾ ಸಮಯ ಹಿಡಿಯಿತು, ಹಾಗಾಗಿ ನಿಲ್ಲಿಸಲಾಯಿತು.",
   "No words were heard. Speak a little closer to the microphone and try again.": "ಯಾವ ಪದವೂ ಕೇಳಿಸಲಿಲ್ಲ. ಮೈಕ್ರೊಫೋನ್‌ಗೆ ಸ್ವಲ್ಪ ಹತ್ತಿರ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  // editActions.js: six more styles from the 2026-11-04 research (M16-17)
+  "Watercolour": "ಜಲವರ್ಣ",
+  "Soft washes that paint themselves": "ತಾವಾಗಿಯೇ ಮೂಡುವ ಮೃದು ಬಣ್ಣದ ಲೇಪಗಳು",
+  "Oil painting": "ತೈಲ ಚಿತ್ರ",
+  "Thick moving brush strokes, rich colour": "ದಪ್ಪ ಚಲಿಸುವ ಕುಂಚದ ಗೆರೆಗಳು, ಗಾಢ ಬಣ್ಣ",
+  "Crayon picture book": "ಕ್ರೇಯಾನ್ ಚಿತ್ರಪುಸ್ತಕ",
+  "A child's drawing come to life": "ಜೀವ ತಳೆದ ಮಗುವಿನ ಚಿತ್ರ",
+  "Chalkboard lesson": "ಕಪ್ಪುಹಲಗೆಯ ಪಾಠ",
+  "Chalk that explains, step by step": "ಹಂತ ಹಂತವಾಗಿ ವಿವರಿಸುವ ಸೀಮೆಸುಣ್ಣ",
+  "Pixel game": "ಪಿಕ್ಸೆಲ್ ಆಟ",
+  "A 16-bit video game world": "16-ಬಿಟ್ ವಿಡಿಯೋ ಆಟದ ಲೋಕ",
+  "News short": "ಸುದ್ದಿ ಶಾರ್ಟ್",
+  "Big headlines, a ticker, the facts fast": "ದೊಡ್ಡ ಶೀರ್ಷಿಕೆಗಳು, ಟಿಕರ್, ಬೇಗ ಸತ್ಯಾಂಶಗಳು",
 };

@@ -86,6 +86,65 @@ export const STYLES = {
       "background's soft light.",
     ],
   },
+  // The six below follow families documented by lemomo-ai/lemo-opuscar (MIT) and the owner's "Shorts Animator"
+  // idea of painted looks (docs/RESEARCH.md, 2026-11-04); the wording is our own.
+  water: {
+    name: "Watercolour",
+    lines: [
+      "A hand-painted page that paints itself: translucent washes on warm cotton paper (#F7F1E6) that darken where",
+      "they overlap, soft edges that pool a little darker, a few dry-brush streaks. No vector outlines: a darker",
+      "stroke along a form is the only line. Things appear stroke by stroke, structure before detail (a hill's wash,",
+      "then its shadow, then the trees). Soft blues, greens and peach; far layers paler. Handwritten notes (Segoe",
+      "Print, Ink Free) beside what is painted. Calm and curious; slow camera drift across one painted world.",
+    ],
+  },
+  oil: {
+    name: "Oil painting",
+    lines: [
+      "Thick painted canvas: every area made of visible directional brush strokes in rich colour (deep blue,",
+      "ochre, burnt orange, crimson), strokes that move gently on twos (a new frame every second picture) so the",
+      "paint shimmers like hand animation. Warm light from one side, bold simple shapes, no fine lines. A serif",
+      "title (Georgia) in a warm cream. Emotional and cinematic: slow pushes, colour that spreads from one spot to",
+      "the whole scene at the turn of the story.",
+    ],
+  },
+  crayon: {
+    name: "Crayon picture book",
+    lines: [
+      "A child's crayon drawing come to life: wobbly, waxy strokes with paper showing through, bright primary",
+      "colours (sun yellow, grass green, sky blue, red) on cream paper, simple stick figures and houses, a sun with",
+      "rays. Lines redraw slightly on twos so they wiggle. Big friendly letters (Comic Sans MS, Segoe Print) in red.",
+      "Bouncy but gentle springs, things popping in from where they would grow. For bedtime stories, kids' lessons",
+      "and family videos.",
+    ],
+  },
+  chalk: {
+    name: "Chalkboard lesson",
+    lines: [
+      "A green school chalkboard in a wooden frame: dusty white chalk strokes that draw themselves, one yellow chalk",
+      "accent for what matters, smudges where something was wiped. Handwritten letters (Segoe Print). Diagrams,",
+      "arrows and circled words build up step by step as a teacher would draw them; a wipe of the cloth clears the",
+      "board between ideas. For explainers, lessons, word origins and myth-busting.",
+    ],
+  },
+  pixel: {
+    name: "Pixel game",
+    lines: [
+      "A 16-bit video game: chunky square pixels on a strict grid (scale by whole numbers only, no smoothing),",
+      "a bright sky, grass and dirt tiles, coin blocks, a small hero who walks and jumps in a few frames of",
+      "animation. Blocky monospace letters (Consolas) with a hard dark drop shadow. Motion snaps on the beat in",
+      "whole pixels; sounds are short chiptune blips. For game-like recaps, levels of a journey and nostalgia.",
+    ],
+  },
+  news: {
+    name: "News short",
+    lines: [
+      "A social news short: a full-screen picture or clip, a red tag (NEW, TODAY), a headline in heavy white",
+      "letters on black bars with one key word in yellow, numbers that count up, a ticker along the bottom. Fast but",
+      "readable: each line on screen at least 1.8 s, the hook in the first 2 seconds. Hard cuts on the beat, quick",
+      "zooms into the picture's detail, captions word by word. For news, reports, facts and data shorts.",
+    ],
+  },
   ink: {
     name: "Line drawing",
     lines: [

@@ -53,10 +53,45 @@
       #ink svg { position: absolute; inset: 0; }
       #ink .title { position: absolute; left: 980px; top: 360px; font: 400 104px/1.15 "Ink Free", "Segoe Print", "Segoe UI", sans-serif; color: #2B2522; }
       #ink .title u { text-decoration-color: #E2553C; text-decoration-thickness: 8px; text-underline-offset: 14px; }
+
+      /* Watercolour */
+      #water { background: #F7F1E6; }
+      #water svg { position: absolute; inset: 0; }
+      #water .title { position: absolute; left: 150px; top: 150px; font: 400 104px/1.1 "Segoe Print", "Ink Free", serif; color: #2E4A5C; }
+      /* Oil painting */
+      #oil { background: #2B3A55; }
+      #oil svg { position: absolute; inset: 0; }
+      #oil .title { position: absolute; right: 150px; top: 170px; text-align: right; font: 800 110px/1.05 Georgia, "Times New Roman", serif; color: #FFE7B0; text-shadow: 0 4px 0 rgba(0,0,0,0.25); }
+      /* Crayon picture book */
+      #crayon { background: #FFFBEF; }
+      #crayon svg { position: absolute; inset: 0; }
+      #crayon .title { position: absolute; left: 140px; top: 120px; font: 700 100px/1.1 "Comic Sans MS", "Segoe Print", sans-serif; color: #E2553C; }
+      /* Chalkboard */
+      #chalk { background: radial-gradient(circle at 50% 40%, #2F5D4A 0%, #22463A 70%, #1B3A30 100%); border: 34px solid #7A5230; }
+      #chalk svg { position: absolute; inset: 0; }
+      #chalk .title { position: absolute; left: 150px; top: 170px; font: 400 112px/1.15 "Segoe Print", "Ink Free", sans-serif; color: #F4F1E8; }
+      #chalk .title b { color: #F7D65A; font-weight: 400; }
+      /* Pixel game */
+      #pixel { background: #5BA4F5; image-rendering: pixelated; }
+      #pixel .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 240px; background: repeating-linear-gradient(90deg, #6BBE45 0 60px, #5FAE3C 60px 120px); border-top: 30px solid #8BD65A; }
+      #pixel .dirt { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: repeating-linear-gradient(90deg, #A0612E 0 60px, #8E5428 60px 120px); }
+      #pixel .cloud { position: absolute; background: #fff; box-shadow: 60px 0 #fff, 120px 0 #fff, 60px -60px #fff; width: 60px; height: 60px; }
+      #pixel .hero { position: absolute; left: 300px; bottom: 240px; width: 120px; height: 180px; background: #E2392B; box-shadow: inset 0 60px #F5C9A0, inset 0 -60px #1F4FB4; }
+      #pixel .block { position: absolute; width: 90px; height: 90px; background: #F5C224; border: 10px solid #A0612E; }
+      #pixel .title { position: absolute; left: 0; right: 0; top: 150px; text-align: center; font: 700 96px "Consolas", "Courier New", monospace; color: #fff; letter-spacing: 6px; text-shadow: 8px 8px 0 #1C2633; }
+      /* News short */
+      #news { background: linear-gradient(160deg, #9AA9B8 0%, #5C6E80 55%, #2E3B48 100%); }
+      #news .photo { position: absolute; inset: 0; background: radial-gradient(circle at 70% 35%, rgba(255,230,180,0.55), transparent 45%); }
+      #news .tag { position: absolute; left: 120px; top: 150px; background: #E2392B; color: #fff; font: 800 44px "Segoe UI", sans-serif; padding: 10px 26px; letter-spacing: 3px; }
+      #news .head { position: absolute; left: 120px; top: 250px; width: 1300px; font: 900 108px/1.08 "Segoe UI Black", "Segoe UI", sans-serif; color: #fff; }
+      #news .head span { background: #111; padding: 4px 18px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      #news .head em { font-style: normal; color: #F5C224; }
+      #news .ticker { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; background: #111; color: #fff; font: 600 46px "Segoe UI", sans-serif; line-height: 110px; padding-left: 120px; white-space: nowrap; }
+      #news .ticker b { background: #E2392B; padding: 0 22px; margin-right: 24px; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
 
       <div id="words" class="scene clip" data-start="0" data-duration="1" data-track-index="0">
         <div class="bar"></div>
@@ -121,6 +156,100 @@
           <path d="M240 800 q300 -30 640 0" stroke-width="5"/>
         </svg>
         <div class="title">Edit videos<br />by <u>talking</u></div>
+      </div>
+
+      <div id="water" class="scene clip" data-start="6" data-duration="1" data-track-index="0">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+          <defs>
+            <filter id="wc" x="-10%" y="-10%" width="120%" height="120%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="7"/>
+              <feDisplacementMap in="SourceGraphic" scale="38"/>
+              <feGaussianBlur stdDeviation="2.2"/>
+            </filter>
+          </defs>
+          <g filter="url(#wc)" opacity="0.78">
+            <ellipse cx="1420" cy="330" rx="230" ry="190" fill="#F2B880"/>
+            <path d="M0 700 C 300 600, 700 640, 1000 600 S 1600 560, 1920 640 L1920 1080 L0 1080 Z" fill="#8FB9A8"/>
+            <path d="M0 820 C 400 760, 800 820, 1200 780 S 1700 760, 1920 800 L1920 1080 L0 1080 Z" fill="#5E8C7A"/>
+            <circle cx="380" cy="640" r="95" fill="#7FAF6B"/>
+            <rect x="370" y="660" width="22" height="120" fill="#8A6A52"/>
+          </g>
+        </svg>
+        <div class="title">Edit videos<br />by talking</div>
+      </div>
+
+      <div id="oil" class="scene clip" data-start="7" data-duration="1" data-track-index="0">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+          <defs>
+            <filter id="oilf" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence type="turbulence" baseFrequency="0.02 0.09" numOctaves="2" seed="3"/>
+              <feDisplacementMap in="SourceGraphic" scale="26"/>
+            </filter>
+          </defs>
+          <g filter="url(#oilf)">
+            <rect width="1920" height="620" fill="#3E5A86"/>
+            <circle cx="420" cy="330" r="150" fill="#F2A541"/>
+            <rect y="600" width="1920" height="480" fill="#C9603A"/>
+            <path d="M0 640 Q 480 560 960 650 T 1920 620 L1920 700 L0 700 Z" fill="#E7924F"/>
+            <path d="M200 1080 L 520 700 L 640 1080 Z" fill="#7E2E1F"/>
+            <path d="M1300 1080 L 1500 760 L 1640 1080 Z" fill="#8E3A24"/>
+          </g>
+        </svg>
+        <div class="title">Edit videos<br />by talking</div>
+      </div>
+
+      <div id="crayon" class="scene clip" data-start="8" data-duration="1" data-track-index="0">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" stroke-linecap="round">
+          <defs>
+            <filter id="cr"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2"/>
+              <feDisplacementMap in="SourceGraphic" scale="9"/></filter>
+          </defs>
+          <g filter="url(#cr)">
+            <circle cx="1560" cy="260" r="120" stroke="#F5B027" stroke-width="22"/>
+            <path d="M1560 100 v-50 M1560 420 v50 M1400 260 h-50 M1720 260 h50" stroke="#F5B027" stroke-width="18"/>
+            <path d="M120 860 Q 700 760 1300 860 T 1840 840" stroke="#5BB04A" stroke-width="26"/>
+            <rect x="1060" y="560" width="300" height="260" stroke="#3B6FD8" stroke-width="20"/>
+            <path d="M1040 570 L 1210 430 L 1380 570" stroke="#E2553C" stroke-width="20"/>
+            <rect x="1170" y="680" width="80" height="140" stroke="#8A5A2B" stroke-width="16"/>
+            <circle cx="520" cy="660" r="46" stroke="#3B3B3B" stroke-width="14"/>
+            <path d="M520 706 v120 M520 740 l-60 40 M520 740 l60 -40 M520 826 l-50 70 M520 826 l50 70" stroke="#3B3B3B" stroke-width="14"/>
+          </g>
+        </svg>
+        <div class="title">Edit videos<br />by talking</div>
+      </div>
+
+      <div id="chalk" class="scene clip" data-start="9" data-duration="1" data-track-index="0">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" stroke="#F4F1E8" stroke-linecap="round" opacity="0.92">
+          <defs>
+            <filter id="ch"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="5"/>
+              <feDisplacementMap in="SourceGraphic" scale="6"/></filter>
+          </defs>
+          <g filter="url(#ch)" stroke-width="8">
+            <circle cx="1380" cy="560" r="170"/>
+            <path d="M1380 390 v340 M1210 560 h340"/>
+            <path d="M1260 460 Q 1380 520 1500 460 M1260 660 Q 1380 600 1500 660" stroke="#F7D65A"/>
+            <path d="M160 840 h560" stroke="#F7D65A"/>
+          </g>
+        </svg>
+        <div class="title">Edit videos<br />by <b>talking</b></div>
+      </div>
+
+      <div id="pixel" class="scene clip" data-start="10" data-duration="1" data-track-index="0">
+        <div class="cloud" style="left:1300px;top:300px"></div>
+        <div class="cloud" style="left:240px;top:420px"></div>
+        <div class="ground"></div>
+        <div class="dirt"></div>
+        <div class="block" style="left:820px;top:560px"></div>
+        <div class="block" style="left:930px;top:560px"></div>
+        <div class="hero"></div>
+        <div class="title">EDIT VIDEOS<br />BY TALKING</div>
+      </div>
+
+      <div id="news" class="scene clip" data-start="11" data-duration="1" data-track-index="0">
+        <div class="photo"></div>
+        <div class="tag">NEW</div>
+        <div class="head"><span>Edit videos just by <em>talking</em></span></div>
+        <div class="ticker"><b>TODAY</b>Free for Windows · works in English, Kannada and Hindi</div>
       </div>
     </div>
     <script>

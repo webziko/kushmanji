@@ -111,6 +111,12 @@ const STYLE_CARDS = [
   { id: "tour", name: t("App or website tour"), about: t("Show an app or website, one step at a time") },
   { id: "shapes", name: t("Bold shapes"), about: t("Big bright circles and squares") },
   { id: "night", name: t("Midnight calm"), about: t("Calm and premium, deep blue with one warm colour") },
+  { id: "water", name: t("Watercolour"), about: t("Soft washes that paint themselves") },
+  { id: "oil", name: t("Oil painting"), about: t("Thick moving brush strokes, rich colour") },
+  { id: "crayon", name: t("Crayon picture book"), about: t("A child's drawing come to life") },
+  { id: "chalk", name: t("Chalkboard lesson"), about: t("Chalk that explains, step by step") },
+  { id: "pixel", name: t("Pixel game"), about: t("A 16-bit video game world") },
+  { id: "news", name: t("News short"), about: t("Big headlines, a ticker, the facts fast") },
   { id: "ink", name: t("Line drawing"), about: t("Hand-drawn lines that draw themselves") },
 ];
 

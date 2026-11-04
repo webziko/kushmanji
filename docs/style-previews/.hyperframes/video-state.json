@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "historyId": "61319986-508a-449a-a966-a89a85b2a21a",
+  "currentRevision": null,
+  "pendingChanges": false,
+  "files": {
+    "README.md": {
+      "hash": "791ee5efebdf49c9449a7404d819412754a04bc0199a8919720e09d5451fd672",
+      "content": "C:\\Users\\kish\\.cache\\hyperframes\\history\\61319986-508a-449a-a966-a89a85b2a21a\\blobs\\79\\791ee5efebdf49c9449a7404d819412754a04bc0199a8919720e09d5451fd672"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "C:\\Users\\kish\\.cache\\hyperframes\\history\\61319986-508a-449a-a966-a89a85b2a21a\\blobs\\53\\53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "e5032044551de489fb470e46241124abd2bb002fd866dc30dbf9aa3306613660",
+      "content": "C:\\Users\\kish\\.cache\\hyperframes\\history\\61319986-508a-449a-a966-a89a85b2a21a\\blobs\\e5\\e5032044551de489fb470e46241124abd2bb002fd866dc30dbf9aa3306613660"
+    },
+    "meta.json": {
+      "hash": "2a7726e9092613ac3317fcf4b646e2b8fa58a00ce5381b614f840d37a6feee46",
+      "content": "C:\\Users\\kish\\.cache\\hyperframes\\history\\61319986-508a-449a-a966-a89a85b2a21a\\blobs\\2a\\2a7726e9092613ac3317fcf4b646e2b8fa58a00ce5381b614f840d37a6feee46"
+    }
+  },
+  "revisions": {},
+  "checks": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": {
+      "revision": null,
+      "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-5"
+    },
+    "revisions": {},
+    "unversioned": [
+      {
+        "scope": "full",
+        "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-0",
+        "image": "C:\\hyperframewindows\\docs\\style-previews\\shots\\frame-00-at-6.5s.png",
+        "time": 6.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1793763594305,
+        "contentHash": "afe5713ede1dfb4412d011279d97c6fdb03efea6e76e7f33c971f5073738ca45",
+        "revision": null,
+        "inputFingerprint": "adbb8a9d5795cfca88a3b1050760d845ac37377999a8e56b47868fbd1aefeabf",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-1",
+        "image": "C:\\hyperframewindows\\docs\\style-previews\\shots\\frame-01-at-7.5s.png",
+        "time": 7.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1793763594305,
+        "contentHash": "2e2ed607992f7813de3e3de60abdeab5953444646c52aa1ff18407ba44cef7e2",
+        "revision": null,
+        "inputFingerprint": "adbb8a9d5795cfca88a3b1050760d845ac37377999a8e56b47868fbd1aefeabf",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-2",
+        "image": "C:\\hyperframewindows\\docs\\style-previews\\shots\\frame-02-at-8.5s.png",
+        "time": 8.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1793763594305,
+        "contentHash": "484959ab689a0e0afc7de397313ed65f4752f9a87f7d2ec620a17a64beb742be",
+        "revision": null,
+        "inputFingerprint": "adbb8a9d5795cfca88a3b1050760d845ac37377999a8e56b47868fbd1aefeabf",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-3",
+        "image": "C:\\hyperframewindows\\docs\\style-previews\\shots\\frame-03-at-9.5s.png",
+        "time": 9.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1793763594305,
+        "contentHash": "6bed8d19a9bdcef77a0f83f4c7c45a4721683a74e1d599df0067e3add8adc56f",
+        "revision": null,
+        "inputFingerprint": "adbb8a9d5795cfca88a3b1050760d845ac37377999a8e56b47868fbd1aefeabf",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-4",
+        "image": "C:\\hyperframewindows\\docs\\style-previews\\shots\\frame-04-at-10.5s.png",
+        "time": 10.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1793763594305,
+        "contentHash": "35644f0409538d7064b10176fdae5aa17f79502ff2d7e370c678346f60c1f142",
+        "revision": null,
+        "inputFingerprint": "adbb8a9d5795cfca88a3b1050760d845ac37377999a8e56b47868fbd1aefeabf",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      },
+      {
+        "scope": "full",
+        "id": "889abcfa-b4de-403c-b27a-768e1c2ccea5-5",
+        "image": "C:\\hyperframewindows\\docs\\style-previews\\shots\\frame-05-at-11.5s.png",
+        "time": 11.5,
+        "metadata": {
+          "width": 1920,
+          "height": 1080,
+          "zoomScale": 1,
+          "browserGpuMode": "auto",
+          "warnings": [],
+          "partial": false
+        },
+        "createdAt": 1793763594306,
+        "contentHash": "88cd55555179f585825ea50f9e75f46f3ceb720719732c438f7b859ea8766d44",
+        "revision": null,
+        "inputFingerprint": "adbb8a9d5795cfca88a3b1050760d845ac37377999a8e56b47868fbd1aefeabf",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      }
+    ]
+  }
+}

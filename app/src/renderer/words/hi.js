@@ -739,4 +739,17 @@ export default {
   "No speech tool is on this computer yet, so your words could not be written down.": "इस कंप्यूटर पर अभी बोलने का टूल नहीं है, इसलिए आपके शब्द नहीं लिखे जा सके।",
   "Writing down what you said took too long, so it was stopped.": "आपने जो कहा उसे लिखने में बहुत समय लगा, इसलिए रोक दिया गया।",
   "No words were heard. Speak a little closer to the microphone and try again.": "कोई शब्द सुनाई नहीं दिया। माइक्रोफ़ोन के थोड़ा पास बोलें और फिर कोशिश करें।",
+  // editActions.js: six more styles from the 2026-11-04 research (M16-17)
+  "Watercolour": "वॉटरकलर",
+  "Soft washes that paint themselves": "ख़ुद बनते हल्के रंगों के लेप",
+  "Oil painting": "ऑयल पेंटिंग",
+  "Thick moving brush strokes, rich colour": "मोटे चलते ब्रश स्ट्रोक, गहरे रंग",
+  "Crayon picture book": "क्रेयॉन चित्र-किताब",
+  "A child's drawing come to life": "जीवित हो उठी बच्चे की ड्रॉइंग",
+  "Chalkboard lesson": "चॉकबोर्ड पाठ",
+  "Chalk that explains, step by step": "क़दम-दर-क़दम समझाती चॉक",
+  "Pixel game": "पिक्सेल गेम",
+  "A 16-bit video game world": "16-बिट वीडियो गेम की दुनिया",
+  "News short": "न्यूज़ शॉर्ट",
+  "Big headlines, a ticker, the facts fast": "बड़ी सुर्ख़ियाँ, टिकर, तेज़ी से तथ्य",
 };
