@@ -114,6 +114,15 @@ animated scene. Where the person has asked for something else, the person wins.
   actions on beats.
 - Something moves in the first 0.5 s. The hero moment lands at 60 to 75% of the film. The last picture holds
   0.8 to 1.2 s, still breathing a little (a scale of 1.00 to 1.01), never frozen.
+- Before building, fill in a short brief for yourself in STORYBOARD.md: GOAL (what the viewer should feel or do,
+  one sentence), TIME (seconds x frames a second = frames; a loop or not), LOOK (colours in hex, one accent, the
+  lettering's family, weight and size), MOTION (curves as cubic-bezier, springs as a damping ratio, durations in
+  frames), SHOTS (a time range, one hero move and how it hands over to the next: a cut on the beat unless there is
+  a reason), BANNED (the effects you will not use) and CHECK (the moments you will look at).
+- Turn every adjective into numbers: "premium" is materials, light and calm curves; "modern" is a camera that
+  moves with purpose; "fun" is springs and timing. An adjective left as an adjective gives the default look.
+- A story: a hook within 3 seconds; one subject, one goal, one turn. Prove the look with one to three still
+  frames before animating everything.
 
 ## The look is a contract
 
@@ -129,6 +138,22 @@ animated scene. Where the person has asked for something else, the person wins.
 - Anticipation before a big move (6 to 8 frames the other way), follow-through after it. Parts of one thing move
   2 to 4 frames apart, never all at once. Groups stagger by about 0.06 s.
 - Squash and stretch on landings: 10 to 15%, never more.
+- Curves by job: reveals cubic-bezier(0.16, 1, 0.3, 1); entrances (0.22, 1, 0.36, 1); moves and the camera
+  (0.76, 0, 0.24, 1); exits (0.7, 0, 0.84, 0), 40 to 50% shorter than the entrance; a playful pop
+  (0.34, 1.56, 0.64, 1) only where the look asks. Linear only for turning, progress bars and a loop's phase.
+- Springs by damping ratio: 1 never bounces, 0.7 to 0.85 feels premium, 0.4 to 0.6 playful. Size and position may
+  bounce; opacity and colour never do.
+- Durations: small feedback 0.1 to 0.2 s, moves 0.2 to 0.5 s, hero reveals 0.6 to 0.9 s; words 0.06 to 0.12 s
+  apart, list items 0.04 to 0.08 s; start the next element when the last is a third of the way through.
+- Work out each beat from time (beat n is at n x 60 / tempo seconds), never by adding a rounded number of frames,
+  which drifts off the music. Cut on the beat; change the layout on the bar (every 4 beats), not on every beat.
+
+## One hero at a time
+
+- One hero move per shot. Secondary moves travel 50 to 70% as far and start 0.1 to 0.2 s later; background motion
+  stays under 5% of the hero's on a slow wave; everything else holds still or dims.
+- The camera gets the softest curves. Parallax speeds of about 1.0 near, 0.5 middle, 0.2 far.
+- At a key moment the subject fills at least a third of the frame's height and keeps clear of the edges.
 
 ## Transitions
 
@@ -158,7 +183,9 @@ animated scene. Where the person has asked for something else, the person wins.
 ## Words on screen
 
 - Big and few: one idea per word group; a headline at least 9% of the frame's short side in a trailer, body text
-  at least 2.6%. Fully readable for letters / 15 + 1.5 seconds, and never less than 1.5 s.
+  at least 2.6%. Fully readable for letters / 15 + 1.5 seconds, and never less than 1.5 s. A spoken line or
+  subtitle stays at least 1.8 s, a title card 4 s; a slow 2% push keeps a held line alive.
+- Contrast of at least 4.5 to 1 on every frame, over moving backgrounds too. Never more than 3 flashes a second.
 - Colour changes only between words, never inside one. Never over a face or a figure's head.
 - Fonts: never declare an @font-face for a font that is installed (Segoe UI, Nirmala UI): one face declared for
   every weight hides the real bold, and the words come out thin. Name it in font-family and set font-weight.
@@ -182,6 +209,13 @@ animated scene. Where the person has asked for something else, the person wins.
   data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":0.5,"v":0.5}]}]}'
   Any other shape passes the check but stops "Save video".
 - A sound effect has a cause on screen, and its peak lands one frame after the picture.
+- Every visible action has its sound, and a story keeps two real silences before its emotional peak. The whole
+  mix at about -14 LUFS with peaks under -1 dB.
+
+## Loops
+
+- A loop draws frames 0 to N-1 only, and its last frame flows into the first. Everything that repeats goes round a
+  whole number of times per loop; random-looking movement is taken from noise along a circle, so it comes back.
 
 ## Before you say it is done
 
@@ -189,6 +223,14 @@ animated scene. Where the person has asked for something else, the person wins.
   every morph and big move. Look at the hardest seconds first.
 - Look for: shapes tangled in the middle of a morph, words cut off or over a figure, a figure washed out by
   light, a blank or frozen stretch longer than 3 s, the last picture.
+- The failures seen most: the subject too small or against an edge; too dark, or a colour on the same colour;
+  words over the subject; a gag too fast to follow; a blank frame between shots; an effect that loses its subject
+  after the camera moves. After the first look, name any default you used (glow, particles, every element fading
+  up, everything centred) and take it out.
+- Turn a feeling into numbers before you change anything: "make it pop" is a scale of 1.0 to 1.08 and back over
+  6 frames on a beat; "it drags" is each hold a beat shorter; "it is busy" is one hero and the rest later and
+  smaller; "it looks like AI" is naming the defaults and removing them.
+- When a fix does not hold, look at the frames just before and after the problem and change only what differs.
 - Fix what is wrong once, then say what you checked and what you are unsure about.
 `;
 
