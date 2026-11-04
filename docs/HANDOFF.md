@@ -5,6 +5,27 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-11-05 (about 01:05 IST) · Claude · M17-04: one short built from the plan, then stopped at 79%
+
+**Done:**
+- Short 1 of `reviews/tidy-test/SHORTS.md` was made the way "Make them" does: `makeShortProject`, then
+  `SHORT_REQUEST` through the chat on Sonnet, smoke `short1`. Built in 29 min, not rendered. PROGRESS M17-04 has
+  what it made and what to change.
+
+**Stopped here:** the 5-hour window reached 79% (stop line 85%), with this build and the M14-19 session's research
+running at once. It resets 23:40 UTC.
+
+**Left for later:**
+- The M2-28 fix (PROGRESS, cause found).
+- The other two shorts.
+- The rest of M16-17.
+
+**What would surprise you**
+- The smoke reports FAIL for this build: `HFWIN_SMOKE_EXPECT` only looks in index.html, and the assistant put the
+  clip in `compositions/footage.html`.
+
+---
+
 ## 2026-11-05 (after midnight IST) · Claude · The fast ad's upright version, and why Claude seemed signed out
 
 **Done: M16-18.** The upright ad was made through "Make other sizes".

@@ -13,6 +13,11 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 
 ## Waiting on you
 
+- [ ] **Look at the first short Kushmanji made from your clips** (5 November): "Off To The Hospital", 18 s, from
+      the first of your three walking clips (`reviews\tidy-test-short-1-off-to-the-hospital`; open it in Kushmanji
+      to play it, it is not saved as a video yet). It has a hook at the start and a closing card, but no subtitles
+      yet, because the app cannot yet hear Kannada reliably. Around 6 s the picture is a little too tight on your
+      face.
 - [ ] **Watch the new fast ad** (`reviews\READY\Kushmanji fast ad`, 30 s), made after you called the story ad
       "so bad". It has a hook in the first second, a new feature about every 2.5 seconds, loud punchy music (public
       domain, no credit needed), and sound at YouTube's level. Is it fast and exciting enough now?

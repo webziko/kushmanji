@@ -800,7 +800,21 @@ everything i want ai to do". The channel's own notes are in `C:\Creators\happywi
       complaint by `readShortsPlan`. Found: the study's words were Parakeet's guess in an assumed language (the clips
       are Kannada), so there was no "strongest line" to find; the assistant wrote its hooks from the few words it
       trusted ("hospital", "friend", "3 o'clock") and said so. Shorts of speech outside Parakeet's languages need
-      Whisper's words first (M10-12). Not yet: making a short from the plan)
+      Whisper's words first (M10-12). **A short built from the plan, 2026-11-05.** Short 1 was made with
+      `makeShortProject` into `reviews/tidy-test-short-1-off-to-the-hospital` and sent `SHORT_REQUEST` through the
+      chat (Claude on Sonnet). It took 29 min, and the 5-hour window went from 29% to 79% while it and another
+      session's research ran.
+      - What it built: 18 s; a fill crop of clip-01 (0.75 to 17.2 s) with a push-in and a pan that follows her face;
+        the hook word by word over her collar for 2.5 s; STYLE.md's dark "Thanks for watching" card.
+      - On purpose: no subtitles, because the words could not be trusted; no 4-word title, because her face fills
+        the top. It said both.
+      - Seen in stills: around 6 s, when she leans in, the push-in cuts her eyes off at the top edge.
+      Next:
+      - In SHORT_REQUEST, no push-in when the face already fills the frame's height.
+      - Whisper's words before shorts of Kannada or Hindi speech.
+      - The smoke's HFWIN_SMOKE_EXPECT looks only in index.html, so this build "failed" there: the clip is used
+        from `compositions/footage.html`.
+      - Not yet: the other two shorts, a render, the owner's eye)
       "Make shorts from this video" as something the app does: pick the moments, make an upright project
       in the video's own look, keep her face in frame. Today it is done by hand with three requests. Design worked out
       in the cloud on 2026-10-14, to build on the owner's PC with real assistants: step one, in the source video,
