@@ -5,6 +5,37 @@ unfinished, what would surprise the next reader. The task list itself lives in `
 
 ---
 
+## 2026-11-05 (after midnight IST) · Claude · The fast ad's upright version, and why Claude seemed signed out
+
+**Done: M16-18.** The upright ad was made through "Make other sizes".
+- The prepared request was sent unchanged with `HFWIN_SMOKE_REQUEST_FILE`, and
+  `HFWIN_SMOKE_EXPECT='data-width="1080"'` proved the size changed.
+- Claude rebuilt every scene for 1080x1920 in 6 min (about 19% of the 5-hour window).
+- I checked 44 stills with the platforms' button zones shaded red. There was nothing to fix, so no fix round.
+- Rendered `--quality delivery` in 48 s, loudnorm to -14.0 LUFS, into `reviews/READY/Kushmanji fast ad` beside the
+  wide one. ABOUT.md has an upright section, `stills (upright).jpg` is there, and both were sent to the owner.
+
+**Found: the cause of M2-28** (PROGRESS has the exact sentence and the fix).
+- The false "signed out" is Claude Code's "Failed to refresh OAuth token: another Claude Code process is refreshing
+  it ... usually transient; retry in a minute".
+- It happens when two processes renew an expired sign-in at once.
+- The raw error is in the nested run's own transcript under `%USERPROFILE%\.claude\projects\`.
+- Sending again a minute later works. Not fixed yet.
+
+**What would surprise you**
+- The owner paused this session mid-run. TaskStop on a background `npm run smoke:agent` ended only the shell. The
+  app's Electron and the nested `claude.exe` kept working and spending allowance until
+  `taskkill /T /F /PID <the run's cmd.exe>`.
+- `makeOtherSizes` copies everything in the folder, including old request files (REQUEST-2.txt, FIX-1.txt). I moved
+  those out of the upright copy before sending, so the assistant would not follow them.
+- Set-aside chats in `reviews/kushmanji-ad-2-upright/.hyperframes/`: `.stopped-2026-11-04` and
+  `.token-race-2026-11-05`.
+
+**Next:** M17-04, building one short from `reviews/tidy-test/SHORTS.md` (needs Whisper's words for Kannada first,
+M10-12, or the captions will be wrong). Then the rest of M16-17.
+
+---
+
 ## 2026-11-04 (afternoon) · Claude · The fast ad (wide), and Make shorts tried through the chat
 
 **Done:** M16-18's wide ad, through the app's chat (`reviews/kushmanji-ad-2`, REQUEST-2.txt, then FIX-1.txt).

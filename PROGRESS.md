@@ -863,12 +863,21 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       they exist and are missing, at the end (`withToolFolders`, launcher.js)
 - [ ] M2-27 More assistants a person may already pay for: Grok (`irm https://x.ai/cli/install.ps1 | iex`, `grok
       login`), GitHub Copilot, OpenCode. The owner's choice which, if any
-- [ ] M2-28 A turn said "Claude is signed out" while Claude was signed in (2026-11-04, 08:35 UTC: the first message
-      after three idle hours stopped in 22 s with `problem: "signed-out"`; a minute later `claude auth status` said
-      loggedIn and `claude -p` answered). Perhaps the saved sign-in was being renewed at that moment. The raw words
-      were not kept: log the assistant's own error line (scrubbed, `log.js`) whenever `problems.js` recognises one,
-      and when a turn fails as signed out within seconds with nothing changed, check `claude auth status` and try
-      once more before telling the person to sign in
+- [ ] M2-28 A turn said "Claude is signed out" while Claude was signed in, twice: on 2026-11-04 at 08:35 and
+      18:47 UTC. Each time it was the first message after hours idle, and it stopped in 22 to 28 s.
+      **Cause found (2026-11-05):** the nested Claude's own record of the turn
+      (`%USERPROFILE%\.claude\projects\<folder>\<session id>.jsonl`) holds this API error:
+      "Failed to refresh OAuth token: another Claude Code process is refreshing it or exited mid-refresh. This is
+      usually transient; retry in a minute, and if it persists close other Claude Code processes or sign in again".
+      `problems.js` SIGNED_OUT matches "oauth token" and "sign in again" in it. Two Claude Code processes renewed an
+      expired sign-in at once (here, the building session and the app's). Sending again 80 s later worked.
+      The fix:
+      - before SIGNED_OUT, recognise this sentence as its own kind, in plain words ("Claude was renewing its
+        sign-in");
+      - when it comes in a turn's first minute with nothing changed, try once more by itself after about a minute;
+      - log the assistant's own error line (scrubbed, `log.js`), since the app's log only says
+        `"problem":"signed-out"`;
+      - a unit test with the exact sentence above.
 - [x] M4-05 (Claude, 2026-11-03) Keep the computer awake (Electron `powerSaveBlocker`) while "Save video" runs and while an assistant works,
       so a long job is not stopped by sleep or a dark screen. Released when the job ends. `keepAwake.js`: one
       "prevent-app-suspension" hold while any reason is on ("saving", "assistant"), set from the exporter's and the
@@ -901,7 +910,7 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       rule (ARCHITECTURE, SECURITY) leaves it at the person's own HyperFrames setting. To switch it off for Kushmanji:
       `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for the CLI and the assistants, and refuse `*.posthog.com` in
       `studioRequests.js`. **The owner said yes (2026-11-02); done (Claude, 2026-11-02).**
-- [~] M16-18 (Claude; the wide one done 2026-11-04, the upright one waits for the allowance) (owner, 2026-11-04: the
+- [x] M16-18 (Claude, wide 2026-11-04, upright 2026-11-05) (owner, 2026-11-04: the
       story ad is "so bad": "everything is saying edit videos just by talking",
       weak music and hook, "no fast pace") Remake the Kushmanji ad: a hook in the first 1 to 2 s; a new idea every
       1 to 2 s on the beat of energetic music (about 120 to 128 BPM, chosen by its energy); show what Kushmanji does
@@ -913,8 +922,12 @@ Ideas and public facts only: HeyGen's own code there is closed and not to be cop
       11 min (truthful words: "many languages", the real 1:32 to 1:16 of Tidy my talking; a fuller subtitles scene;
       a 2% push on held shots). A feature about every 2.5 s. Rendered at delivery quality, sound brought to -14.0
       LUFS, in `reviews/READY/Kushmanji fast ad` with ABOUT.md and stills. The build cost about 45% of the 5-hour
-      window, the Sonnet fix about 12%. The upright copy is made (`reviews/kushmanji-ad-2-upright`, "Make other
-      sizes" code and its prepared REQUEST.txt), not yet sent
+      window, the Sonnet fix about 12%. **Upright one done** (2026-11-05): "Make other sizes" (`makeOtherSizes`)
+      made the copy (`reviews/kushmanji-ad-2-upright`) and its request, sent unchanged. Claude rebuilt each scene
+      for 1080x1920 in 6 min (about 19% of the 5-hour window), looked at 19 moments and fixed three itself.
+      44 stills with the platforms' button zones shaded red (220 px top, 420 bottom, 140 right, 60 left) showed
+      nothing important in them; only the "-16 s" badge's pop touches the right zone, high up. So there was no fix
+      round. Rendered and brought to -14.0 LUFS beside the wide one. Open: the owner listening to the sound
 - [x] M16-16 (Claude, 2026-11-03) One high-quality story ad for Kushmanji, to show and to test with (owner: "1 clip to
       test and for many things"): 45 s, friendly flat illustration, Meera the home baker; built by Claude through the
       app's chat in 22 + 5 minutes (`reviews/kushmanji-ad`, rendered to `reviews/READY/Kushmanji story ad`). Open:
