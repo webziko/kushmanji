@@ -35,7 +35,15 @@ The self-test's Electron gets Chromium's fake microphone playing `test/fixtures/
 so the box can get the sentence and part of it again). The owner offered links to motion-design style
 collections: ask for them before the style research.
 
-Next: Claude's upright trailer (or let the story ad stand for it); the style research with the owner's links; short moving previews and footage styles for Pick a style; the rest
+**4 November, early morning:** the owner's links (M16-17), all read with licences: RESEARCH.md's new section
+(lemo-opuscar 66 styles MIT, mg-styles-15 MIT, ClaudeAnimationBase MIT, pdoom-video MIT, openshorts MIT,
+head-of-content MIT, the Commons API tried live; PDoomVideo, opus-video-prompts and the owner's Shorts Animator
+download carry no licence: ideas only; the pasted Motion Lab article is never copied). Built: the motion guide's
+new rules (craft.js) and six more styles (14 cards). The owner's links and the article's condensed rules are in
+the session notes, `owner-style-links-2026-11-04.md`.
+
+Next: Commons videos in the free-media tool (M8-10); openshorts' per-scene layouts for "Make shorts"; Claude's
+upright trailer (or let the story ad stand for it); short moving previews and footage styles for Pick a style; the rest
 of M10-09; M11-20; M5-05's install part; M2-24 and M2-27 wait on the owner.
 
 **What would surprise you**

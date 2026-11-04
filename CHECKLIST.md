@@ -18,8 +18,11 @@ Centre vlog", went to the Recycle Bin with the vlog on 24 October.)
 - [ ] **Close Kushmanji and open it again** to get HyperFrames 0.9.2 (quicker to jump around), working Undo, and the
       new "Tidy my talking" button.
 - [ ] **Listen to the story ad once** (`reviews\READY\Kushmanji story ad`): is the music right?
-- [ ] **Send your links to motion-design style collections** (GitHub repositories and websites): they start the
-      research for more "Pick a style" cards. Each one's licence gets checked before anything is used.
+- [x] **Your motion-design links, all researched** (4 November): every one read with its licence, written up in
+      `docs\RESEARCH.md`. From them: the guide every assistant reads before animating got the Motion Lab's rules
+      and numbers (in our own words), and **Pick a style now has 14 cards**: watercolour, oil painting, crayon picture
+      book, chalkboard lesson, pixel game and news short are new. Your Shorts Animator download is incomplete and has
+      no licence, so only its ideas were used (the painted looks).
 - [ ] **Try the microphone once** (🎤 beside Send): Windows may ask whether Kushmanji may use it. In Kannada or Hindi
       it uses Whisper, which takes a minute or more for a short request on this PC.
 - [x] **Claude Code is signed in again** (checked 2 November). Claude's trailer was started, then paused while you
